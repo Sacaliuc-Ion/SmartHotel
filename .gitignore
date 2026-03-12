@@ -1,3 +1,16 @@
+build/
+bin/
+out/
+*.o
+*.out
+*.exe
+*.tmp
+*.log
+*.swp
+*~
+
+.vscode/
+
 # Logs
 logs
 *.log
@@ -22,3 +35,4 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+node_modules
