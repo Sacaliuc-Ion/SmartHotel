@@ -3,7 +3,19 @@ import { rooms } from '../data/mockData';
 import { Badge } from '../components/ui/badge';
 import { Input } from '../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { Search, Users } from 'lucide-react';
+import { ImageWithFallback } from '../components/imageError/ImageWihFallback.tsx';
+import { Search, Users, Wifi, Tv, Wind, Coffee, Bath, Armchair } from 'lucide-react';
+
+const roomImages = {
+  single: 'https://images.unsplash.com/photo-1657639754502-3c138cb24b4c?w=800',
+  double: 'https://images.unsplash.com/photo-1657639754502-3c138cb24b4c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1080',
+  suite: 'https://images.unsplash.com/photo-1759223198981-661cadbbff36?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1080',
+  deluxe: 'https://images.unsplash.com/photo-1520056107387-2cb5354436ed?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1080',
+};
+
+const amenityIcons: Record<string, React.ElementType> = {
+  'WiFi': Wifi, 'TV': Tv, 'AC': Wind, 'Mini Bar': Coffee, 'Jacuzzi': Bath, 'Balcony': Armchair,
+};
 
 export const RoomsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -35,12 +47,7 @@ export const RoomsPage = () => {
           <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="Search by room number or type..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+            <Input placeholder="Search by room number or type..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
           </div>
         </div>
         <div>
@@ -73,6 +80,14 @@ export const RoomsPage = () => {
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredRooms.map((room) => (
           <div key={room.id} className="bg-white rounded-lg border overflow-hidden hover:shadow-lg transition-shadow">
+            <div className="relative h-48">
+              <ImageWithFallback src={roomImages[room.type]} alt={`Room ${room.number}`} className="w-full h-full object-cover" />
+              <div className="absolute top-3 right-3">
+                <Badge variant={room.status === 'available' ? 'default' : 'secondary'} className="bg-white/90 text-gray-800">
+                  {room.status === 'available' ? 'Available' : 'Not Available'}
+                </Badge>
+              </div>
+            </div>
             <div className="p-5">
               <div className="flex items-start justify-between mb-2">
                 <div>
@@ -89,9 +104,16 @@ export const RoomsPage = () => {
                 <span className="text-sm">{room.capacity} Guest{room.capacity > 1 ? 's' : ''}</span>
               </div>
               <p className="text-sm text-gray-600 mb-4">{room.description}</p>
-              <Badge variant={room.status === 'available' ? 'default' : 'secondary'}>
-                {room.status === 'available' ? 'Available' : 'Not Available'}
-              </Badge>
+              <div className="flex flex-wrap gap-2">
+                {room.amenities.slice(0, 4).map((amenity) => {
+                  const Icon = amenityIcons[amenity] || Wifi;
+                  return (
+                    <div key={amenity} className="flex items-center gap-1 text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded">
+                      <Icon className="h-3 w-3" /><span>{amenity}</span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         ))}
@@ -105,3 +127,4 @@ export const RoomsPage = () => {
     </div>
   );
 };
+
