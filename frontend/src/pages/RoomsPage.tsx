@@ -3,7 +3,7 @@ import { rooms } from '../data/mockData';
 import { Badge } from '../components/ui/badge';
 import { Input } from '../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { ImageWithFallback } from '../components/imageError/ImageWihFallback.tsx';
+import { ImageWithFallback } from '../components/imageError/ImageWithFallback.tsx';
 import { Search, Users, Wifi, Tv, Wind, Coffee, Bath, Armchair } from 'lucide-react';
 
 const roomImages = {
@@ -127,4 +127,3 @@ export const RoomsPage = () => {
     </div>
   );
 };
-
