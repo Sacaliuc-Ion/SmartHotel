@@ -4,6 +4,7 @@ import { LoginPage } from './pages/Login';
 import { RoomsPage } from './pages/RoomsPage';
 import { FrontDeskPage } from './pages/FrontDeskPage';
 import { MaintenancePage } from './pages/MaintenancePage';
+import { RoomBoardPage } from './pages/RoomBoardPage';
 export const router = createBrowserRouter([
   {
     path: '/',
@@ -12,6 +13,10 @@ export const router = createBrowserRouter([
   {
     path: '/rooms',
     element: <RoomsPage />,
+  },
+  {
+    path: '/roomboard',
+    element: <RoomBoardPage />,
   },
   {
     path: '/login',
