@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { maintenanceTickets, rooms } from '../data/mockData';
+import { useHotel } from '../context/HotelContext';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
-import { type TicketStatus, type TicketPriority } from '../data/mockData';
+import { TicketStatus, TicketPriority } from '../data/mockData';
 import { Plus, AlertCircle, Clock, Wrench, CheckCircle } from 'lucide-react';
 
 const statusConfig: Record<TicketStatus, { label: string; color: string; icon: React.ElementType }> = {
@@ -13,23 +13,25 @@ const statusConfig: Record<TicketStatus, { label: string; color: string; icon: R
 };
 
 const priorityColors: Record<TicketPriority, string> = {
-  'low': 'bg-gray-100 text-gray-800',
-  'medium': 'bg-blue-100 text-blue-800',
-  'high': 'bg-orange-100 text-orange-800',
-  'urgent': 'bg-red-100 text-red-800',
+  'low': 'bg-gray-100 text-gray-800','medium': 'bg-blue-100 text-blue-800',
+  'high': 'bg-orange-100 text-orange-800','urgent': 'bg-red-100 text-red-800',
 };
 
 export const MaintenancePage = () => {
+  const { tickets, rooms } = useHotel();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedTicket, setSelectedTicket] = useState<string | null>(null);
+
   const getRoom = (roomId: string) => rooms.find((r) => r.id === roomId);
 
-  const groupedTickets = {
-    'new': maintenanceTickets.filter((t) => t.status === 'new'),
-    'in-progress': maintenanceTickets.filter((t) => t.status === 'in-progress'),
-    'waiting-parts': maintenanceTickets.filter((t) => t.status === 'waiting-parts'),
-    'resolved': maintenanceTickets.filter((t) => t.status === 'resolved'),
-  } as Record<TicketStatus, typeof maintenanceTickets>;
+  const groupedTickets: Record<TicketStatus, typeof tickets> = {
+    'new': tickets.filter((t) => t.status === 'new'),
+    'in-progress': tickets.filter((t) => t.status === 'in-progress'),
+    'waiting-parts': tickets.filter((t) => t.status === 'waiting-parts'),
+    'resolved': tickets.filter((t) => t.status === 'resolved'),
+  };
 
-  const openTicketsCount = maintenanceTickets.filter((t) => t.status !== 'resolved').length;
+  const openTicketsCount = tickets.filter((t) => t.status !== 'resolved').length;
 
   return (
     <div className="p-8">
@@ -38,7 +40,7 @@ export const MaintenancePage = () => {
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Maintenance</h1>
           <p className="text-gray-600">Manage maintenance tickets and work orders</p>
         </div>
-        <Button><Plus className="h-4 w-4 mr-2" />New Ticket</Button>
+        <Button onClick={() => setIsModalOpen(true)}><Plus className="h-4 w-4 mr-2" />New Ticket</Button>
       </div>
 
       <div className="grid md:grid-cols-4 gap-4 mb-6">
@@ -64,7 +66,7 @@ export const MaintenancePage = () => {
                   const room = getRoom(ticket.roomId);
                   const daysSince = Math.floor((Date.now() - new Date(ticket.createdAt).getTime()) / 86400000);
                   return (
-                    <div key={ticket.id} className="bg-white p-4 rounded-lg border hover:shadow-md transition-shadow cursor-pointer">
+                    <div key={ticket.id} className="bg-white p-4 rounded-lg border hover:shadow-md transition-shadow cursor-pointer" onClick={() => setSelectedTicket(ticket.id)}>
                       <div className="flex items-start justify-between mb-2">
                         <h4 className="font-semibold text-gray-800 text-sm">{ticket.issue}</h4>
                         <Badge className={`${priorityColors[ticket.priority]} text-xs`}>{ticket.priority}</Badge>
@@ -84,6 +86,17 @@ export const MaintenancePage = () => {
           );
         })}
       </div>
+
+      {/* TicketFormModal added in next commit */}
+      {(isModalOpen || selectedTicket) && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+          <div className="bg-white p-6 rounded-lg w-full max-w-md">
+            <h3 className="font-semibold mb-4">{selectedTicket ? 'Edit Ticket' : 'New Ticket'}</h3>
+            <p className="text-sm text-gray-500 mb-4">Full form modal coming soon</p>
+            <Button onClick={() => { setIsModalOpen(false); setSelectedTicket(null); }}>Close</Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
