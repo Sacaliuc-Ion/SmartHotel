@@ -5,6 +5,7 @@ import { RoomsPage } from './pages/RoomsPage';
 import { FrontDeskPage } from './pages/FrontDeskPage';
 import { MaintenancePage } from './pages/MaintenancePage';
 import { RoomBoardPage } from './pages/RoomBoardPage';
+import { HousekeepingPage } from './pages/HousekeepingPage';
 export const router = createBrowserRouter([
   {
     path: '/',
@@ -29,6 +30,10 @@ export const router = createBrowserRouter([
   {
     path: '/maintenance',
     element: <MaintenancePage />,
+  },
+  {
+    path: '/housekeeping',
+    element: <HousekeepingPage />,
   },
 
 ]);
