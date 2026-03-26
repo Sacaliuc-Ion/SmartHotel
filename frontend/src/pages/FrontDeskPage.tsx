@@ -1,16 +1,18 @@
-import { bookings, rooms } from '../data/mockData';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card.tsx';
+import { useHotel } from '../context/HotelContext';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { ArrowDownToLine, ArrowUpFromLine, Bed, DollarSign } from 'lucide-react';
 
-const today = new Date().toISOString().split('T')[0];
-const arrivals = bookings.filter((b) => b.checkIn === today && b.status === 'confirmed');
-const departures = bookings.filter((b) => b.checkOut === today && b.status === 'checked-in');
-const currentlyOccupied = bookings.filter((b) => b.status === 'checked-in').length;
-const occupancyRate = Math.round((currentlyOccupied / rooms.length) * 100);
-
 export const FrontDeskPage = () => {
+  const { bookings, rooms } = useHotel();
+
+  const today = new Date().toISOString().split('T')[0];
+  const arrivals = bookings.filter((b) => b.checkIn === today && b.status === 'confirmed');
+  const departures = bookings.filter((b) => b.checkOut === today && b.status === 'checked-in');
+  const currentlyOccupied = bookings.filter((b) => b.status === 'checked-in').length;
+  const occupancyRate = rooms.length > 0 ? Math.round((currentlyOccupied / rooms.length) * 100) : 0;
+
   const getRoom = (roomId: string) => rooms.find((r) => r.id === roomId);
 
   return (
