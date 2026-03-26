@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import { rooms } from '../data/mockData';
+import { useHotel } from '../context/HotelContext';
 import { Badge } from '../components/ui/badge';
 import { Input } from '../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { ImageWithFallback } from '../components/imageError/ImageWithFallback.tsx';
+import { Button } from '../components/ui/button';
+import { ImageWithFallback } from '../components/imageError/ImageWithFallback';
 import { Search, Users, Wifi, Tv, Wind, Coffee, Bath, Armchair } from 'lucide-react';
 
-const roomImages = {
+const roomImages: Record<string, string> = {
   single: 'https://images.unsplash.com/photo-1657639754502-3c138cb24b4c?w=800',
   double: 'https://images.unsplash.com/photo-1657639754502-3c138cb24b4c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1080',
   suite: 'https://images.unsplash.com/photo-1759223198981-661cadbbff36?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1080',
@@ -18,6 +19,7 @@ const amenityIcons: Record<string, React.ElementType> = {
 };
 
 export const RoomsPage = () => {
+  const { rooms } = useHotel();
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [priceFilter, setPriceFilter] = useState('all');
@@ -104,7 +106,7 @@ export const RoomsPage = () => {
                 <span className="text-sm">{room.capacity} Guest{room.capacity > 1 ? 's' : ''}</span>
               </div>
               <p className="text-sm text-gray-600 mb-4">{room.description}</p>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 mb-6">
                 {room.amenities.slice(0, 4).map((amenity) => {
                   const Icon = amenityIcons[amenity] || Wifi;
                   return (
@@ -114,6 +116,7 @@ export const RoomsPage = () => {
                   );
                 })}
               </div>
+              <Button className="w-full">View Details</Button>
             </div>
           </div>
         ))}
