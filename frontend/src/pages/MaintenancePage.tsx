@@ -4,6 +4,7 @@ import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { TicketStatus, TicketPriority } from '../data/mockData';
 import { Plus, AlertCircle, Clock, Wrench, CheckCircle } from 'lucide-react';
+import { TicketFormModal } from '../components/maintenance/TicketFormModal';
 
 const statusConfig: Record<TicketStatus, { label: string; color: string; icon: React.ElementType }> = {
   'new': { label: 'New', color: 'bg-blue-100 text-blue-800', icon: AlertCircle },
@@ -86,17 +87,9 @@ export const MaintenancePage = () => {
           );
         })}
       </div>
-
-      {/* TicketFormModal added in next commit */}
-      {(isModalOpen || selectedTicket) && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-          <div className="bg-white p-6 rounded-lg w-full max-w-md">
-            <h3 className="font-semibold mb-4">{selectedTicket ? 'Edit Ticket' : 'New Ticket'}</h3>
-            <p className="text-sm text-gray-500 mb-4">Full form modal coming soon</p>
-            <Button onClick={() => { setIsModalOpen(false); setSelectedTicket(null); }}>Close</Button>
-          </div>
-        </div>
-      )}
+      {isModalOpen && <TicketFormModal onClose={() => setIsModalOpen(false)} />}
+      {selectedTicket && <TicketFormModal ticketId={selectedTicket} onClose={() => 
+      setSelectedTicket(null)} />}
     </div>
   );
 };
