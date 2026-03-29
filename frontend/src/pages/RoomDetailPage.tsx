@@ -1,8 +1,9 @@
-import { rooms } from '../data/mockData';
-import { Badge } from '../components/ui/badge';
+import { useParams, useNavigate } from 'react-router';
+import { useHotel } from '../context/HotelContext';
 import { Button } from '../components/ui/button';
+import { Badge } from '../components/ui/badge';
 import { ImageWithFallback } from '../components/imageError/ImageWithFallback';
-import { Users, Wifi, Tv, Wind, Coffee, Bath, Armchair, MapPin } from 'lucide-react';
+import { ArrowLeft, Users, Wifi, Tv, Wind, Coffee, Bath, Armchair, MapPin } from 'lucide-react';
 
 const roomImages = {
   single: 'https://images.unsplash.com/photo-1657639754502-3c138cb24b4c?w=800',
@@ -15,14 +16,27 @@ const amenityIcons: Record<string, React.ElementType> = {
   'WiFi': Wifi, 'TV': Tv, 'AC': Wind, 'Mini Bar': Coffee, 'Jacuzzi': Bath, 'Balcony': Armchair,
 };
 
-// Temporarily using first room as placeholder — routing not yet set up
-const room = rooms[0];
 
 export const RoomDetailPage = () => {
+  const { id } = useParams<{ id: string }>();
+  const { rooms } = useHotel();
+  const navigate = useNavigate();
+  const room = rooms.find((r) => r.id === id);
+
+  if (!room) return (
+    <div className="text-center py-12">
+      <p className="text-gray-500 text-lg mb-4">Room not found</p>
+      <Button onClick={() => navigate('/rooms')}>Back to Rooms</Button>
+    </div>
+  );
+
   return (
-    <div className="p-8">
+    <div>
+      <Button variant="ghost" onClick={() => navigate('/rooms')} className="mb-6">
+        <ArrowLeft className="h-4 w-4 mr-2" />Back to Rooms
+      </Button>
       <div className="grid lg:grid-cols-2 gap-8">
-        <div>
+        <div className="space-y-4">
           <div className="relative h-96 rounded-lg overflow-hidden">
             <ImageWithFallback src={roomImages[room.type]} alt={`Room ${room.number}`} className="w-full h-full object-cover" />
           </div>
@@ -33,7 +47,7 @@ export const RoomDetailPage = () => {
           </Badge>
           <h1 className="text-4xl font-bold text-gray-800 mb-2">Room {room.number}</h1>
           <p className="text-lg text-gray-600 capitalize mb-4">{room.type} Room</p>
-          <div className="flex items-center gap-4 mb-6 text-gray-600">
+          <div className="flex items-center gap-3 mb-6 text-gray-600">
             <div className="flex items-center gap-2"><MapPin className="h-5 w-5" /><span>Floor {room.floor}</span></div>
             <div className="flex items-center gap-2"><Users className="h-5 w-5" /><span>{room.capacity} Guest{room.capacity > 1 ? 's' : ''}</span></div>
           </div>
