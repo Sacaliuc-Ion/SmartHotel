@@ -5,6 +5,7 @@ import { Button } from '../components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { RoomStatus } from '../data/mockData';
 import { AlertTriangle, Sparkles } from 'lucide-react';
+import { DefectReportModal } from '../components/housekeeping/DefectReportModal';
 
 const statusColors: Record<RoomStatus, string> = {
   'dirty': 'bg-red-100 text-red-800 border-red-200',
@@ -113,13 +114,7 @@ export const HousekeepingPage = () => {
 
       {/* Defect report modal added in next commit */}
       {selectedRoom && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-          <div className="bg-white p-6 rounded-lg max-w-sm w-full">
-            <h3 className="font-semibold mb-4">Report Issue — Room {selectedRoom}</h3>
-            <p className="text-sm text-gray-500 mb-4">Full modal coming soon</p>
-            <Button onClick={() => setSelectedRoom(null)}>Close</Button>
-          </div>
-        </div>
+        <DefectReportModal roomId={selectedRoom} onClose={() => setSelectedRoom(null)} />
       )}
     </div>
   );
