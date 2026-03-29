@@ -112,7 +112,6 @@ export const HousekeepingPage = () => {
         <div className="text-center py-12"><p className="text-gray-500">No rooms match the selected filter</p></div>
       )}
 
-      {/* Defect report modal added in next commit */}
       {selectedRoom && (
         <DefectReportModal roomId={selectedRoom} onClose={() => setSelectedRoom(null)} />
       )}
