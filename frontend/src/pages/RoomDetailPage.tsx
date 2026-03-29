@@ -16,6 +16,7 @@ const amenityIcons: Record<string, React.ElementType> = {
   'WiFi': Wifi, 'TV': Tv, 'AC': Wind, 'Mini Bar': Coffee, 'Jacuzzi': Bath, 'Balcony': Armchair,
 };
 
+
 export const RoomDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const { rooms } = useHotel();
