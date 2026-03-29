@@ -9,7 +9,9 @@ export const Layout = ({ children }: { children: ReactNode }) => {
       <Topbar onToggleSidebar={() => setSidebarOpen((v) => !v)} sidebarOpen={sidebarOpen} />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar isOpen={sidebarOpen} />
-        <main className="flex-1 overflow-y-auto p-8">{children}</main>
+        <main className="flex-1 overflow-y-auto">
+          {children}
+        </main>
       </div>
     </div>
   );

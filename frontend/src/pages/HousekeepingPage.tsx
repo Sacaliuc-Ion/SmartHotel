@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { RoomStatus } from '../data/mockData';
 import { AlertTriangle, Sparkles } from 'lucide-react';
 import { DefectReportModal } from '../components/housekeeping/DefectReportModal';
+import { toast } from 'sonner';
 
 const statusColors: Record<RoomStatus, string> = {
   'dirty': 'bg-red-100 text-red-800 border-red-200',
@@ -31,11 +32,14 @@ export const HousekeepingPage = () => {
   const todaysArrivals = bookings.filter((b) => b.checkIn === today && b.status === 'confirmed');
   const filteredRooms = rooms.filter((r) => filterStatus === 'all' || r.status === filterStatus);
 
-  const handleStatusChange = (roomId: string, current: RoomStatus) => {
-    const next = statusFlow[current];
-    if (next) updateRoomStatus(roomId, next);
-  };
+ const handleStatusChange = (roomId: string, current: RoomStatus) => {
+  const next = statusFlow[current];
 
+  if (next) {
+    updateRoomStatus(roomId, next);
+    toast.success(`Room status updated to ${next}`);
+  }
+};
   const priorityRooms = filteredRooms.filter((room) =>
     todaysArrivals.some((b) => b.roomId === room.id) &&
     room.status !== 'ready' && room.status !== 'available'
