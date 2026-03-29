@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router';
 import { useHotel } from '../context/HotelContext';
 import { Badge } from '../components/ui/badge';
 import { Input } from '../components/ui/input';
@@ -20,6 +21,7 @@ const amenityIcons: Record<string, React.ElementType> = {
 
 export const RoomsPage = () => {
   const { rooms } = useHotel();
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [priceFilter, setPriceFilter] = useState('all');
@@ -116,7 +118,13 @@ export const RoomsPage = () => {
                   );
                 })}
               </div>
-              <Button className="w-full">View Details</Button>
+              <Button
+                className="w-full"
+                onClick={() => navigate(`/rooms/${room.id}`)}
+                disabled={room.status !== 'available'}
+              >
+                {room.status === 'available' ? 'View Details' : 'Not Available'}
+              </Button>
             </div>
           </div>
         ))}

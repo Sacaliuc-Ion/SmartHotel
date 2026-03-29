@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { rooms, bookings } from '../data/mockData';
+import { useHotel } from '../context/HotelContext';
 import { Button } from '../components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export const RoomBoardPage = () => {
   const [startDate, setStartDate] = useState(new Date());
+  const { rooms, bookings } = useHotel();
 
   const days = Array.from({ length: 14 }, (_, i) => {
     const d = new Date(startDate);

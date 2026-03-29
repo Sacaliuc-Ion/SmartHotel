@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router';
 import { useAuth } from '../context/AuthContext';
 import { users } from '../data/mockData';
 import { Button } from '../components/ui/button';
@@ -11,6 +12,7 @@ export const LoginPage = () => {
   const [selectedRole, setSelectedRole] = useState('client');
   const [name, setName] = useState('');
   const { login } = useAuth();
+  const navigate = useNavigate();
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,7 +24,7 @@ export const LoginPage = () => {
       role: selectedRole as any,
     };
     login(userData);
-    // Navigate handled after routing is added in a later commit
+    navigate('/');
   };
 
   return (
