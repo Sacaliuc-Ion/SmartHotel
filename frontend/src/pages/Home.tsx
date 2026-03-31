@@ -14,6 +14,7 @@ import {
   Coffee,
   Car,
 } from 'lucide-react';
+
 import Herro from '../assets/HeroIMG.jpg';
 import Lobby from '../assets/LobbyIMG.jpg';
 import Pool from '../assets/PoolIMG.jpg';
