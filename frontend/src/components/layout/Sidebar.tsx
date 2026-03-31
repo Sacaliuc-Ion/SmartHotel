@@ -35,7 +35,7 @@ export const Sidebar = ({ isOpen = true }: { isOpen?: boolean }) => {
             );
           })}
         </nav>
-        <div className="p-4 border-t"><p className="text-xs text-gray-400 text-center">Grand Hotel © 2026</p></div>
+        <div className="p-4 border-t"><p className="text-xs text-gray-400 text-center">Smart Hotel © 2026</p></div>
       </div>
     </div>
   );

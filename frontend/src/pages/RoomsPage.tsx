@@ -5,14 +5,17 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Badge } from '../components/ui/badge';
-import { ImageWithFallback } from '../components/imageError/ImageWithFallback';
 import { Search, Users, Wifi, Tv, Wind, Coffee, Armchair, Bath } from 'lucide-react';
+import Single from '../assets/rooms/Single.jpg';
+import Double from '../assets/rooms/Double.jpg';
+import Suite from '../assets/rooms/Suite.jpg';
+import Deluxe from '../assets/rooms/Deluxe.jpg';
 
 const roomImages = {
-  single: 'https://images.unsplash.com/photo-1657639754502-3c138cb24b4c?w=800',
-  double: 'https://images.unsplash.com/photo-1657639754502-3c138cb24b4c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxob3RlbCUyMGRvdWJsZSUyMGJlZHJvb218ZW58MXx8fHwxNzcyMjk2MTUwfDA&ixlib=rb-4.1.0&q=80&w=1080',
-  suite: 'https://images.unsplash.com/photo-1759223198981-661cadbbff36?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjBob3RlbCUyMHN1aXRlfGVufDF8fHx8MTc3MjI4MjQ1Mnww&ixlib=rb-4.1.0&q=80&w=1080',
-  deluxe: 'https://images.unsplash.com/photo-1520056107387-2cb5354436ed?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkZWx1eGUlMjBob3RlbCUyMHJvb20lMjBiYWxjb255fGVufDF8fHx8MTc3MjIwMzI2M3ww&ixlib=rb-4.1.0&q=80&w=1080',
+  single: Single,
+  double: Double,
+  suite: Suite,
+  deluxe: Deluxe,
 };
 
 const amenityIcons: Record<string, React.ElementType> = {
@@ -101,7 +104,7 @@ export const RoomsPage = () => {
         {filteredRooms.map((room) => (
           <div key={room.id} className="bg-white rounded-lg border overflow-hidden hover:shadow-lg transition-shadow">
             <div className="relative h-48">
-              <ImageWithFallback
+              <img
                 src={roomImages[room.type]}
                 alt={`Room ${room.number}`}
                 className="w-full h-full object-cover"

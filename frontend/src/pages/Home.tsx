@@ -15,13 +15,9 @@ import {
   Car,
 } from 'lucide-react';
 
-import Herro from '../assets/HeroIMG.jpg';
-import Lobby from '../assets/LobbyIMG.jpg';
-import Pool from '../assets/PoolIMG.jpg';
-
-const HERO_IMAGE = Herro;
-const LOBBY_IMAGE = Lobby;
-const POOL_IMAGE = Pool;
+import Herro from '../assets/home/HeroIMG.jpg';
+import Lobby from '../assets/home/LobbyIMG.jpg';
+import Pool from '../assets//home/PoolIMG.jpg';
 
 export const HomePage = () => {
   const { user } = useAuth();
@@ -78,7 +74,7 @@ export const HomePage = () => {
         {/* Background image */}
         <div
           className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${HERO_IMAGE})` }}
+          style={{ backgroundImage: `url(${Herro})` }}
         />
         {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
@@ -232,12 +228,12 @@ export const HomePage = () => {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <img
-                  src={LOBBY_IMAGE}
+                  src={Lobby}
                   alt="Hotel lobby"
                   className="rounded-2xl object-cover h-48 w-full shadow-md"
                 />
                 <img
-                  src={POOL_IMAGE}
+                  src={Pool}
                   alt="Hotel pool"
                   className="rounded-2xl object-cover h-48 w-full shadow-md mt-6"
                 />
@@ -273,7 +269,7 @@ export const HomePage = () => {
           {/* CTA banner */}
           <section
             className="relative py-24 bg-cover bg-center"
-            style={{ backgroundImage: `url(${Lobby})` }}
+            style={{ backgroundImage: `url(${Herro})` }}
           >
             <div className="absolute inset-0 bg-blue-900/75" />
             <div className="relative text-center text-white max-w-2xl mx-auto px-8">
