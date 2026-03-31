@@ -2,14 +2,17 @@ import { useParams, useNavigate } from 'react-router';
 import { useHotel } from '../context/HotelContext';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
-import { ImageWithFallback } from '../components/imageError/ImageWithFallback';
 import { ArrowLeft, Users, Wifi, Tv, Wind, Coffee, Bath, Armchair, MapPin } from 'lucide-react';
+import Single from '../assets/rooms/Single.jpg';
+import Double from '../assets/rooms/Double.jpg';
+import Suite from '../assets/rooms/Suite.jpg';
+import Deluxe from '../assets/rooms/Deluxe.jpg';
 
 const roomImages = {
-  single: 'https://images.unsplash.com/photo-1657639754502-3c138cb24b4c?w=800',
-  double: 'https://images.unsplash.com/photo-1657639754502-3c138cb24b4c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1080',
-  suite: 'https://images.unsplash.com/photo-1759223198981-661cadbbff36?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1080',
-  deluxe: 'https://images.unsplash.com/photo-1520056107387-2cb5354436ed?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1080',
+  single: Single,
+  double: Double,
+  suite: Suite,
+  deluxe: Deluxe,
 };
 
 const amenityIcons: Record<string, React.ElementType> = {
@@ -38,7 +41,7 @@ export const RoomDetailPage = () => {
       <div className="grid lg:grid-cols-2 gap-8">
         <div className="space-y-4">
           <div className="relative h-96 rounded-lg overflow-hidden">
-            <ImageWithFallback src={roomImages[room.type]} alt={`Room ${room.number}`} className="w-full h-full object-cover" />
+            <img src={roomImages[room.type]} alt={`Room ${room.number}`} className="w-full h-full object-cover" />
           </div>
         </div>
         <div>
