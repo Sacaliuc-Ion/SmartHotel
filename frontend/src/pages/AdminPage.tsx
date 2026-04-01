@@ -18,21 +18,27 @@ export const AdminPage = () => {
 
   return (
     <div>
-      <div className="mb-8"><h1 className="text-3xl font-bold text-gray-800 mb-2">Admin Settings</h1><p className="text-gray-600">Manage system configuration and data</p></div>
+      <div className="mb-8 px-4 py-2">
+        <h1 className="text-3xl font-bold text-gray-800 mb-2"
+        >
+          Admin Settings
+        </h1>
+          <p className="text-gray-600">Manage system configuration and data</p>
+      </div>
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-6">
+        <TabsList className="mb-6 mx-4">
           <TabsTrigger value="rooms" className="flex items-center gap-2"><Building className="h-4 w-4" />Rooms</TabsTrigger>
           <TabsTrigger value="users" className="flex items-center gap-2"><Users className="h-4 w-4" />Users</TabsTrigger>
           <TabsTrigger value="settings" className="flex items-center gap-2"><Settings className="h-4 w-4" />Settings</TabsTrigger>
         </TabsList>
 
         <TabsContent value="rooms">
-          <div className="grid lg:grid-cols-4 gap-4 mb-6">
+          <div className="grid mx-4 lg:grid-cols-4 gap-4 mb-6">
             {Object.entries(roomTypeStats).map(([type, count]) => (
               <Card key={type}><CardHeader className="pb-3"><CardDescription className="capitalize">{type} Rooms</CardDescription></CardHeader><CardContent><p className="text-3xl font-bold text-gray-800">{count}</p></CardContent></Card>
             ))}
           </div>
-          <Card>
+          <Card className="mx-4">
             <CardHeader><CardTitle>All Rooms</CardTitle><CardDescription>Manage hotel rooms and their configurations</CardDescription></CardHeader>
             <CardContent>
               <Table>
@@ -81,7 +87,7 @@ export const AdminPage = () => {
             <Card>
               <CardHeader><CardTitle>General Settings</CardTitle><CardDescription>System configuration options</CardDescription></CardHeader>
               <CardContent className="space-y-4">
-                {[['Check-in Time','Standard check-in hour','2:00 PM'],['Check-out Time','Standard check-out hour','11:00 AM'],['Currency','Default currency','USD'],['Tax Rate','Applied to bookings','10%']].map(([label, desc, val]) => (
+                {[['Check-in Time','Standard check-in hour','2:00 PM'],['Check-out Time','Standard check-out hour',' 1:00 AM'],['Currency','Default currency','USD'],['Tax Rate','Applied to bookings','10%']].map(([label, desc, val]) => (
                   <div key={label} className="flex items-center justify-between p-3 border rounded-lg">
                     <div><p className="font-medium text-gray-800">{label}</p><p className="text-sm text-gray-600">{desc}</p></div>
                     <p className="font-semibold text-gray-800">{val}</p>

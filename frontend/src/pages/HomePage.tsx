@@ -84,7 +84,7 @@ export const HomePage = () => {
           {amenities.map(({ icon: Icon, label }) => (
             <div
               key={label}
-              className="flex items-center gap-1.5 bg-white/15 backdrop-blur-sm border border-white/20 text-white text-xs px-3 py-1.5 rounded-full"
+              className="flex items-center gap-1.5 bg-white/15 backdrop-blur-sm border border-white/65 text-white text-xs px-3 py-1.5 rounded-lg"
             >
               <Icon className="h-3.5 w-3.5" />
               {label}
@@ -93,7 +93,7 @@ export const HomePage = () => {
         </div>
 
         {/* Hero copy */}
-        <div className="relative z-10 w-full px-8 md:px-16 pb-16">
+        <div className="relative z-10 w-full px-8 md:px-16 pb-24">
           <div className="max-w-3xl">
             <div className="flex items-center gap-2 mb-4">
               {[...Array(5)].map((_, i) => (
@@ -109,14 +109,14 @@ export const HomePage = () => {
               </span>
             </h1>
 
-            <p className="text-lg md:text-xl text-white/80 mb-8 max-w-xl leading-relaxed">
+            <p className="text-lg md:text-xl text-white/80 mb-5 max-w-xl leading-relaxed">
               {user
                 ? `You're logged in as ${user.role}. Access your tools below and make today exceptional.`
                 : 'Where every detail is crafted for your comfort. Discover our rooms, exceptional dining, and world-class amenities.'}
             </p>
 
             {!user ? (
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap gap-4 mb-1">
                 <button
                   onClick={() => navigate('/rooms')}
                   className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-8 py-3.5 rounded-xl font-medium transition-all shadow-lg shadow-blue-900/30"

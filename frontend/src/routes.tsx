@@ -1,9 +1,9 @@
 import { createBrowserRouter, Navigate } from 'react-router';
 import { Layout } from './components/layout/Layout';
-import { HomePage } from './pages/Home';
+import { HomePage } from './pages/HomePage';
 import { RoomsPage } from './pages/RoomsPage';
 import { RoomDetailPage } from './pages/RoomDetailPage';
-import { LoginPage } from './pages/Login';
+import { LoginPage } from './pages/LoginPage';
 import { FrontDeskPage } from './pages/FrontDeskPage';
 import { RoomBoardPage } from './pages/RoomBoardPage';
 import { HousekeepingPage } from './pages/HousekeepingPage';
