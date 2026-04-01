@@ -36,20 +36,20 @@ export const RoomsPage = () => {
 
   const filteredRooms = rooms.filter((room) => {
     const matchesSearch = room.number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         room.type.toLowerCase().includes(searchTerm.toLowerCase());
+      room.type.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = typeFilter === 'all' || room.type === typeFilter;
-    const matchesPrice = 
+    const matchesPrice =
       priceFilter === 'all' ||
       (priceFilter === 'budget' && room.pricePerNight < 100) ||
       (priceFilter === 'mid' && room.pricePerNight >= 100 && room.pricePerNight < 200) ||
       (priceFilter === 'luxury' && room.pricePerNight >= 200);
-    
+
     return matchesSearch && matchesType && matchesPrice && room.status !== 'out-of-order';
   });
 
   return (
     <div>
-      <div className="mb-4 px-4 py-2">
+      <div className="mb-4 px-4 py-2 lb-sidebar">
         <h1 className="text-3xl font-bold text-gray-800 mb-2">Our Rooms</h1>
         <p className="text-gray-600">Discover your perfect stay from our selection of rooms</p>
       </div>
@@ -126,7 +126,7 @@ export const RoomsPage = () => {
                   <p className="text-xs text-gray-500">per night</p>
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-2 mb-3 text-gray-600">
                 <Users className="h-4 w-4" />
                 <span className="text-sm">{room.capacity} Guest{room.capacity > 1 ? 's' : ''}</span>
@@ -146,8 +146,8 @@ export const RoomsPage = () => {
                 })}
               </div>
 
-              <Button 
-                className="w-full" 
+              <Button
+                className="w-full"
                 onClick={() => navigate(`/rooms/${room.id}`)}
                 disabled={room.status !== 'available'}
               >
