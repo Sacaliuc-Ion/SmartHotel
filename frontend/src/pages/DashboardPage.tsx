@@ -34,16 +34,24 @@ export const DashboardPage = () => {
 
   return (
     <div>
-      <div className="mb-8"><h1 className="text-3xl font-bold text-gray-800 mb-2">Dashboard</h1><p className="text-gray-600">Overview of hotel operations and metrics</p></div>
+      <div className="mb-8 px-4 py-2">
+        <h1 className="text-3xl font-bold text-gray-800 mb-2">
+          Dashboard
+        </h1>
+          <p className="text-gray-600"
+          >
+            Overview of hotel operations and metrics
+          </p>
+      </div>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid mx-4 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <Card><CardHeader className="pb-3"><CardDescription>Occupancy Rate</CardDescription></CardHeader><CardContent><div className="flex items-center justify-between"><div><p className="text-3xl font-bold text-gray-800">{occupancyRate}%</p><p className="text-sm text-gray-500">{occupiedRooms}/{totalRooms} rooms</p></div><Bed className="h-10 w-10 text-blue-600" /></div></CardContent></Card>
         <Card><CardHeader className="pb-3"><CardDescription>Total Revenue</CardDescription></CardHeader><CardContent><div className="flex items-center justify-between"><div><p className="text-3xl font-bold text-gray-800">${totalRevenue.toLocaleString()}</p><p className="text-sm text-gray-500">This period</p></div><DollarSign className="h-10 w-10 text-green-600" /></div></CardContent></Card>
         <Card><CardHeader className="pb-3"><CardDescription>Open Tickets</CardDescription></CardHeader><CardContent><div className="flex items-center justify-between"><div><p className="text-3xl font-bold text-gray-800">{openTickets}</p><p className="text-sm text-gray-500">{outOfOrderRooms} rooms OOO</p></div><Wrench className="h-10 w-10 text-orange-600" /></div></CardContent></Card>
         <Card><CardHeader className="pb-3"><CardDescription>Housekeeping</CardDescription></CardHeader><CardContent><div className="flex items-center justify-between"><div><p className="text-3xl font-bold text-gray-800">{dirtyRooms}</p><p className="text-sm text-gray-500">Rooms pending</p></div><Sparkles className="h-10 w-10 text-purple-600" /></div></CardContent></Card>
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6 mb-8">
+      <div className="grid mx-4 lg:grid-cols-2 gap-6 mb-8">
         <Card>
           <CardHeader><CardTitle>Occupancy Trend</CardTitle><CardDescription>Last 7 days</CardDescription></CardHeader>
           <CardContent>

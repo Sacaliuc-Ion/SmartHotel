@@ -36,7 +36,7 @@ export const RoomBoardPage = () => {
   });
 
   return (
-    <div className="p-8">
+    <div className="p-4">
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Room Board</h1>

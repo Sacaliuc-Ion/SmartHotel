@@ -35,7 +35,7 @@ export const MaintenancePage = () => {
   const openTicketsCount = tickets.filter((t) => t.status !== 'resolved').length;
 
   return (
-    <div className="p-8">
+    <div className="p-4">
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Maintenance</h1>
@@ -44,7 +44,7 @@ export const MaintenancePage = () => {
         <Button onClick={() => setIsModalOpen(true)}><Plus className="h-4 w-4 mr-2" />New Ticket</Button>
       </div>
 
-      <div className="grid md:grid-cols-4 gap-4 mb-6">
+      <div className="grid md:grid-cols-4 gap-4 mb-4">
         <div className="bg-white p-4 rounded-lg border"><p className="text-sm text-gray-600">Open Tickets</p><p className="text-3xl font-bold text-gray-800">{openTicketsCount}</p></div>
         <div className="bg-white p-4 rounded-lg border"><p className="text-sm text-gray-600">New</p><p className="text-3xl font-bold text-blue-600">{groupedTickets.new.length}</p></div>
         <div className="bg-white p-4 rounded-lg border"><p className="text-sm text-gray-600">In Progress</p><p className="text-3xl font-bold text-yellow-600">{groupedTickets['in-progress'].length}</p></div>
