@@ -26,7 +26,11 @@ export const Topbar = ({ onToggleSidebar, sidebarOpen }: TopbarProps) => {
           </Link>
         </div>
       </div>
-      {user && (
+      {!user ? (
+        <Button onClick={() => navigate('/login')} variant="outline" size="sm" className="gap-2 border-black/65 w-24">
+          Sign In
+        </Button>
+      ) : (
         <div className="flex items-center gap-4">
           <div className="text-right hidden sm:block">
             <p className="text-sm font-medium text-gray-800">{user.name}</p>

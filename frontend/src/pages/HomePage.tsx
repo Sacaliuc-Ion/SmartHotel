@@ -93,7 +93,7 @@ export const HomePage = () => {
         </div>
 
         {/* Hero copy */}
-        <div className="relative z-10 w-full px-8 md:px-16 pb-16">
+        <div className="relative z-10 w-full px-8 md:px-16 pb-24">
           <div className="max-w-3xl">
             <div className="flex items-center gap-2 mb-4">
               {[...Array(5)].map((_, i) => (
@@ -116,7 +116,7 @@ export const HomePage = () => {
             </p>
 
             {!user ? (
-              <div className="flex flex-wrap gap-4 mb-12">
+              <div className="flex flex-wrap gap-4 mb-1">
                 <button
                   onClick={() => navigate('/rooms')}
                   className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-8 py-3.5 rounded-xl font-medium transition-all shadow-lg shadow-blue-900/30"
