@@ -1,5 +1,4 @@
 import { useAuth } from '../../context/AuthContext';
-import { Button } from '../ui/button';
 import { LogOut, Hotel, Menu, X } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { Link } from 'react-router-dom';
@@ -12,36 +11,49 @@ export const Topbar = ({ onToggleSidebar, sidebarOpen }: TopbarProps) => {
   const handleLogout = () => { logout(); navigate('/'); };
 
   return (
-    <div className="h-16 border-b bg-white flex items-center justify-between px-4 shrink-0 z-30 shadow-sm">
+    <div className="lb-topbar h-16 flex items-center justify-between px-4 shrink-0 z-30">
       <div className="flex items-center gap-3">
         {onToggleSidebar && (
-          <button onClick={onToggleSidebar} className="p-2 rounded-lg text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition-colors" aria-label="Toggle sidebar">
+          <button
+            onClick={onToggleSidebar}
+            className="lb-topbar-icon-btn p-2 rounded-lg transition-colors"
+            aria-label="Toggle sidebar"
+          >
             {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         )}
         <div className="flex items-center gap-2">
-          <div className="p-1.5 bg-blue-600 rounded-lg"><Hotel className="h-5 w-5 text-white" /></div>
+          <div className="lb-logo-icon p-1.5 rounded-lg">
+            <Hotel className="h-5 w-5 text-white" />
+          </div>
           <Link to="/">
-            <h1 className="text-xl font-semibold text-gray-800">Smart Hotel</h1>
+            <h1 className="text-xl font-semibold lb-topbar-title">Smart Hotel</h1>
           </Link>
         </div>
       </div>
+
       {!user ? (
-        <Button onClick={() => navigate('/login')} variant="outline" size="sm" className="gap-2 border-black/65 w-24">
+        <button
+          onClick={() => navigate('/login')}
+          className="lb-topbar-signin-btn px-5 py-2 rounded-lg text-sm font-medium transition-all"
+        >
           Sign In
-        </Button>
+        </button>
       ) : (
         <div className="flex items-center gap-4">
           <div className="text-right hidden sm:block">
-            <p className="text-sm font-medium text-gray-800">{user.name}</p>
-            <p className="text-xs text-gray-500 capitalize">{user.role}</p>
+            <p className="text-sm font-medium lb-topbar-username">{user.name}</p>
+            <p className="text-xs lb-topbar-role capitalize">{user.role}</p>
           </div>
-          <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-semibold text-sm shrink-0">
+          <div className="lb-avatar w-9 h-9 rounded-full flex items-center justify-center font-semibold text-sm shrink-0">
             {user.name.charAt(0).toUpperCase()}
           </div>
-          <Button onClick={handleLogout} variant="outline" size="sm" className="gap-2">
+          <button
+            onClick={handleLogout}
+            className="lb-topbar-logout-btn flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all"
+          >
             <LogOut className="h-4 w-4" /><span className="hidden sm:inline">Logout</span>
-          </Button>
+          </button>
         </div>
       )}
     </div>
