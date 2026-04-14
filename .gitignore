@@ -1,18 +1,23 @@
-build/
-bin/
-out/
-*.o
-*.out
-*.exe
-*.tmp
-*.log
-*.swp
-*~
+# SmartHotelB - .NET + Vite/React monorepo
 
-.vscode/
+# OS / editor
+.vs/
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.tmp
+*~
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.rsuser
 
 # Logs
-logs
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -20,19 +25,33 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# .NET build output
+**/bin/
+**/obj/
+**/out/
+**/TestResults/
+*.nupkg
+*.snupkg
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-node_modules
+# Node / Vite
+**/node_modules/
+**/dist/
+**/dist-ssr/
+**/.vite/
+**/coverage/
+*.tsbuildinfo
+.eslintcache
+
+# Environment / local secrets
+**/.env
+**/.env.*
+!**/.env.example
+backend/**/appsettings.Local.json
+backend/**/appsettings.*.local.json
+secrets.json
+*.pfx
+
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
