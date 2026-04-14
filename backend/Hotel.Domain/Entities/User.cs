@@ -13,4 +13,10 @@ public class User
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public Role Role { get; set; } = null!;
+    public ICollection<Reservation> Reservations { get; set; } = new List<Reservation>();
+    public ICollection<HousekeepingTask> HousekeepingTasks { get; set; } = new List<HousekeepingTask>();
+    public ICollection<MaintenanceTicket> ReportedTickets { get; set; } = new List<MaintenanceTicket>();
+    public ICollection<MaintenanceTicket> AssignedTickets { get; set; } = new List<MaintenanceTicket>();
+    public ICollection<CheckInRecord> ProcessedCheckIns { get; set; } = new List<CheckInRecord>();
+    public ICollection<CheckOutRecord> ProcessedCheckOuts { get; set; } = new List<CheckOutRecord>();
 }
