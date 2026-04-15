@@ -1,5 +1,9 @@
-var builder = WebApplication.CreateBuilder(args);
+using Hotel.DataAccess.Context;
+using Microsoft.EntityFrameworkCore;
 
+var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddDbContext<HotelDbContext>(options =>
+     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 // Add services to the container.
 
 builder.Services.AddControllers();
