@@ -10,7 +10,10 @@ public static class BusinessLogic
      public static IServiceCollection AddBusinessLayer(this IServiceCollection services)
      {
           services.AddScoped<DbSession>();
+
           services.AddScoped<IAuthService, AuthService>();
+          services.AddScoped<IRoomService, RoomService>();
+          services.AddScoped<IReservationService, ReservationService>();
 
           return services;
      }
