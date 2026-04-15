@@ -35,6 +35,22 @@ builder.Services.AddAuthentication(options =>
      };
 });
 
+// CORS (Allow any origin for the sake of the exercise, ideally lock it to the frontend URL localhost:5173/3000)
+builder.Services.AddCors(options =>
+{
+     options.AddPolicy("AllowFrontend", policy =>
+     {
+          policy.WithOrigins("http://localhost:5173", "http://localhost:3000")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials(); // needed if using cookies
+     });
+     options.AddPolicy("AllowAll", policy =>
+     {
+          policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+     });
+});
+
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -67,6 +83,7 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
+app.UseCors("AllowAll");
 app.UseSwagger();
 app.UseSwaggerUI();
 app.UseHttpsRedirection();

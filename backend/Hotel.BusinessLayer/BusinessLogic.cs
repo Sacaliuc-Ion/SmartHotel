@@ -1,3 +1,5 @@
+using Hotel.BusinessLayer.Core;
+using Hotel.BusinessLayer.Interfaces;
 using Hotel.DataAccess;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -8,6 +10,8 @@ public static class BusinessLogic
      public static IServiceCollection AddBusinessLayer(this IServiceCollection services)
      {
           services.AddScoped<DbSession>();
+          services.AddScoped<IAuthService, AuthService>();
+
           return services;
      }
 }
