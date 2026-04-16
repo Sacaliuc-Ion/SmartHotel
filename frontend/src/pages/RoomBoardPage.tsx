@@ -19,10 +19,11 @@ export const RoomBoardPage = () => {
     setStartDate(nd);
   };
 
-  const getBooking = (roomId: string, date: Date) => {
+  const getBooking = (roomId: string | number, date: Date) => {
     const ds = date.toISOString().split('T')[0];
+    const normalizedRoomId = String(roomId);
     return bookings.find((b) =>
-      b.roomId === roomId &&
+      String(b.roomId) === normalizedRoomId &&
       b.status !== 'cancelled' &&
       b.status !== 'checked-out' &&
       ds >= b.checkIn && ds < b.checkOut

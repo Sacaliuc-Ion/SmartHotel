@@ -6,18 +6,17 @@ import { Textarea } from '../ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Switch } from '../ui/switch';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
-import { TicketPriority, TicketStatus } from '../../data/mockData';
 import { toast } from 'sonner';
 
-interface TicketFormModalProps { ticketId?: string; onClose: () => void; }
+interface TicketFormModalProps { ticketId?: string | number; onClose: () => void; }
 
 export const TicketFormModal = ({ ticketId, onClose }: TicketFormModalProps) => {
   const { rooms, tickets, addTicket, updateTicket, updateRoomStatus } = useHotel();
   const [roomId, setRoomId] = useState('');
   const [issue, setIssue] = useState('');
   const [description, setDescription] = useState('');
-  const [priority, setPriority] = useState<TicketPriority>('medium');
-  const [status, setStatus] = useState<TicketStatus>('new');
+  const [priority, setPriority] = useState<string>('medium');
+  const [status, setStatus] = useState<string>('new');
   const [assignee, setAssignee] = useState('');
   const [markOutOfOrder, setMarkOutOfOrder] = useState(false);
 
@@ -26,11 +25,14 @@ export const TicketFormModal = ({ ticketId, onClose }: TicketFormModalProps) => 
 
   useEffect(() => {
     if (existingTicket) {
-      setRoomId(existingTicket.roomId); setIssue(existingTicket.issue);
-      setDescription(existingTicket.description); setPriority(existingTicket.priority);
-      setStatus(existingTicket.status); setAssignee(existingTicket.assignee || '');
-      const room = rooms.find((r) => r.id === existingTicket.roomId);
-      setMarkOutOfOrder(room?.status === 'out-of-order');
+      setRoomId(existingTicket.roomId.toString()); 
+      setIssue(existingTicket.issue);
+      setDescription(existingTicket.description || ''); 
+      setPriority(existingTicket.priority);
+      setStatus(existingTicket.status.toLowerCase()); 
+      setAssignee(existingTicket.assignee || '');
+      const room = rooms.find((r) => r.id.toString() === existingTicket.roomId.toString());
+      setMarkOutOfOrder(room?.status.toLowerCase() === 'out-of-order' || room?.status.toLowerCase() === 'outoforder');
     }
   }, [existingTicket, rooms]);
 
@@ -39,14 +41,19 @@ export const TicketFormModal = ({ ticketId, onClose }: TicketFormModalProps) => 
     if (!roomId || !issue.trim()) { toast.error('Please fill in all required fields'); return; }
 
     if (isEditing && ticketId) {
-      updateTicket(ticketId, { roomId, issue, description, priority, status, assignee: assignee || undefined, resolvedAt: status === 'resolved' ? new Date().toISOString() : undefined });
+      updateTicket(ticketId, { roomId, issue, description, priority, status, assignee: assignee || undefined });
       if (markOutOfOrder) updateRoomStatus(roomId, 'out-of-order');
-      else { const room = rooms.find((r) => r.id === roomId); if (room?.status === 'out-of-order') updateRoomStatus(roomId, 'available'); }
-      toast.success('Ticket updated successfully');
+      else { 
+        const room = rooms.find((r) => r.id.toString() === roomId); 
+        if (room?.status.toLowerCase() === 'out-of-order' || room?.status.toLowerCase() === 'outoforder') {
+          updateRoomStatus(roomId, 'available'); 
+        }
+      }
+      toast.success('Cererea a fost inregistrata!');
     } else {
-      addTicket({ id: 'T' + Date.now(), roomId, issue, description, priority, status, assignee: assignee || undefined, createdAt: new Date().toISOString() });
+      addTicket({ roomId, issue, description, priority });
       if (markOutOfOrder) updateRoomStatus(roomId, 'out-of-order');
-      toast.success('Ticket created successfully');
+      toast.success('Serviciul de mentenanta apelat.');
     }
     onClose();
   };
@@ -65,12 +72,12 @@ export const TicketFormModal = ({ ticketId, onClose }: TicketFormModalProps) => 
                 <label className="block text-sm font-medium text-gray-700 mb-2">Room *</label>
                 <Select value={roomId} onValueChange={setRoomId} disabled={isEditing}>
                   <SelectTrigger><SelectValue placeholder="Select room" /></SelectTrigger>
-                  <SelectContent>{rooms.map((r) => <SelectItem key={r.id} value={r.id}>Room {r.number} - {r.type}</SelectItem>)}</SelectContent>
+                  <SelectContent>{rooms.map((r) => <SelectItem key={r.id} value={r.id.toString()}>Room {r.number} - {r.type}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Priority *</label>
-                <Select value={priority} onValueChange={(v) => setPriority(v as TicketPriority)}>
+                <Select value={priority} onValueChange={setPriority}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="low">Low</SelectItem><SelectItem value="medium">Medium</SelectItem>
@@ -91,17 +98,17 @@ export const TicketFormModal = ({ ticketId, onClose }: TicketFormModalProps) => 
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                  <Select value={status} onValueChange={(v) => setStatus(v as TicketStatus)}>
+                  <Select value={status} onValueChange={setStatus}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="new">New</SelectItem><SelectItem value="in-progress">In Progress</SelectItem>
-                      <SelectItem value="waiting-parts">Waiting Parts</SelectItem><SelectItem value="resolved">Resolved</SelectItem>
+                      <SelectItem value="resolved">Resolved</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Assignee</label>
-                  <Input placeholder="Technician name" value={assignee} onChange={(e) => setAssignee(e.target.value)} />
+                  <Input placeholder="Technician name" value={assignee} onChange={(e) => setAssignee(e.target.value)} disabled />
                 </div>
               </div>
             )}
