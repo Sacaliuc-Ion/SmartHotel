@@ -14,6 +14,7 @@ public static class BusinessLogic
           services.AddScoped<IAuthService, AuthService>();
           services.AddScoped<IRoomService, RoomService>();
           services.AddScoped<IReservationService, ReservationService>();
+          services.AddScoped<IReceptionService, ReceptionService>();
 
           return services;
      }
