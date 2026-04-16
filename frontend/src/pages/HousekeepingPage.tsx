@@ -1,14 +1,12 @@
 import { useState } from 'react';
-import { useHotel } from '../context/HotelContext';
+import { useHotel, RoomStatus } from '../context/HotelContext';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { RoomStatus } from '../data/mockData';
 import { AlertTriangle, Sparkles } from 'lucide-react';
 import { DefectReportModal } from '../components/housekeeping/DefectReportModal';
-import { toast } from 'sonner';
 
-const statusColors: Record<RoomStatus, string> = {
+const statusColors: Record<string, string> = {
   'dirty': 'bg-red-100 text-red-800 border-red-200',
   'cleaning': 'bg-yellow-100 text-yellow-800 border-yellow-200',
   'clean': 'bg-blue-100 text-blue-800 border-blue-200',
@@ -16,40 +14,40 @@ const statusColors: Record<RoomStatus, string> = {
   'available': 'bg-gray-100 text-gray-800 border-gray-200',
   'occupied': 'bg-purple-100 text-purple-800 border-purple-200',
   'out-of-order': 'bg-gray-400 text-white border-gray-400',
+  'outoforder': 'bg-gray-400 text-white border-gray-400', // C# fallback enum literal
 };
 
-const statusFlow: Record<RoomStatus, RoomStatus | null> = {
+const statusFlow: Record<string, string | null> = {
   'dirty': 'cleaning','cleaning': 'clean','clean': 'ready','ready': 'available',
-  'available': null,'occupied': null,'out-of-order': null,
+  'available': null,'occupied': null,'out-of-order': null, 'outoforder': null
 };
 
 export const HousekeepingPage = () => {
   const { rooms, updateRoomStatus, bookings } = useHotel();
   const [filterStatus, setFilterStatus] = useState('all');
-  const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
+  const [selectedRoom, setSelectedRoom] = useState<string | number | null>(null);
 
   const today = new Date().toISOString().split('T')[0];
   const todaysArrivals = bookings.filter((b) => b.checkIn === today && b.status === 'confirmed');
-  const filteredRooms = rooms.filter((r) => filterStatus === 'all' || r.status === filterStatus);
+  const filteredRooms = rooms.filter((r) => filterStatus === 'all' || r.status.toLowerCase() === filterStatus.toLowerCase());
 
- const handleStatusChange = (roomId: string, current: RoomStatus) => {
-  const next = statusFlow[current];
+  const handleStatusChange = (roomId: string | number, current: string) => {
+    const next = statusFlow[current.toLowerCase()];
+    if (next) {
+      updateRoomStatus(roomId, next);
+    }
+  };
 
-  if (next) {
-    updateRoomStatus(roomId, next);
-    toast.success(`Room status updated to ${next}`);
-  }
-};
   const priorityRooms = filteredRooms.filter((room) =>
     todaysArrivals.some((b) => b.roomId === room.id) &&
-    room.status !== 'ready' && room.status !== 'available'
+    room.status.toLowerCase() !== 'ready' && room.status.toLowerCase() !== 'available'
   );
 
   return (
     <div className="p-4">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-800 mb-2">Housekeeping</h1>
-        <p className="text-gray-600">Manage room cleaning status and maintenance</p>
+        <p className="text-gray-600">Manage room cleaning status and maintenance via live data</p>
       </div>
 
       <div className="bg-white p-4 rounded-lg border mb-6 flex items-center gap-4">
@@ -82,7 +80,8 @@ export const HousekeepingPage = () => {
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredRooms.map((room) => {
           const isPriority = priorityRooms.some((r) => r.id === room.id);
-          const nextStatus = statusFlow[room.status];
+          const currentStatus = room.status.toLowerCase();
+          const nextStatus = statusFlow[currentStatus];
           return (
             <div key={room.id} className={`bg-white rounded-lg border p-5 ${isPriority ? 'border-orange-400 shadow-md' : ''}`}>
               <div className="flex items-start justify-between mb-3">
@@ -97,11 +96,11 @@ export const HousekeepingPage = () => {
                 )}
               </div>
               <div className="mb-4">
-                <Badge className={`${statusColors[room.status]} border`}>{room.status.replace('-', ' ')}</Badge>
+                <Badge className={`${statusColors[currentStatus] || 'bg-gray-100'} border`}>{currentStatus.replace('-', ' ')}</Badge>
               </div>
               <div className="flex gap-2">
                 {nextStatus && (
-                  <Button size="sm" className="flex-1" onClick={() => handleStatusChange(room.id, room.status)}>
+                  <Button size="sm" className="flex-1" onClick={() => handleStatusChange(room.id, currentStatus)}>
                     Mark as {nextStatus.replace('-', ' ')}
                   </Button>
                 )}

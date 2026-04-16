@@ -1,25 +1,35 @@
+import { useEffect, useState } from 'react';
 import { useHotel } from '../context/HotelContext';
+import { api } from '../services/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Bed, Wrench, Sparkles, DollarSign, TrendingUp, AlertCircle } from 'lucide-react';
 
 export const DashboardPage = () => {
-  const { rooms, bookings, tickets } = useHotel();
-  const totalRooms = rooms.length;
-  const occupiedRooms = bookings.filter((b) => b.status === 'checked-in').length;
-  const occupancyRate = Math.round((occupiedRooms / totalRooms) * 100);
-  const outOfOrderRooms = rooms.filter((r) => r.status === 'out-of-order').length;
-  const openTickets = tickets.filter((t) => t.status !== 'resolved').length;
-  const dirtyRooms = rooms.filter((r) => r.status === 'dirty' || r.status === 'cleaning').length;
-  const totalRevenue = bookings.filter((b) => b.status === 'checked-in' || b.status === 'checked-out').reduce((s, b) => s + b.totalAmount, 0);
+  const { rooms, tickets } = useHotel();
+  const [summary, setSummary] = useState<any>(null);
+
+  useEffect(() => {
+    api.get<any>('/dashboard').then(res => setSummary(res)).catch(console.error);
+  }, []);
+
+  const totalRooms = summary?.totalRooms || rooms.length || 0;
+  const occupiedRooms = summary?.occupiedRooms || 0;
+  const occupancyRate = summary?.occupancyRate || 0;
+  const outOfOrderRooms = summary?.outOfOrderRooms || 0;
+  const openTickets = summary?.openTickets || 0;
+  const dirtyRooms = summary?.dirtyRooms || 0;
+  const totalRevenue = summary?.totalRevenue || 0;
 
   const last7Days = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(); d.setDate(d.getDate() - (6 - i));
     return { day: d.toLocaleDateString('en-US', { weekday: 'short' }), occupancy: 60 + Math.floor(Math.random() * 30) };
   });
 
+  const availableRooms = totalRooms - occupiedRooms - dirtyRooms - outOfOrderRooms;
+  
   const roomStatusData = [
-    { name: 'Available', value: rooms.filter((r) => r.status === 'available').length, color: '#10b981' },
+    { name: 'Available', value: Math.max(0, availableRooms), color: '#10b981' },
     { name: 'Occupied', value: occupiedRooms, color: '#3b82f6' },
     { name: 'Dirty/Cleaning', value: dirtyRooms, color: '#f59e0b' },
     { name: 'Out of Order', value: outOfOrderRooms, color: '#ef4444' },
@@ -27,21 +37,16 @@ export const DashboardPage = () => {
 
   const ticketStatusData = [
     { status: 'New', count: tickets.filter((t) => t.status === 'new').length },
-    { status: 'In Progress', count: tickets.filter((t) => t.status === 'in-progress').length },
-    { status: 'Waiting', count: tickets.filter((t) => t.status === 'waiting-parts').length },
+    { status: 'In Progress', count: tickets.filter((t) => t.status === 'in progress' || t.status === 'in-progress').length },
+    { status: 'Waiting', count: tickets.filter((t) => t.status === 'waiting parts' || t.status === 'waiting-parts').length },
     { status: 'Resolved', count: tickets.filter((t) => t.status === 'resolved').length },
   ];
 
   return (
-    <div>
+    <div className="pb-8">
       <div className="mb-8 px-4 py-2">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">
-          Dashboard
-        </h1>
-          <p className="text-gray-600"
-          >
-            Overview of hotel operations and metrics
-          </p>
+        <h1 className="text-3xl font-bold text-gray-800 mb-2">Dashboard</h1>
+        <p className="text-gray-600">Overview of hotel operations and metrics via API</p>
       </div>
 
       <div className="grid mx-4 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -72,7 +77,7 @@ export const DashboardPage = () => {
         </Card>
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6">
+      <div className="grid mx-4 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader><CardTitle>Maintenance Tickets</CardTitle><CardDescription>Status breakdown</CardDescription></CardHeader>
           <CardContent>

@@ -11,7 +11,7 @@ import Double from '../assets/rooms/Double.jpg';
 import Suite from '../assets/rooms/Suite.jpg';
 import Deluxe from '../assets/rooms/Deluxe.jpg';
 
-const roomImages = {
+const roomImages: Record<string, string> = {
   single: Single,
   double: Double,
   suite: Suite,

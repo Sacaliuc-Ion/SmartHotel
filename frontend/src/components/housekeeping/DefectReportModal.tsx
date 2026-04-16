@@ -5,23 +5,20 @@ import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
-import { TicketPriority } from '../../data/mockData';
-import { toast } from 'sonner';
 
-interface DefectReportModalProps { roomId: string; onClose: () => void; }
+interface DefectReportModalProps { roomId: string | number; onClose: () => void; }
 
 export const DefectReportModal = ({ roomId, onClose }: DefectReportModalProps) => {
   const { rooms, addTicket } = useHotel();
   const [issue, setIssue] = useState('');
   const [description, setDescription] = useState('');
-  const [priority, setPriority] = useState<TicketPriority>('medium');
+  const [priority, setPriority] = useState<string>('medium');
   const room = rooms.find((r) => r.id === roomId);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!issue.trim()) { toast.error('Please enter an issue title'); return; }
-    addTicket({ id: 'T' + Date.now(), roomId, issue, description, priority, status: 'new', createdAt: new Date().toISOString() });
-    toast.success('Maintenance ticket created successfully');
+    if (!issue.trim()) return;
+    await addTicket({ roomId, issue, description, priority });
     onClose();
   };
 
@@ -30,7 +27,7 @@ export const DefectReportModal = ({ roomId, onClose }: DefectReportModalProps) =
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Report Defect</DialogTitle>
-          <DialogDescription>Create a maintenance ticket for Room {room?.number}</DialogDescription>
+          <DialogDescription>Create a maintenance ticket for Room {room?.number || roomId}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="space-y-4 py-4">
@@ -44,7 +41,7 @@ export const DefectReportModal = ({ roomId, onClose }: DefectReportModalProps) =
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
-              <Select value={priority} onValueChange={(v) => setPriority(v as TicketPriority)}>
+              <Select value={priority} onValueChange={setPriority}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="low">Low</SelectItem>
