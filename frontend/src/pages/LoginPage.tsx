@@ -1,126 +1,56 @@
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import { Hotel, KeyRound, Sparkles } from 'lucide-react';
-
-import { useAuth } from '../context/AuthContext';
-import { users, type UserRole } from '../data/mockData';
+import { useAuth, User } from '../context/AuthContext';
+import { api } from '../services/api';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 
-const STORAGE_KEY = 'smart-hotel-registered-accounts';
-const DEMO_PASSWORD = 'hotel123';
-
-type AuthAccount = {
-  id: string;
-  name: string;
-  email: string;
-  password: string;
-  role: UserRole;
-};
-
-const builtInAccounts: AuthAccount[] = users.map((user) => ({
-  ...user,
-  password: DEMO_PASSWORD,
-}));
-
-const normalizeValue = (value: string) => value.trim().toLowerCase();
-
-const getLoginAlias = (email: string) => normalizeValue(email).split('@')[0];
-
-const buildEmailFromLogin = (loginValue: string) => {
-  const normalizedLogin = normalizeValue(loginValue);
-  return normalizedLogin.includes('@') ? normalizedLogin : `${normalizedLogin}@guest.smarthotel.local`;
-};
-
-const buildNameFromLogin = (loginValue: string) => {
-  const baseValue = loginValue.split('@')[0].replace(/[._-]+/g, ' ').trim();
-  if (!baseValue) return 'Client';
-
-  return baseValue
-    .split(/\s+/)
-    .map((chunk) => chunk.charAt(0).toUpperCase() + chunk.slice(1))
-    .join(' ');
-};
-
-const readStoredAccounts = (): AuthAccount[] => {
-  if (typeof window === 'undefined') return [];
-
-  try {
-    const rawValue = window.localStorage.getItem(STORAGE_KEY);
-    if (!rawValue) return [];
-
-    const parsedValue = JSON.parse(rawValue);
-    return Array.isArray(parsedValue) ? parsedValue : [];
-  } catch {
-    return [];
-  }
-};
-
-const saveStoredAccounts = (accounts: AuthAccount[]) => {
-  if (typeof window === 'undefined') return;
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(accounts));
-};
-
-const matchesLogin = (account: AuthAccount, loginValue: string) => {
-  const normalizedLogin = normalizeValue(loginValue);
-  return normalizeValue(account.email) === normalizedLogin || getLoginAlias(account.email) === normalizedLogin;
-};
-
 export const LoginPage = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
-
   const [activeTab, setActiveTab] = useState('login');
-  const [storedAccounts, setStoredAccounts] = useState<AuthAccount[]>(() => readStoredAccounts());
-  const [loginValue, setLoginValue] = useState('');
+  
+  // Login form state
+  const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
-  const [registerValue, setRegisterValue] = useState('');
+  
+  // Register form state
+  const [registerFirstName, setRegisterFirstName] = useState('');
+  const [registerLastName, setRegisterLastName] = useState('');
+  const [registerEmail, setRegisterEmail] = useState('');
   const [registerPassword, setRegisterPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  const availableAccounts = useMemo(
-    () => [...builtInAccounts, ...storedAccounts],
-    [storedAccounts]
-  );
-
-  const handleLogin = (event: FormEvent<HTMLFormElement>) => {
+  const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!loginValue.trim() || !loginPassword.trim()) {
-      toast.error('Completeaza login-ul si parola.');
+    if (!loginEmail.trim() || !loginPassword.trim()) {
+      toast.error('Completeaza email-ul si parola.');
       return;
     }
 
-    const matchedAccount = availableAccounts.find((account) => matchesLogin(account, loginValue));
-
-    if (!matchedAccount) {
-      toast.error('Nu exista un cont pentru acest login.');
-      return;
+    try {
+      const response = await api.post<{ token: string; user: User }>('/auth/login', {
+        email: loginEmail,
+        password: loginPassword,
+      });
+      
+      login(response.token, response.user);
+      toast.success(`Bine ai revenit, ${response.user.name}!`);
+      navigate('/');
+    } catch (error: any) {
+      toast.error(error.message || 'Eroare la autentificare.');
     }
-
-    if (matchedAccount.password !== loginPassword) {
-      toast.error('Parola introdusa nu este corecta.');
-      return;
-    }
-
-    login({
-      id: matchedAccount.id,
-      name: matchedAccount.name,
-      email: matchedAccount.email,
-      role: matchedAccount.role,
-    });
-
-    toast.success(`Bine ai revenit, ${matchedAccount.name}!`);
-    navigate('/');
   };
 
-  const handleRegister = (event: FormEvent<HTMLFormElement>) => {
+  const handleRegister = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!registerValue.trim() || !registerPassword.trim() || !confirmPassword.trim()) {
+    if (!registerFirstName.trim() || !registerLastName.trim() || !registerEmail.trim() || !registerPassword.trim() || !confirmPassword.trim()) {
       toast.error('Completeaza toate campurile pentru inregistrare.');
       return;
     }
@@ -135,48 +65,27 @@ export const LoginPage = () => {
       return;
     }
 
-    const normalizedEmail = buildEmailFromLogin(registerValue);
-    const normalizedAlias = getLoginAlias(normalizedEmail);
-    const alreadyExists = availableAccounts.some((account) => {
-      const accountEmail = normalizeValue(account.email);
-      const accountAlias = getLoginAlias(account.email);
-      return accountEmail === normalizedEmail || accountAlias === normalizedAlias;
-    });
-
-    if (alreadyExists) {
-      toast.error('Acest login este deja folosit.');
-      return;
+    try {
+      const response = await api.post<{ token: string; user: User }>('/auth/register', {
+        firstName: registerFirstName,
+        lastName: registerLastName,
+        email: registerEmail,
+        password: registerPassword,
+      });
+      
+      login(response.token, response.user);
+      toast.success('Cont creat cu succes. Ai fost autentificat ca client.');
+      navigate('/');
+    } catch (error: any) {
+      toast.error(error.message || 'Eroare la inregistrare. Verifica datele introduse.');
     }
-
-    const newAccount: AuthAccount = {
-      id: `USR-${Date.now()}`,
-      name: buildNameFromLogin(registerValue),
-      email: normalizedEmail,
-      password: registerPassword,
-      role: 'client',
-    };
-
-    const nextStoredAccounts = [...storedAccounts, newAccount];
-    setStoredAccounts(nextStoredAccounts);
-    saveStoredAccounts(nextStoredAccounts);
-
-    login({
-      id: newAccount.id,
-      name: newAccount.name,
-      email: newAccount.email,
-      role: newAccount.role,
-    });
-
-    toast.success('Cont creat cu succes. Ai fost autentificat ca client.');
-    navigate('/');
   };
 
   return (
     <div
       className="relative min-h-screen overflow-hidden px-4 py-8 sm:px-6 lg:px-8"
       style={{
-        background:
-          'linear-gradient(135deg, var(--hp-gold-pale) 0%, #fff8ee 52%, var(--hp-cream) 100%)',
+        background: 'linear-gradient(135deg, var(--hp-gold-pale) 0%, #fff8ee 52%, var(--hp-cream) 100%)',
       }}
     >
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -199,8 +108,7 @@ export const LoginPage = () => {
           <section
             className="relative hidden flex-col justify-between p-10 lg:flex"
             style={{
-              background:
-                'linear-gradient(160deg, rgba(15, 27, 53, 0.98) 0%, rgba(26, 45, 82, 0.95) 56%, rgba(200, 151, 58, 0.88) 100%)',
+              background: 'linear-gradient(160deg, rgba(15, 27, 53, 0.98) 0%, rgba(26, 45, 82, 0.95) 56%, rgba(200, 151, 58, 0.88) 100%)',
             }}
           >
             <div className="absolute inset-0 opacity-30">
@@ -221,9 +129,7 @@ export const LoginPage = () => {
                 Platforma digitala pentru administrarea completa a hotelului tau.
               </h1>
               <p className="mt-5 max-w-xl text-base leading-7 text-white/75">
-                Smart Hotel reuneste intr-un singur loc rezervarile, camerele, operatiunile zilnice si
-                fluxurile esentiale ale echipei, intr-o aplicatie moderna gandita pentru organizare si
-                control mai bun.
+                Smart Hotel reuneste intr-un singur loc rezervarile, camerele, operatiunile zilnice si fluxurile esentiale ale echipei, intr-o aplicatie moderna gandita pentru organizare si control mai bun.
               </p>
             </div>
 
@@ -234,8 +140,7 @@ export const LoginPage = () => {
                   <p className="font-medium">Rezervari si camere</p>
                 </div>
                 <p className="text-sm leading-6 text-white/72">
-                  Ofera o imagine clara asupra camerelor disponibile, rezervarilor active si serviciilor
-                  pregatite pentru oaspeti.
+                  Ofera o imagine clara asupra camerelor disponibile, rezervarilor active si serviciilor pregatite pentru oaspeti.
                 </p>
               </div>
 
@@ -245,8 +150,7 @@ export const LoginPage = () => {
                   <p className="font-medium">Operatiuni hoteliere</p>
                 </div>
                 <p className="text-sm leading-6 text-white/72">
-                  Receptia, housekeeping-ul, mentenanta si administrarea pot lucra coordonat din acelasi
-                  sistem, cu acces rapid la informatiile importante.
+                  Receptia, housekeeping-ul, mentenanta si administrarea pot lucra coordonat din acelasi sistem, cu acces rapid la informatiile importante.
                 </p>
               </div>
             </div>
@@ -263,30 +167,18 @@ export const LoginPage = () => {
                     Contul tau Smart Hotel
                   </CardTitle>
                   <CardDescription className="mx-auto max-w-md text-sm leading-6" style={{ color: 'var(--hp-muted)' }}>
-                    Acceseaza platforma Smart Hotel si continua gestionarea rezervarilor, camerelor si
-                    operatiunilor hoteliere.
+                    Acceseaza platforma Smart Hotel si continua gestionarea rezervarilor, camerelor si operatiunilor hoteliere.
                   </CardDescription>
                 </div>
               </CardHeader>
 
               <CardContent>
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="gap-5">
-                  <TabsList
-                    className="grid h-auto w-full grid-cols-2 rounded-2xl p-1.5"
-                    style={{ backgroundColor: 'rgba(245, 230, 204, 0.95)' }}
-                  >
-                    <TabsTrigger
-                      value="login"
-                      className="rounded-xl py-2.5 text-sm font-semibold data-[state=active]:shadow-none"
-                      style={{ color: 'var(--hp-text)' }}
-                    >
+                  <TabsList className="grid h-auto w-full grid-cols-2 rounded-2xl p-1.5" style={{ backgroundColor: 'rgba(245, 230, 204, 0.95)' }}>
+                    <TabsTrigger value="login" className="rounded-xl py-2.5 text-sm font-semibold data-[state=active]:shadow-none" style={{ color: 'var(--hp-text)' }}>
                       Autentificare
                     </TabsTrigger>
-                    <TabsTrigger
-                      value="register"
-                      className="rounded-xl py-2.5 text-sm font-semibold data-[state=active]:shadow-none"
-                      style={{ color: 'var(--hp-text)' }}
-                    >
+                    <TabsTrigger value="register" className="rounded-xl py-2.5 text-sm font-semibold data-[state=active]:shadow-none" style={{ color: 'var(--hp-text)' }}>
                       Inregistrare
                     </TabsTrigger>
                   </TabsList>
@@ -294,28 +186,24 @@ export const LoginPage = () => {
                   <TabsContent value="login" className="mt-0">
                     <form onSubmit={handleLogin} className="space-y-4">
                       <div className="space-y-2">
-                        <label className="block text-sm font-medium" style={{ color: 'var(--hp-text)' }}>
-                          Login
-                        </label>
+                        <label className="block text-sm font-medium" style={{ color: 'var(--hp-text)' }}>Email</label>
                         <Input
-                          type="text"
-                          placeholder="ex: guest@example.com sau guest"
-                          value={loginValue}
-                          onChange={(event) => setLoginValue(event.target.value)}
-                          autoComplete="username"
+                          type="email"
+                          placeholder="ex: admin@smarthotel.com"
+                          value={loginEmail}
+                          onChange={(e) => setLoginEmail(e.target.value)}
+                          autoComplete="email"
                           className="h-11 border-[#ead7b6] bg-white/90"
                         />
                       </div>
 
                       <div className="space-y-2">
-                        <label className="block text-sm font-medium" style={{ color: 'var(--hp-text)' }}>
-                          Parola
-                        </label>
+                        <label className="block text-sm font-medium" style={{ color: 'var(--hp-text)' }}>Parola</label>
                         <Input
                           type="password"
                           placeholder="Introdu parola"
                           value={loginPassword}
-                          onChange={(event) => setLoginPassword(event.target.value)}
+                          onChange={(e) => setLoginPassword(e.target.value)}
                           autoComplete="current-password"
                           className="h-11 border-[#ead7b6] bg-white/90"
                         />
@@ -324,66 +212,72 @@ export const LoginPage = () => {
                       <Button
                         type="submit"
                         className="h-11 w-full rounded-xl text-sm font-semibold"
-                        style={{
-                          background: 'linear-gradient(135deg, var(--hp-gold) 0%, var(--hp-gold-light) 100%)',
-                          color: 'var(--hp-navy)',
-                        }}
+                        style={{ background: 'linear-gradient(135deg, var(--hp-gold) 0%, var(--hp-gold-light) 100%)', color: 'var(--hp-navy)' }}
                       >
                         Intra in cont
                       </Button>
                     </form>
-
-                    <div
-                      className="mt-5 rounded-2xl border p-4 text-sm leading-6"
-                      style={{
-                        borderColor: 'rgba(200, 151, 58, 0.25)',
-                        backgroundColor: 'rgba(245, 230, 204, 0.65)',
-                        color: 'var(--hp-text)',
-                      }}
-                    >
-                      Introdu datele contului tau pentru a continua catre platforma.
+                    <div className="mt-5 rounded-2xl border p-4 text-sm leading-6" style={{ borderColor: 'rgba(200, 151, 58, 0.25)', backgroundColor: 'rgba(245, 230, 204, 0.65)', color: 'var(--hp-text)' }}>
+                      Introdu datele contului tau pentru a continua. Mod demonstrativ setat cu `admin@smarthotel.com` & `hotel123`.
                     </div>
                   </TabsContent>
 
                   <TabsContent value="register" className="mt-0">
                     <form onSubmit={handleRegister} className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="block text-sm font-medium" style={{ color: 'var(--hp-text)' }}>Prenume</label>
+                          <Input
+                            type="text"
+                            placeholder="ex: Maria"
+                            value={registerFirstName}
+                            onChange={(e) => setRegisterFirstName(e.target.value)}
+                            className="h-11 border-[#ead7b6] bg-white/90"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="block text-sm font-medium" style={{ color: 'var(--hp-text)' }}>Nume</label>
+                          <Input
+                            type="text"
+                            placeholder="ex: Popescu"
+                            value={registerLastName}
+                            onChange={(e) => setRegisterLastName(e.target.value)}
+                            className="h-11 border-[#ead7b6] bg-white/90"
+                          />
+                        </div>
+                      </div>
+
                       <div className="space-y-2">
-                        <label className="block text-sm font-medium" style={{ color: 'var(--hp-text)' }}>
-                          Login
-                        </label>
+                        <label className="block text-sm font-medium" style={{ color: 'var(--hp-text)' }}>Email</label>
                         <Input
-                          type="text"
-                          placeholder="ex: maria.popescu sau maria@example.com"
-                          value={registerValue}
-                          onChange={(event) => setRegisterValue(event.target.value)}
-                          autoComplete="username"
+                          type="email"
+                          placeholder="maria@example.com"
+                          value={registerEmail}
+                          onChange={(e) => setRegisterEmail(e.target.value)}
+                          autoComplete="email"
                           className="h-11 border-[#ead7b6] bg-white/90"
                         />
                       </div>
 
                       <div className="space-y-2">
-                        <label className="block text-sm font-medium" style={{ color: 'var(--hp-text)' }}>
-                          Parola
-                        </label>
+                        <label className="block text-sm font-medium" style={{ color: 'var(--hp-text)' }}>Parola</label>
                         <Input
                           type="password"
                           placeholder="Minim 6 caractere"
                           value={registerPassword}
-                          onChange={(event) => setRegisterPassword(event.target.value)}
+                          onChange={(e) => setRegisterPassword(e.target.value)}
                           autoComplete="new-password"
                           className="h-11 border-[#ead7b6] bg-white/90"
                         />
                       </div>
 
                       <div className="space-y-2">
-                        <label className="block text-sm font-medium" style={{ color: 'var(--hp-text)' }}>
-                          Confirma parola
-                        </label>
+                        <label className="block text-sm font-medium" style={{ color: 'var(--hp-text)' }}>Confirma parola</label>
                         <Input
                           type="password"
                           placeholder="Reintrodu parola"
                           value={confirmPassword}
-                          onChange={(event) => setConfirmPassword(event.target.value)}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
                           autoComplete="new-password"
                           className="h-11 border-[#ead7b6] bg-white/90"
                         />
@@ -392,28 +286,13 @@ export const LoginPage = () => {
                       <Button
                         type="submit"
                         className="h-11 w-full rounded-xl text-sm font-semibold"
-                        style={{
-                          background: 'linear-gradient(135deg, var(--hp-gold) 0%, var(--hp-gold-light) 100%)',
-                          color: 'var(--hp-navy)',
-                        }}
+                        style={{ background: 'linear-gradient(135deg, var(--hp-gold) 0%, var(--hp-gold-light) 100%)', color: 'var(--hp-navy)' }}
                       >
                         Creeaza cont
                       </Button>
                     </form>
-
-                    <div
-                      className="mt-5 rounded-2xl border p-4 text-sm leading-6"
-                      style={{
-                        borderColor: 'rgba(200, 151, 58, 0.25)',
-                        backgroundColor: 'rgba(245, 230, 204, 0.65)',
-                        color: 'var(--hp-text)',
-                      }}
-                    >
-                      Completeaza campurile de mai sus pentru a crea rapid un cont nou.
-                    </div>
                   </TabsContent>
                 </Tabs>
-
                 <button
                   type="button"
                   onClick={() => navigate('/')}
