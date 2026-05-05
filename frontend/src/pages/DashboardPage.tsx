@@ -3,7 +3,8 @@ import { useHotel } from '../context/HotelContext';
 import { api } from '../services/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { Bed, Wrench, Sparkles, DollarSign, TrendingUp, AlertCircle } from 'lucide-react';
+import { Bed, Wrench, Sparkles, Coins, TrendingUp, AlertCircle } from 'lucide-react';
+import { formatCurrency } from '../utils/hotelFormatting';
 
 export const DashboardPage = () => {
   const { rooms, tickets } = useHotel();
@@ -30,14 +31,14 @@ export const DashboardPage = () => {
   
   const roomStatusData = [
     { name: 'Available', value: Math.max(0, availableRooms), color: '#10b981' },
-    { name: 'Occupied', value: occupiedRooms, color: '#3b82f6' },
+    { name: 'Occupied', value: occupiedRooms, color: '#d97706' },
     { name: 'Dirty/Cleaning', value: dirtyRooms, color: '#f59e0b' },
-    { name: 'Out of Order', value: outOfOrderRooms, color: '#ef4444' },
+    { name: 'Out of order', value: outOfOrderRooms, color: '#ef4444' },
   ];
 
   const ticketStatusData = [
     { status: 'New', count: tickets.filter((t) => t.status === 'new').length },
-    { status: 'In Progress', count: tickets.filter((t) => t.status === 'in progress' || t.status === 'in-progress').length },
+    { status: 'In progress', count: tickets.filter((t) => t.status === 'in progress' || t.status === 'in-progress').length },
     { status: 'Waiting', count: tickets.filter((t) => t.status === 'waiting parts' || t.status === 'waiting-parts').length },
     { status: 'Resolved', count: tickets.filter((t) => t.status === 'resolved').length },
   ];
@@ -50,23 +51,23 @@ export const DashboardPage = () => {
       </div>
 
       <div className="grid mx-4 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card><CardHeader className="pb-3"><CardDescription>Occupancy Rate</CardDescription></CardHeader><CardContent><div className="flex items-center justify-between"><div><p className="text-3xl font-bold text-gray-800">{occupancyRate}%</p><p className="text-sm text-gray-500">{occupiedRooms}/{totalRooms} rooms</p></div><Bed className="h-10 w-10 text-blue-600" /></div></CardContent></Card>
-        <Card><CardHeader className="pb-3"><CardDescription>Total Revenue</CardDescription></CardHeader><CardContent><div className="flex items-center justify-between"><div><p className="text-3xl font-bold text-gray-800">${totalRevenue.toLocaleString()}</p><p className="text-sm text-gray-500">This period</p></div><DollarSign className="h-10 w-10 text-green-600" /></div></CardContent></Card>
-        <Card><CardHeader className="pb-3"><CardDescription>Open Tickets</CardDescription></CardHeader><CardContent><div className="flex items-center justify-between"><div><p className="text-3xl font-bold text-gray-800">{openTickets}</p><p className="text-sm text-gray-500">{outOfOrderRooms} rooms OOO</p></div><Wrench className="h-10 w-10 text-orange-600" /></div></CardContent></Card>
+        <Card><CardHeader className="pb-3"><CardDescription>Occupancy rate</CardDescription></CardHeader><CardContent><div className="flex items-center justify-between"><div><p className="text-3xl font-bold text-gray-800">{occupancyRate}%</p><p className="text-sm text-gray-500">{occupiedRooms}/{totalRooms} rooms</p></div><Bed className="h-10 w-10 text-amber-600" /></div></CardContent></Card>
+        <Card><CardHeader className="pb-3"><CardDescription>Total revenue</CardDescription></CardHeader><CardContent><div className="flex items-center justify-between"><div><p className="text-3xl font-bold text-gray-800">{formatCurrency(totalRevenue)}</p><p className="text-sm text-gray-500">This period</p></div><Coins className="h-10 w-10 text-amber-600" /></div></CardContent></Card>
+        <Card><CardHeader className="pb-3"><CardDescription>Open tickets</CardDescription></CardHeader><CardContent><div className="flex items-center justify-between"><div><p className="text-3xl font-bold text-gray-800">{openTickets}</p><p className="text-sm text-gray-500">{outOfOrderRooms} rooms OOO</p></div><Wrench className="h-10 w-10 text-orange-600" /></div></CardContent></Card>
         <Card><CardHeader className="pb-3"><CardDescription>Housekeeping</CardDescription></CardHeader><CardContent><div className="flex items-center justify-between"><div><p className="text-3xl font-bold text-gray-800">{dirtyRooms}</p><p className="text-sm text-gray-500">Rooms pending</p></div><Sparkles className="h-10 w-10 text-purple-600" /></div></CardContent></Card>
       </div>
 
       <div className="grid mx-4 lg:grid-cols-2 gap-6 mb-8">
         <Card>
-          <CardHeader><CardTitle>Occupancy Trend</CardTitle><CardDescription>Last 7 days</CardDescription></CardHeader>
+          <CardHeader><CardTitle>Occupancy trend</CardTitle><CardDescription>Last 7 days</CardDescription></CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={last7Days}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="day" /><YAxis /><Tooltip /><Line type="monotone" dataKey="occupancy" stroke="#3b82f6" strokeWidth={2} /></LineChart>
+              <LineChart data={last7Days}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="day" /><YAxis /><Tooltip /><Line type="monotone" dataKey="occupancy" stroke="#d97706" strokeWidth={2} /></LineChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle>Room Status Distribution</CardTitle><CardDescription>Current breakdown</CardDescription></CardHeader>
+          <CardHeader><CardTitle>Room status distribution</CardTitle><CardDescription>Current breakdown</CardDescription></CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart><Pie data={roomStatusData} cx="50%" cy="50%" labelLine={false} label={(e) => `${e.name}: ${e.value}`} outerRadius={100} dataKey="value">
@@ -79,20 +80,20 @@ export const DashboardPage = () => {
 
       <div className="grid mx-4 lg:grid-cols-2 gap-6">
         <Card>
-          <CardHeader><CardTitle>Maintenance Tickets</CardTitle><CardDescription>Status breakdown</CardDescription></CardHeader>
+          <CardHeader><CardTitle>Maintenance tickets</CardTitle><CardDescription>Status breakdown</CardDescription></CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={ticketStatusData}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="status" /><YAxis /><Tooltip /><Bar dataKey="count" fill="#3b82f6" /></BarChart>
+              <BarChart data={ticketStatusData}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="status" /><YAxis /><Tooltip /><Bar dataKey="count" fill="#d97706" /></BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle>Key Metrics</CardTitle><CardDescription>Important indicators</CardDescription></CardHeader>
+          <CardHeader><CardTitle>Key metrics</CardTitle><CardDescription>Important indicators</CardDescription></CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg"><div className="flex items-center gap-3"><TrendingUp className="h-5 w-5 text-blue-600" /><div><p className="text-sm text-gray-600">Average Daily Rate</p><p className="font-bold text-gray-800">$156</p></div></div></div>
+            <div className="flex items-center justify-between p-3 bg-amber-50 rounded-lg"><div className="flex items-center gap-3"><TrendingUp className="h-5 w-5 text-amber-600" /><div><p className="text-sm text-gray-600">Average daily rate</p><p className="font-bold text-gray-800">{formatCurrency(156)}</p></div></div></div>
             <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg"><div className="flex items-center gap-3"><Sparkles className="h-5 w-5 text-green-600" /><div><p className="text-sm text-gray-600">Avg. Cleaning Time</p><p className="font-bold text-gray-800">28 minutes</p></div></div></div>
             <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg"><div className="flex items-center gap-3"><Wrench className="h-5 w-5 text-orange-600" /><div><p className="text-sm text-gray-600">Avg. Resolution Time</p><p className="font-bold text-gray-800">2.3 days</p></div></div></div>
-            <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg"><div className="flex items-center gap-3"><AlertCircle className="h-5 w-5 text-red-600" /><div><p className="text-sm text-gray-600">Critical Issues</p><p className="font-bold text-gray-800">{tickets.filter((t) => t.priority === 'urgent').length}</p></div></div></div>
+            <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg"><div className="flex items-center gap-3"><AlertCircle className="h-5 w-5 text-red-600" /><div><p className="text-sm text-gray-600">Critical issues</p><p className="font-bold text-gray-800">{tickets.filter((t) => t.priority === 'urgent').length}</p></div></div></div>
           </CardContent>
         </Card>
       </div>

@@ -17,6 +17,7 @@ export const LoginPage = () => {
   // Login form state
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   
   // Register form state
   const [registerFirstName, setRegisterFirstName] = useState('');
@@ -24,6 +25,7 @@ export const LoginPage = () => {
   const [registerEmail, setRegisterEmail] = useState('');
   const [registerPassword, setRegisterPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [isRegistering, setIsRegistering] = useState(false);
 
   const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -34,6 +36,7 @@ export const LoginPage = () => {
     }
 
     try {
+      setIsLoggingIn(true);
       const response = await api.post<{ token: string; user: User }>('/auth/login', {
         email: loginEmail,
         password: loginPassword,
@@ -44,6 +47,8 @@ export const LoginPage = () => {
       navigate('/');
     } catch (error: any) {
       toast.error(error.message || 'Eroare la autentificare.');
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
@@ -66,6 +71,7 @@ export const LoginPage = () => {
     }
 
     try {
+      setIsRegistering(true);
       const response = await api.post<{ token: string; user: User }>('/auth/register', {
         firstName: registerFirstName,
         lastName: registerLastName,
@@ -78,6 +84,8 @@ export const LoginPage = () => {
       navigate('/');
     } catch (error: any) {
       toast.error(error.message || 'Eroare la inregistrare. Verifica datele introduse.');
+    } finally {
+      setIsRegistering(false);
     }
   };
 
@@ -211,10 +219,11 @@ export const LoginPage = () => {
 
                       <Button
                         type="submit"
+                        disabled={isLoggingIn || isRegistering}
                         className="h-11 w-full rounded-xl text-sm font-semibold"
                         style={{ background: 'linear-gradient(135deg, var(--hp-gold) 0%, var(--hp-gold-light) 100%)', color: 'var(--hp-navy)' }}
                       >
-                        Intra in cont
+                        {isLoggingIn ? 'Se autentifica...' : 'Intra in cont'}
                       </Button>
                     </form>
                     <div className="mt-5 rounded-2xl border p-4 text-sm leading-6" style={{ borderColor: 'rgba(200, 151, 58, 0.25)', backgroundColor: 'rgba(245, 230, 204, 0.65)', color: 'var(--hp-text)' }}>
@@ -285,10 +294,11 @@ export const LoginPage = () => {
 
                       <Button
                         type="submit"
+                        disabled={isRegistering || isLoggingIn}
                         className="h-11 w-full rounded-xl text-sm font-semibold"
                         style={{ background: 'linear-gradient(135deg, var(--hp-gold) 0%, var(--hp-gold-light) 100%)', color: 'var(--hp-navy)' }}
                       >
-                        Creeaza cont
+                        {isRegistering ? 'Se creeaza contul...' : 'Creeaza cont'}
                       </Button>
                     </form>
                   </TabsContent>

@@ -10,6 +10,7 @@ import Single from '../assets/rooms/Single.jpg';
 import Double from '../assets/rooms/Double.jpg';
 import Suite from '../assets/rooms/Suite.jpg';
 import Deluxe from '../assets/rooms/Deluxe.jpg';
+import { formatCurrency } from '../utils/hotelFormatting';
 
 const roomImages: Record<string, string> = {
   single: Single,
@@ -50,7 +51,7 @@ export const RoomsPage = () => {
   return (
     <div>
       <div className="mb-4 px-4 py-2 lb-sidebar">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">Our Rooms</h1>
+        <h1 className="text-3xl font-bold text-gray-800 mb-2">Our rooms</h1>
         <p className="text-gray-600">Discover your perfect stay from our selection of rooms</p>
       </div>
 
@@ -69,13 +70,13 @@ export const RoomsPage = () => {
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Room Type</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Room type</label>
           <Select value={typeFilter} onValueChange={setTypeFilter}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Types</SelectItem>
+              <SelectItem value="all">All types</SelectItem>
               <SelectItem value="single">Single</SelectItem>
               <SelectItem value="double">Double</SelectItem>
               <SelectItem value="suite">Suite</SelectItem>
@@ -84,16 +85,16 @@ export const RoomsPage = () => {
           </Select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Price Range</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Price range</label>
           <Select value={priceFilter} onValueChange={setPriceFilter}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Prices</SelectItem>
-              <SelectItem value="budget">Under $100</SelectItem>
-              <SelectItem value="mid">$100 - $200</SelectItem>
-              <SelectItem value="luxury">$200+</SelectItem>
+              <SelectItem value="all">All prices</SelectItem>
+              <SelectItem value="budget">Sub 100 MDL</SelectItem>
+              <SelectItem value="mid">100 - 200 MDL</SelectItem>
+              <SelectItem value="luxury">Peste 200 MDL</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -111,7 +112,7 @@ export const RoomsPage = () => {
               />
               <div className="absolute top-3 right-3">
                 <Badge variant={room.status === 'available' ? 'default' : 'secondary'} className="bg-white/90 text-gray-800">
-                  {room.status === 'available' ? 'Available' : 'Not Available'}
+                  {room.status === 'available' ? 'Available' : 'Not available'}
                 </Badge>
               </div>
             </div>
@@ -122,7 +123,7 @@ export const RoomsPage = () => {
                   <p className="text-sm text-gray-500 capitalize">{room.type} Room • Floor {room.floor}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-2xl font-bold text-blue-600">${room.pricePerNight}</p>
+                  <p className="text-2xl font-bold text-amber-600">{formatCurrency(room.pricePerNight)}</p>
                   <p className="text-xs text-gray-500">per night</p>
                 </div>
               </div>
@@ -151,7 +152,7 @@ export const RoomsPage = () => {
                 onClick={() => navigate(`/rooms/${room.id}`)}
                 disabled={room.status !== 'available'}
               >
-                {room.status === 'available' ? 'View Details' : 'Not Available'}
+                {room.status === 'available' ? 'View details' : 'Not available'}
               </Button>
             </div>
           </div>

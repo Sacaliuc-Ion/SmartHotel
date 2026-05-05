@@ -9,7 +9,7 @@ import { DefectReportModal } from '../components/housekeeping/DefectReportModal'
 const statusColors: Record<string, string> = {
   'dirty': 'bg-red-100 text-red-800 border-red-200',
   'cleaning': 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  'clean': 'bg-blue-100 text-blue-800 border-blue-200',
+  'clean': 'bg-amber-100 text-amber-800 border-amber-200',
   'ready': 'bg-green-100 text-green-800 border-green-200',
   'available': 'bg-gray-100 text-gray-800 border-gray-200',
   'occupied': 'bg-purple-100 text-purple-800 border-purple-200',
@@ -51,11 +51,11 @@ export const HousekeepingPage = () => {
       </div>
 
       <div className="bg-white p-4 rounded-lg border mb-6 flex items-center gap-4">
-        <label className="text-sm font-medium text-gray-700">Filter by Status:</label>
+        <label className="text-sm font-medium text-gray-700">Filter by status:</label>
         <Select value={filterStatus} onValueChange={setFilterStatus}>
           <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Rooms</SelectItem>
+            <SelectItem value="all">All rooms</SelectItem>
             <SelectItem value="dirty">Dirty</SelectItem>
             <SelectItem value="cleaning">Cleaning</SelectItem>
             <SelectItem value="clean">Clean</SelectItem>
@@ -71,7 +71,7 @@ export const HousekeepingPage = () => {
         <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6 flex items-start gap-3">
           <AlertTriangle className="h-5 w-5 text-orange-600 mt-0.5" />
           <div>
-            <h3 className="font-semibold text-orange-900 mb-1">Priority Rooms</h3>
+            <h3 className="font-semibold text-orange-900 mb-1">Priority rooms</h3>
             <p className="text-sm text-orange-800">{priorityRooms.length} room{priorityRooms.length > 1 ? 's' : ''} need to be ready for today's check-ins</p>
           </div>
         </div>
@@ -104,7 +104,7 @@ export const HousekeepingPage = () => {
                     Mark as {nextStatus.replace('-', ' ')}
                   </Button>
                 )}
-                <Button size="sm" variant="outline" onClick={() => setSelectedRoom(room.id)}>Report Issue</Button>
+                <Button size="sm" variant="outline" onClick={() => setSelectedRoom(room.id)}>Report issue</Button>
               </div>
             </div>
           );

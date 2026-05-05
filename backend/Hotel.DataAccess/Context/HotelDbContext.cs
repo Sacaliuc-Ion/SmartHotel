@@ -142,41 +142,38 @@ public class HotelDbContext : DbContext
             new Amenity { Id = 6, Name = "Balcony" }
         );
 
-        modelBuilder.Entity<Room>().HasData(
-            new Room { Id = 1, Number = "101", Floor = 1, Capacity = 1, PricePerNight = 89, RoomTypeId = 1, Status = RoomStatus.Available, Description = "Cozy single room with modern amenities" },
-            new Room { Id = 2, Number = "102", Floor = 1, Capacity = 1, PricePerNight = 89, RoomTypeId = 1, Status = RoomStatus.Occupied, Description = "Cozy single room with modern amenities" },
-            new Room { Id = 3, Number = "103", Floor = 1, Capacity = 2, PricePerNight = 129, RoomTypeId = 2, Status = RoomStatus.Dirty, Description = "Spacious double room with city view" },
-            new Room { Id = 4, Number = "201", Floor = 2, Capacity = 2, PricePerNight = 129, RoomTypeId = 2, Status = RoomStatus.Available, Description = "Spacious double room with city view" },
-            new Room { Id = 5, Number = "202", Floor = 2, Capacity = 4, PricePerNight = 249, RoomTypeId = 3, Status = RoomStatus.Occupied, Description = "Luxury suite with separate living area" },
-            new Room { Id = 6, Number = "203", Floor = 2, Capacity = 2, PricePerNight = 129, RoomTypeId = 2, Status = RoomStatus.Cleaning, Description = "Spacious double room with city view" },
-            new Room { Id = 7, Number = "301", Floor = 3, Capacity = 3, PricePerNight = 189, RoomTypeId = 4, Status = RoomStatus.Available, Description = "Deluxe room with premium amenities" },
-            new Room { Id = 8, Number = "302", Floor = 3, Capacity = 4, PricePerNight = 249, RoomTypeId = 3, Status = RoomStatus.Available, Description = "Luxury suite with separate living area" },
-            new Room { Id = 9, Number = "303", Floor = 3, Capacity = 3, PricePerNight = 189, RoomTypeId = 4, Status = RoomStatus.OutOfOrder, Description = "Deluxe room with premium amenities" },
-            new Room { Id = 10, Number = "304", Floor = 3, Capacity = 2, PricePerNight = 129, RoomTypeId = 2, Status = RoomStatus.Available, Description = "Spacious double room with city view" }
-        );
+        var seededRooms = HotelSeedCatalog.RoomSpecs
+            .Select(roomSpec => new Room
+            {
+                Id = roomSpec.Id,
+                Number = roomSpec.Number,
+                Floor = roomSpec.Floor,
+                Capacity = roomSpec.Capacity,
+                PricePerNight = roomSpec.PricePerNight,
+                RoomTypeId = roomSpec.RoomTypeId,
+                Status = roomSpec.Status,
+                Description = roomSpec.Description,
+            })
+            .ToList();
 
-        // Add some basic RoomAmenities (1 is WiFi, 2 is TV, 3 is AC, 4 is Mini Bar, 5 is Jacuzzi, 6 is Balcony)
-        var roomAmenities = new List<RoomAmenity>();
-        for (int i = 1; i <= 10; i++)
-        {
-            roomAmenities.Add(new RoomAmenity { RoomId = i, AmenityId = 1 }); // All have WiFi
-            roomAmenities.Add(new RoomAmenity { RoomId = i, AmenityId = 2 }); // All have TV
-            roomAmenities.Add(new RoomAmenity { RoomId = i, AmenityId = 3 }); // All have AC
-        }
-        // Suite extras for room 5 & 8
-        roomAmenities.Add(new RoomAmenity { RoomId = 5, AmenityId = 4 });
-        roomAmenities.Add(new RoomAmenity { RoomId = 5, AmenityId = 5 });
-        roomAmenities.Add(new RoomAmenity { RoomId = 5, AmenityId = 6 });
-        roomAmenities.Add(new RoomAmenity { RoomId = 8, AmenityId = 4 });
-        roomAmenities.Add(new RoomAmenity { RoomId = 8, AmenityId = 5 });
-        roomAmenities.Add(new RoomAmenity { RoomId = 8, AmenityId = 6 });
+        modelBuilder.Entity<Room>().HasData(seededRooms);
+
+        var roomAmenities = HotelSeedCatalog.RoomSpecs
+            .SelectMany(roomSpec => HotelSeedCatalog
+                .GetAmenityIds(roomSpec)
+                .Select(amenityId => new RoomAmenity
+                {
+                    RoomId = roomSpec.Id,
+                    AmenityId = amenityId,
+                }))
+            .ToList();
 
         modelBuilder.Entity<RoomAmenity>().HasData(roomAmenities);
 
         modelBuilder.Entity<HotelSetting>().HasData(
             new HotelSetting { Id = 1, Key = "CheckInTime", Value = "14:00", Description = "Standard check-in time" },
             new HotelSetting { Id = 2, Key = "CheckOutTime", Value = "11:00", Description = "Standard check-out time" },
-            new HotelSetting { Id = 3, Key = "Currency", Value = "USD", Description = "Default currency" }
+            new HotelSetting { Id = 3, Key = "Currency", Value = HotelSeedCatalog.DefaultCurrency, Description = "Default currency" }
         );
     }
 }

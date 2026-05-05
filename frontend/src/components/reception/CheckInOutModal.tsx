@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { toast } from 'sonner';
 import { api } from '../../services/api';
 import { Input } from '../ui/input';
+import { formatCurrency } from '../../utils/hotelFormatting';
 
 interface CheckInOutModalProps {
   booking: any;
@@ -14,9 +15,11 @@ interface CheckInOutModalProps {
 
 export const CheckInOutModal = ({ booking, type, onClose, onSuccess }: CheckInOutModalProps) => {
   const [notes, setNotes] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleConfirm = async () => {
     try {
+      setIsSubmitting(true);
       if (type === 'checkin') {
         await api.post(`/reception/check-in/${booking.id}`, { notes });
         toast.success(`${booking.guestName} a fost cazat in camera ${booking.roomNumber}.`);
@@ -28,6 +31,8 @@ export const CheckInOutModal = ({ booking, type, onClose, onSuccess }: CheckInOu
       onClose();
     } catch (e: any) {
       toast.error(e.message || `Eroare la operatiunea de ${type}`);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -35,17 +40,17 @@ export const CheckInOutModal = ({ booking, type, onClose, onSuccess }: CheckInOu
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{type === 'checkin' ? 'Check In Guest' : 'Check Out Guest'}</DialogTitle>
+          <DialogTitle>{type === 'checkin' ? 'Check in guest' : 'Check out guest'}</DialogTitle>
           <DialogDescription>Confirma detaliile de {type === 'checkin' ? 'check-in' : 'check-out'} mai jos</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="grid grid-cols-2 gap-4">
-            <div><p className="text-sm text-gray-500">Guest Name</p><p className="font-semibold">{booking.guestName}</p></div>
+            <div><p className="text-sm text-gray-500">Guest name</p><p className="font-semibold">{booking.guestName}</p></div>
             <div><p className="text-sm text-gray-500">Room</p><p className="font-semibold">Room {booking.roomNumber}</p></div>
-            <div><p className="text-sm text-gray-500">Check-In</p><p className="font-semibold">{booking.checkIn}</p></div>
-            <div><p className="text-sm text-gray-500">Check-Out</p><p className="font-semibold">{booking.checkOut}</p></div>
+            <div><p className="text-sm text-gray-500">Check-in</p><p className="font-semibold">{booking.checkIn}</p></div>
+            <div><p className="text-sm text-gray-500">Check-out</p><p className="font-semibold">{booking.checkOut}</p></div>
             <div><p className="text-sm text-gray-500">Guests</p><p className="font-semibold">{booking.guests ?? 1}</p></div>
-            <div><p className="text-sm text-gray-500">Total Amount</p><p className="font-semibold">${booking.totalAmount}</p></div>
+            <div><p className="text-sm text-gray-500">Total amount</p><p className="font-semibold">{formatCurrency(booking.totalAmount)}</p></div>
             <div><p className="text-sm text-gray-500">Payment</p><p className="font-semibold capitalize">{booking.paymentStatus}</p></div>
           </div>
           <div>
@@ -54,8 +59,10 @@ export const CheckInOutModal = ({ booking, type, onClose, onSuccess }: CheckInOu
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={handleConfirm}>Confirm {type === 'checkin' ? 'Check-In' : 'Check-Out'}</Button>
+          <Button variant="outline" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
+          <Button onClick={handleConfirm} disabled={isSubmitting}>
+            {isSubmitting ? 'Processing...' : `Confirm ${type === 'checkin' ? 'check-in' : 'check-out'}`}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

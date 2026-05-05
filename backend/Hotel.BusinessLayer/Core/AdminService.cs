@@ -24,7 +24,8 @@ public class AdminService : IAdminService
                Id = u.Id,
                Name = $"{u.FirstName} {u.LastName}",
                Email = u.Email,
-               Role = u.Role.Name.ToLower()
+               Role = u.Role.Name.ToLower(),
+               IsActive = u.IsActive
           }).ToList();
 
           return ServiceResult<List<UserDto>>.Ok(dtos);
@@ -36,6 +37,53 @@ public class AdminService : IAdminService
           if (user == null) return ServiceResult.Fail("User not found");
 
           user.IsActive = !user.IsActive;
+          await _db.SaveChangesAsync();
+          return ServiceResult.Ok();
+     }
+
+     public async Task<ServiceResult> DeleteUserAsync(int userId, int requestedByUserId)
+     {
+          if (userId == requestedByUserId)
+               return ServiceResult.Fail("You cannot delete your own account from the admin panel.");
+
+          var user = await _db.Context.Users
+              .Include(existingUser => existingUser.Role)
+              .Include(existingUser => existingUser.Reservations)
+                  .ThenInclude(reservation => reservation.Room)
+              .Include(existingUser => existingUser.ReportedTickets)
+              .Include(existingUser => existingUser.ProcessedCheckIns)
+              .Include(existingUser => existingUser.ProcessedCheckOuts)
+              .FirstOrDefaultAsync(existingUser => existingUser.Id == userId);
+
+          if (user == null)
+               return ServiceResult.Fail("User not found");
+
+          if (user.ProcessedCheckIns.Count > 0 || user.ProcessedCheckOuts.Count > 0)
+               return ServiceResult.Fail("Users with operational check-in or check-out history cannot be deleted. Deactivate them instead.");
+
+          var affectedRoomIds = user.Reservations
+              .Select(reservation => reservation.RoomId)
+              .Distinct()
+              .ToList();
+
+          if (user.ReportedTickets.Count > 0)
+          {
+               _db.Context.MaintenanceTickets.RemoveRange(user.ReportedTickets);
+          }
+
+          if (user.Reservations.Count > 0)
+          {
+               _db.Context.Reservations.RemoveRange(user.Reservations);
+          }
+
+          _db.Context.Users.Remove(user);
+          await _db.SaveChangesAsync();
+
+          foreach (var roomId in affectedRoomIds)
+          {
+               await RoomStatusSyncHelper.SyncAsync(_db.Context, roomId);
+          }
+
           await _db.SaveChangesAsync();
           return ServiceResult.Ok();
      }

@@ -5,8 +5,9 @@ import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { CheckInOutModal } from '../components/reception/CheckInOutModal';
-import { ArrowDownToLine, ArrowUpFromLine, Bed, DollarSign } from 'lucide-react';
+import { ArrowDownToLine, ArrowUpFromLine, Bed, Coins } from 'lucide-react';
 import { toast } from 'sonner';
+import { formatCurrency } from '../utils/hotelFormatting';
 
 export const FrontDeskPage = () => {
   const { refreshData } = useHotel(); // Refresh global stat later
@@ -55,27 +56,27 @@ export const FrontDeskPage = () => {
   return (
     <div className="pb-8">
       <div className="mb-6 px-4 py-2">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">Front Desk</h1>
+        <h1 className="text-3xl font-bold text-gray-800 mb-2">Front desk</h1>
         <p className="text-gray-600">Manage check-ins, check-outs, and today's activities via Live API</p>
       </div>
 
       {/* KPIs */}
       <div className="grid mx-4 md:grid-cols-3 gap-6 mb-8">
         <Card>
-          <CardHeader className="pb-3"><CardDescription>Occupancy Rate</CardDescription></CardHeader>
+          <CardHeader className="pb-3"><CardDescription>Occupancy rate</CardDescription></CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-3xl font-bold text-gray-800">{dashboardSummary?.occupancyRate || 0}%</p>
                 <p className="text-sm text-gray-500">{dashboardSummary?.occupiedRooms || 0} of {dashboardSummary?.totalRooms || 0} rooms</p>
               </div>
-              <Bed className="h-10 w-10 text-blue-600" />
+              <Bed className="h-10 w-10 text-amber-600" />
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="pb-3"><CardDescription>Arrivals Today</CardDescription></CardHeader>
+          <CardHeader className="pb-3"><CardDescription>Arrivals today</CardDescription></CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
@@ -88,7 +89,7 @@ export const FrontDeskPage = () => {
         </Card>
 
         <Card>
-          <CardHeader className="pb-3"><CardDescription>Departures Today</CardDescription></CardHeader>
+          <CardHeader className="pb-3"><CardDescription>Departures today</CardDescription></CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
@@ -105,7 +106,7 @@ export const FrontDeskPage = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <ArrowDownToLine className="h-5 w-5 text-green-600" /> Arrivals Today
+              <ArrowDownToLine className="h-5 w-5 text-green-600" /> Arrivals today
             </CardTitle>
             <CardDescription>Guests checking in today</CardDescription>
           </CardHeader>
@@ -123,7 +124,7 @@ export const FrontDeskPage = () => {
                     </div>
                     <div className="flex items-center justify-between">
                       <p className="text-sm text-gray-500">Stay: {booking.checkOut}</p>
-                      <Button size="sm" onClick={() => handleCheckIn(booking)}>Check In</Button>
+                      <Button size="sm" onClick={() => handleCheckIn(booking)}>Check in</Button>
                     </div>
                   </div>
                 ))}
@@ -135,7 +136,7 @@ export const FrontDeskPage = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <ArrowUpFromLine className="h-5 w-5 text-orange-600" /> Departures Today
+              <ArrowUpFromLine className="h-5 w-5 text-orange-600" /> Departures today
             </CardTitle>
             <CardDescription>Guests checking out today</CardDescription>
           </CardHeader>
@@ -150,13 +151,13 @@ export const FrontDeskPage = () => {
                         <p className="text-sm text-gray-600">Room {booking.roomNumber} • {booking.guests} guests</p>
                       </div>
                       <div className="flex items-center gap-1 text-gray-700">
-                        <DollarSign className="h-4 w-4" />
-                        <span className="font-semibold">{booking.totalAmount}</span>
+                        <Coins className="h-4 w-4 text-amber-600" />
+                        <span className="font-semibold">{formatCurrency(booking.totalAmount)}</span>
                       </div>
                     </div>
                     <div className="flex items-center justify-between">
                       <Badge variant={booking.paymentStatus === 'paid' ? 'default' : 'destructive'}>{booking.paymentStatus}</Badge>
-                      <Button size="sm" variant="outline" onClick={() => handleCheckOut(booking)}>Check Out</Button>
+                      <Button size="sm" variant="outline" onClick={() => handleCheckOut(booking)}>Check out</Button>
                     </div>
                   </div>
                 ))}

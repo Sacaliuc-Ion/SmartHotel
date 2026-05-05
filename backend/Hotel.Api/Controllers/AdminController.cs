@@ -2,6 +2,7 @@
 using Hotel.Domain.Models.Admin;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Hotel.Api.Controllers;
 
@@ -28,6 +29,15 @@ public class AdminController : ControllerBase
      public async Task<IActionResult> ToggleUser(int id)
      {
           var result = await _adminService.ToggleUserActiveAsync(id);
+          if (!result.Success) return BadRequest(new { message = result.Message });
+          return Ok();
+     }
+
+     [HttpDelete("users/{id}")]
+     public async Task<IActionResult> DeleteUser(int id)
+     {
+          var requestedByUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+          var result = await _adminService.DeleteUserAsync(id, requestedByUserId);
           if (!result.Success) return BadRequest(new { message = result.Message });
           return Ok();
      }

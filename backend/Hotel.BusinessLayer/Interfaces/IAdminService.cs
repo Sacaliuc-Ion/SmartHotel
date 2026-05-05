@@ -8,6 +8,7 @@ public interface IAdminService
 {
      Task<ServiceResult<List<UserDto>>> GetUsersAsync();
      Task<ServiceResult> ToggleUserActiveAsync(int userId);
+     Task<ServiceResult> DeleteUserAsync(int userId, int requestedByUserId);
      Task<ServiceResult<List<SettingDto>>> GetSettingsAsync();
      Task<ServiceResult> UpdateSettingAsync(string key, UpdateSettingRequest request);
 }

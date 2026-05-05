@@ -53,6 +53,23 @@ public class ReservationService : IReservationService
         if (days <= 0)
             return ServiceResult<ReservationDto>.Fail("CheckOut must be after CheckIn");
 
+        if (request.Guests < 1)
+            return ServiceResult<ReservationDto>.Fail("At least one guest is required.");
+
+        if (request.Guests > room.Capacity)
+            return ServiceResult<ReservationDto>.Fail($"Room supports up to {room.Capacity} guests.");
+
+        var hasOverlap = await _db.Context.Reservations.AnyAsync(reservation =>
+            reservation.RoomId == request.RoomId &&
+            reservation.Status != ReservationStatus.Cancelled &&
+            reservation.Status != ReservationStatus.CheckedOut &&
+            reservation.CheckInDate < checkOut &&
+            checkIn < reservation.CheckOutDate
+        );
+
+        if (hasOverlap)
+            return ServiceResult<ReservationDto>.Fail("Room already has an active reservation for the selected dates.");
+
         var reservation = new Reservation
         {
             UserId = userId,
@@ -64,8 +81,6 @@ public class ReservationService : IReservationService
             PaymentStatus = PaymentStatus.Unpaid,
             Guests = request.Guests
         };
-
-        room.Status = RoomStatus.Occupied; // Or could leave available until check-in. Mock frontend occupies immediately, so let's match
 
         _db.Context.Reservations.Add(reservation);
         await _db.SaveChangesAsync();
@@ -83,7 +98,8 @@ public class ReservationService : IReservationService
             return ServiceResult.Fail("Unauthorized to cancel this reservation");
 
         res.Status = ReservationStatus.Cancelled;
-        res.Room.Status = RoomStatus.Available;
+        await _db.SaveChangesAsync();
+        await RoomStatusSyncHelper.SyncAsync(_db.Context, res.RoomId);
         await _db.SaveChangesAsync();
 
         return ServiceResult.Ok();
@@ -97,8 +113,8 @@ public class ReservationService : IReservationService
         RoomNumber = r.Room.Number,
         CheckIn = r.CheckInDate.ToString("yyyy-MM-dd"),
         CheckOut = r.CheckOutDate.ToString("yyyy-MM-dd"),
-        Status = r.Status.ToString(),
-        PaymentStatus = r.PaymentStatus.ToString(),
+        Status = ClientValueFormatter.ToClientValue(r.Status),
+        PaymentStatus = ClientValueFormatter.ToClientValue(r.PaymentStatus),
         TotalAmount = r.TotalPrice,
         Guests = r.Guests
     };
