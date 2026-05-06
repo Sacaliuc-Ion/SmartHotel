@@ -7,8 +7,8 @@ interface NavItem { label: string; path: string; icon: React.ElementType; roles:
 const navItems: NavItem[] = [
   { label: 'Home',         path: '/',            icon: Home,      roles: ['client','reception','housekeeping','maintenance','admin','manager'] },
   { label: 'Rooms',        path: '/rooms',        icon: Building,  roles: ['client','reception','housekeeping','maintenance','admin','manager'] },
-  { label: 'Front Desk',   path: '/front-desk',  icon: DoorOpen,  roles: ['reception','admin','manager'] },
-  { label: 'Room Board',   path: '/room-board',  icon: Calendar,  roles: ['reception','admin','manager'] },
+  { label: 'Front desk',   path: '/front-desk',  icon: DoorOpen,  roles: ['reception','admin','manager'] },
+  { label: 'Room board',   path: '/room-board',  icon: Calendar,  roles: ['reception','admin','manager'] },
   { label: 'Housekeeping', path: '/housekeeping', icon: Sparkles,  roles: ['housekeeping','admin','manager'] },
   { label: 'Maintenance',  path: '/maintenance',  icon: Wrench,    roles: ['maintenance','admin','manager'] },
   { label: 'Dashboard',    path: '/dashboard',   icon: BarChart3, roles: ['admin','manager'] },

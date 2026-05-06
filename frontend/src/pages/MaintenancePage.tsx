@@ -6,16 +6,16 @@ import { Plus, AlertCircle, Clock, Wrench, CheckCircle } from 'lucide-react';
 import { TicketFormModal } from '../components/maintenance/TicketFormModal';
 
 const statusConfig: Record<string, { label: string; color: string; icon: React.ElementType }> = {
-  'new': { label: 'New', color: 'bg-blue-100 text-blue-800', icon: AlertCircle },
-  'in-progress': { label: 'In Progress', color: 'bg-yellow-100 text-yellow-800', icon: Wrench },
-  'inprogress': { label: 'In Progress', color: 'bg-yellow-100 text-yellow-800', icon: Wrench },
-  'waiting-parts': { label: 'Waiting Parts', color: 'bg-orange-100 text-orange-800', icon: Clock },
+  'new': { label: 'New', color: 'bg-amber-100 text-amber-800', icon: AlertCircle },
+  'in-progress': { label: 'In progress', color: 'bg-yellow-100 text-yellow-800', icon: Wrench },
+  'inprogress': { label: 'In progress', color: 'bg-yellow-100 text-yellow-800', icon: Wrench },
+  'waiting-parts': { label: 'Waiting parts', color: 'bg-orange-100 text-orange-800', icon: Clock },
   'resolved': { label: 'Resolved', color: 'bg-green-100 text-green-800', icon: CheckCircle },
   'closed': { label: 'Closed', color: 'bg-gray-100 text-gray-800', icon: CheckCircle },
 };
 
 const priorityColors: Record<string, string> = {
-  'low': 'bg-gray-100 text-gray-800','medium': 'bg-blue-100 text-blue-800',
+  'low': 'bg-gray-100 text-gray-800','medium': 'bg-amber-100 text-amber-800',
   'high': 'bg-orange-100 text-orange-800','urgent': 'bg-red-100 text-red-800',
 };
 
@@ -47,13 +47,13 @@ export const MaintenancePage = () => {
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Maintenance</h1>
           <p className="text-gray-600">Manage maintenance tickets and work orders via live data</p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)}><Plus className="h-4 w-4 mr-2" />New Ticket</Button>
+        <Button onClick={() => setIsModalOpen(true)}><Plus className="h-4 w-4 mr-2" />New ticket</Button>
       </div>
 
       <div className="grid md:grid-cols-4 gap-4 mb-4">
-        <div className="bg-white p-4 rounded-lg border"><p className="text-sm text-gray-600">Open Tickets</p><p className="text-3xl font-bold text-gray-800">{openTicketsCount}</p></div>
-        <div className="bg-white p-4 rounded-lg border"><p className="text-sm text-gray-600">New</p><p className="text-3xl font-bold text-blue-600">{groupedTickets['new'].length}</p></div>
-        <div className="bg-white p-4 rounded-lg border"><p className="text-sm text-gray-600">In Progress</p><p className="text-3xl font-bold text-yellow-600">{groupedTickets['in-progress'].length}</p></div>
+        <div className="bg-white p-4 rounded-lg border"><p className="text-sm text-gray-600">Open tickets</p><p className="text-3xl font-bold text-gray-800">{openTicketsCount}</p></div>
+        <div className="bg-white p-4 rounded-lg border"><p className="text-sm text-gray-600">New</p><p className="text-3xl font-bold text-amber-600">{groupedTickets['new'].length}</p></div>
+        <div className="bg-white p-4 rounded-lg border"><p className="text-sm text-gray-600">In progress</p><p className="text-3xl font-bold text-yellow-600">{groupedTickets['in-progress'].length}</p></div>
         <div className="bg-white p-4 rounded-lg border"><p className="text-sm text-gray-600">Resolved</p><p className="text-3xl font-bold text-green-600">{groupedTickets['resolved'].length}</p></div>
       </div>
 

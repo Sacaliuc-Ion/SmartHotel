@@ -62,7 +62,7 @@ export const TicketFormModal = ({ ticketId, onClose }: TicketFormModalProps) => 
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{isEditing ? 'Edit Ticket' : 'New Maintenance Ticket'}</DialogTitle>
+          <DialogTitle>{isEditing ? 'Edit ticket' : 'New maintenance ticket'}</DialogTitle>
           <DialogDescription>{isEditing ? 'Update ticket details and status' : 'Create a new maintenance work order'}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
@@ -87,7 +87,7 @@ export const TicketFormModal = ({ ticketId, onClose }: TicketFormModalProps) => 
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Issue Title *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Issue title *</label>
               <Input placeholder="e.g., Broken AC, Leaky faucet..." value={issue} onChange={(e) => setIssue(e.target.value)} required />
             </div>
             <div>
@@ -113,7 +113,7 @@ export const TicketFormModal = ({ ticketId, onClose }: TicketFormModalProps) => 
               </div>
             )}
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-              <div><p className="font-medium text-gray-800">Mark Room as Out of Order</p><p className="text-sm text-gray-600">Room will be unavailable for booking</p></div>
+              <div><p className="font-medium text-gray-800">Mark room as out of order</p><p className="text-sm text-gray-600">Room will be unavailable for booking</p></div>
               <Switch checked={markOutOfOrder} onCheckedChange={setMarkOutOfOrder} />
             </div>
           </div>

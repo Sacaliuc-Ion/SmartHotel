@@ -2,9 +2,10 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { api } from '../services/api';
 import { useAuth } from './AuthContext';
 import { toast } from 'sonner';
+import { normalizeBookingStatus, normalizePaymentStatus, normalizeRoomStatus } from '../utils/hotelFormatting';
 
-export type RoomStatus = 'available' | 'occupied' | 'dirty' | 'cleaning' | 'clean' | 'ready' | 'outoforder' | 'inspected' | 'outofservice';
-export type BookingStatus = 'confirmed' | 'checkedIn' | 'checkedOut' | 'cancelled' | 'noShow';
+export type RoomStatus = 'available' | 'occupied' | 'dirty' | 'cleaning' | 'clean' | 'ready' | 'out-of-order' | 'inspected' | 'out-of-service';
+export type BookingStatus = 'confirmed' | 'checked-in' | 'checked-out' | 'cancelled' | 'no-show';
 
 export interface Room {
   id: string | number;
@@ -26,6 +27,7 @@ export interface Booking {
   checkIn: string;
   checkOut: string;
   status: BookingStatus | string;
+  paymentStatus?: string;
   guests: number;
   totalAmount: number;
 }
@@ -66,16 +68,36 @@ export const HotelProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [tickets, setTickets] = useState<MaintenanceTicket[]>([]);
 
   const refreshData = async () => {
-    if (!isAuthenticated) return;
     try {
-      const [roomsRes, bookingsRes, ticketsRes] = await Promise.all([
-        api.get<Room[]>('/rooms').catch(() => []),
-        api.get<Booking[]>('/reservations').catch(() => []),
-        api.get<MaintenanceTicket[]>('/maintenance/tickets').catch(() => [])
-      ]);
-      setRooms(roomsRes || []);
-      setBookings(bookingsRes || []);
+      const roomsPromise: Promise<Room[]> = api.get<Room[]>('/rooms').catch(() => []);
+      const bookingsPromise: Promise<Booking[]> = isAuthenticated
+        ? api.get<Booking[]>('/reservations').catch(() => [])
+        : Promise.resolve([]);
+      const ticketsPromise: Promise<MaintenanceTicket[]> = isAuthenticated
+        ? api.get<MaintenanceTicket[]>('/maintenance/tickets').catch(() => [])
+        : Promise.resolve([]);
+
+      const [roomsRes, bookingsRes, ticketsRes] = await Promise.all([roomsPromise, bookingsPromise, ticketsPromise]);
+
+      setRooms(
+        (roomsRes || []).map((room) => ({
+          ...room,
+          status: normalizeRoomStatus(room.status),
+        }))
+      );
+      setBookings(
+        (bookingsRes || []).map((booking) => ({
+          ...booking,
+          status: normalizeBookingStatus(booking.status),
+          paymentStatus: booking.paymentStatus ? normalizePaymentStatus(booking.paymentStatus) : undefined,
+        }))
+      );
       setTickets(ticketsRes || []);
+
+      if (!isAuthenticated) {
+        setBookings([]);
+        setTickets([]);
+      }
     } catch (err) {
       console.error('Error fetching global hotel data:', err);
     }
@@ -89,7 +111,13 @@ export const HotelProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     try {
       const payloadStatus = status.replace(/-/g, ''); // Ensure mapping matches C# enum
       await api.patch(`/rooms/${roomId}/status`, { status: payloadStatus });
-      setRooms((prev) => prev.map((r) => (r.id === roomId ? { ...r, status } : r)));
+      setRooms((prev) =>
+        prev.map((room) =>
+          String(room.id) === String(roomId)
+            ? { ...room, status: normalizeRoomStatus(status) }
+            : room
+        )
+      );
     } catch (e: any) {
       toast.error(e.message || 'Eroare la actualizarea statusului camerei');
     }

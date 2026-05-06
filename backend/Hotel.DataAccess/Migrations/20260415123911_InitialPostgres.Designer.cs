@@ -183,7 +183,7 @@ namespace Hotel.DataAccess.Migrations
                             Id = 3,
                             Description = "Default currency",
                             Key = "Currency",
-                            Value = "USD"
+                            Value = "MDL"
                         });
                 });
 

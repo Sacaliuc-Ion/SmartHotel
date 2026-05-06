@@ -71,7 +71,6 @@ public class ReceptionService : IReceptionService
           if (res.Status != ReservationStatus.CheckedIn) return ServiceResult.Fail("Reservation is not checked in");
 
           res.Status = ReservationStatus.CheckedOut;
-          res.Room.Status = RoomStatus.Dirty;
 
           _db.Context.CheckOutRecords.Add(new CheckOutRecord
           {
@@ -80,6 +79,8 @@ public class ReceptionService : IReceptionService
                Notes = request.Notes
           });
 
+          await _db.SaveChangesAsync();
+          await RoomStatusSyncHelper.SyncAsync(_db.Context, res.RoomId);
           await _db.SaveChangesAsync();
           return ServiceResult.Ok();
      }
@@ -92,8 +93,8 @@ public class ReceptionService : IReceptionService
           RoomNumber = r.Room.Number,
           CheckIn = r.CheckInDate.ToString("yyyy-MM-dd"),
           CheckOut = r.CheckOutDate.ToString("yyyy-MM-dd"),
-          Status = r.Status.ToString(),
-          PaymentStatus = r.PaymentStatus.ToString(),
+          Status = ClientValueFormatter.ToClientValue(r.Status),
+          PaymentStatus = ClientValueFormatter.ToClientValue(r.PaymentStatus),
           TotalAmount = r.TotalPrice,
           Guests = r.Guests
      };

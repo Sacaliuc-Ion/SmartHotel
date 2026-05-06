@@ -6,6 +6,7 @@ using Hotel.Domain.Models.Auth;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using System.Collections.Concurrent;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -16,6 +17,7 @@ public class AuthService : IAuthService
 {
      private readonly DbSession _db;
      private readonly IConfiguration _config;
+     private static readonly ConcurrentDictionary<string, SemaphoreSlim> RegistrationLocks = new(StringComparer.OrdinalIgnoreCase);
 
      public AuthService(DbSession db, IConfiguration config)
      {
@@ -25,9 +27,11 @@ public class AuthService : IAuthService
 
      public async Task<ServiceResult<AuthResponse>> LoginAsync(LoginRequest request)
      {
+          var normalizedEmail = request.Email.Trim().ToLowerInvariant();
+
           var user = await _db.Context.Users
               .Include(u => u.Role)
-              .FirstOrDefaultAsync(u => u.Email == request.Email);
+              .FirstOrDefaultAsync(u => u.Email == normalizedEmail);
 
           if (user == null || !user.IsActive)
                return ServiceResult<AuthResponse>.Fail("Invalid credentials or inactive user.");
@@ -46,31 +50,44 @@ public class AuthService : IAuthService
                     Id = user.Id,
                     Name = $"{user.FirstName} {user.LastName}",
                     Email = user.Email,
-                    Role = user.Role.Name.ToLower()
+                    Role = user.Role.Name.ToLower(),
+                    IsActive = user.IsActive
                }
           });
      }
 
      public async Task<ServiceResult<AuthResponse>> RegisterAsync(RegisterRequest request)
      {
-          if (await _db.Context.Users.AnyAsync(u => u.Email == request.Email))
-               return ServiceResult<AuthResponse>.Fail("Email already in use.");
+          var normalizedEmail = request.Email.Trim().ToLowerInvariant();
+          var emailLock = RegistrationLocks.GetOrAdd(normalizedEmail, _ => new SemaphoreSlim(1, 1));
 
-          var user = new User
+          await emailLock.WaitAsync();
+
+          try
           {
-               FirstName = request.FirstName,
-               LastName = request.LastName,
-               Email = request.Email,
-               PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
-               RoleId = 1
-          };
+               if (await _db.Context.Users.AnyAsync(u => u.Email == normalizedEmail))
+                    return ServiceResult<AuthResponse>.Fail("Email already in use.");
 
-          _db.Context.Users.Add(user);
-          await _db.SaveChangesAsync();
+               var user = new User
+               {
+                    FirstName = request.FirstName.Trim(),
+                    LastName = request.LastName.Trim(),
+                    Email = normalizedEmail,
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
+                    RoleId = 1
+               };
+
+               _db.Context.Users.Add(user);
+               await _db.SaveChangesAsync();
+          }
+          finally
+          {
+               emailLock.Release();
+          }
 
           return await LoginAsync(new LoginRequest
           {
-               Email = request.Email,
+               Email = normalizedEmail,
                Password = request.Password
           });
      }

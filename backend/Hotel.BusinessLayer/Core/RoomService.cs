@@ -64,7 +64,7 @@ public class RoomService : IRoomService
             Floor = room.Floor,
             Capacity = room.Capacity,
             PricePerNight = room.PricePerNight,
-            Status = room.Status.ToString().ToLower(),
+            Status = ClientValueFormatter.ToClientValue(room.Status),
             Description = room.Description,
             Amenities = room.RoomAmenities.Select(ra => ra.Amenity.Name).ToList()
         };

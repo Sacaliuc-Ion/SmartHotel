@@ -83,6 +83,12 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+     var dbContext = scope.ServiceProvider.GetRequiredService<HotelDbContext>();
+     await HotelDbInitializer.InitializeAsync(dbContext);
+}
+
 app.UseCors("AllowAll");
 app.UseSwagger();
 app.UseSwaggerUI();

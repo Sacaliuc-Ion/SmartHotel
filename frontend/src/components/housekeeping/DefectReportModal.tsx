@@ -26,13 +26,13 @@ export const DefectReportModal = ({ roomId, onClose }: DefectReportModalProps) =
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Report Defect</DialogTitle>
+          <DialogTitle>Report defect</DialogTitle>
           <DialogDescription>Create a maintenance ticket for Room {room?.number || roomId}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="space-y-4 py-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Issue Title</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Issue title</label>
               <Input placeholder="e.g., Leaky faucet, Broken AC..." value={issue} onChange={(e) => setIssue(e.target.value)} required />
             </div>
             <div>
@@ -54,7 +54,7 @@ export const DefectReportModal = ({ roomId, onClose }: DefectReportModalProps) =
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-            <Button type="submit">Create Ticket</Button>
+            <Button type="submit">Create ticket</Button>
           </DialogFooter>
         </form>
       </DialogContent>

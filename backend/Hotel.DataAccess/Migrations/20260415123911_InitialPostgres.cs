@@ -329,7 +329,7 @@ namespace Hotel.DataAccess.Migrations
                 {
                     { 1, "Standard check-in time", "CheckInTime", "14:00" },
                     { 2, "Standard check-out time", "CheckOutTime", "11:00" },
-                    { 3, "Default currency", "Currency", "USD" }
+                    { 3, "Default currency", "Currency", "MDL" }
                 });
 
             migrationBuilder.InsertData(

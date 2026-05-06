@@ -21,11 +21,16 @@ import Lobby from '../assets/home/LobbyIMG.jpg';
 import Pool from '../assets//home/PoolIMG.jpg';
 
 /* ─── tiny intersection-observer hook for scroll-in animations ─── */
-function useReveal() {
+function useReveal(isEnabled = true) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
+    if (!isEnabled) return;
+
     const el = ref.current;
     if (!el) return;
+
+    el.classList.remove('hp-revealed');
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -35,9 +40,12 @@ function useReveal() {
       },
       { threshold: 0.12 }
     );
+
     observer.observe(el);
+
     return () => observer.disconnect();
-  }, []);
+  }, [isEnabled]);
+
   return ref;
 }
 
@@ -47,8 +55,8 @@ export const HomePage = () => {
 
   const roleActions = {
     reception: [
-      { label: 'Front Desk', description: 'Manage check-ins, check-outs & reservations', path: '/front-desk', icon: DoorOpen, color: 'from-sky-500 to-blue-600' },
-      { label: 'Room Board', description: 'Live overview of all room statuses', path: '/room-board', icon: Calendar, color: 'from-violet-500 to-purple-600' },
+      { label: 'Front desk', description: 'Manage check-ins, check-outs and reservations', path: '/front-desk', icon: DoorOpen, color: 'from-amber-500 to-orange-500' },
+      { label: 'Room board', description: 'Live overview of all room statuses', path: '/room-board', icon: Calendar, color: 'from-violet-500 to-purple-600' },
     ],
     housekeeping: [
       { label: 'Housekeeping', description: 'Track and manage room cleaning tasks', path: '/housekeeping', icon: Sparkles, color: 'from-emerald-500 to-teal-600' },
@@ -57,18 +65,18 @@ export const HomePage = () => {
       { label: 'Maintenance', description: 'View and resolve maintenance tickets', path: '/maintenance', icon: Wrench, color: 'from-orange-500 to-amber-600' },
     ],
     admin: [
-      { label: 'Dashboard', description: 'Analytics, KPIs and hotel overview', path: '/dashboard', icon: BarChart3, color: 'from-blue-500 to-indigo-600' },
-      { label: 'Admin Settings', description: 'Manage users, rooms and settings', path: '/admin', icon: Settings, color: 'from-slate-500 to-gray-700' },
-      { label: 'Front Desk', description: 'Manage check-ins, check-outs & reservations', path: '/front-desk', icon: DoorOpen, color: 'from-sky-500 to-blue-600' },
-      { label: 'Room Board', description: 'Live overview of all room statuses', path: '/room-board', icon: Calendar, color: 'from-violet-500 to-purple-600' },
+      { label: 'Dashboard', description: 'Analytics, KPIs and hotel overview', path: '/dashboard', icon: BarChart3, color: 'from-amber-500 to-yellow-600' },
+      { label: 'Admin settings', description: 'Manage users, rooms and settings', path: '/admin', icon: Settings, color: 'from-slate-500 to-gray-700' },
+      { label: 'Front desk', description: 'Manage check-ins, check-outs and reservations', path: '/front-desk', icon: DoorOpen, color: 'from-amber-500 to-orange-500' },
+      { label: 'Room board', description: 'Live overview of all room statuses', path: '/room-board', icon: Calendar, color: 'from-violet-500 to-purple-600' },
     ],
     manager: [
-      { label: 'Dashboard', description: 'Analytics, KPIs and hotel overview', path: '/dashboard', icon: BarChart3, color: 'from-blue-500 to-indigo-600' },
-      { label: 'Front Desk', description: 'Manage check-ins, check-outs & reservations', path: '/front-desk', icon: DoorOpen, color: 'from-sky-500 to-blue-600' },
-      { label: 'Room Board', description: 'Live overview of all room statuses', path: '/room-board', icon: Calendar, color: 'from-violet-500 to-purple-600' },
+      { label: 'Dashboard', description: 'Analytics, KPIs and hotel overview', path: '/dashboard', icon: BarChart3, color: 'from-amber-500 to-yellow-600' },
+      { label: 'Front desk', description: 'Manage check-ins, check-outs and reservations', path: '/front-desk', icon: DoorOpen, color: 'from-amber-500 to-orange-500' },
+      { label: 'Room board', description: 'Live overview of all room statuses', path: '/room-board', icon: Calendar, color: 'from-violet-500 to-purple-600' },
     ],
     client: [
-      { label: 'Browse Rooms', description: 'Explore our selection of luxury rooms', path: '/rooms', icon: Building, color: 'from-blue-500 to-indigo-600' },
+      { label: 'Browse rooms', description: 'Explore our selection of luxury rooms', path: '/rooms', icon: Building, color: 'from-amber-500 to-yellow-600' },
     ],
   };
 
@@ -88,10 +96,10 @@ export const HomePage = () => {
     { value: '15+', label: 'Years of Excellence' },
   ];
 
-  const aboutRef  = useReveal();
-  const whyRef    = useReveal();
-  const ctaRef    = useReveal();
-  const actionsRef = useReveal();
+  const aboutRef = useReveal(!user);
+  const whyRef = useReveal(!user);
+  const ctaRef = useReveal(!user);
+  const actionsRef = useReveal(!!user);
 
   return (
     <div className="min-h-full hp-bg overflow-x-hidden">
@@ -138,7 +146,7 @@ export const HomePage = () => {
                   style={{ animationDelay: `${i * 0.1}s` }}
                 />
               ))}
-              <span className="text-white/80 text-sm ml-1">5-Star Luxury Hotel</span>
+              <span className="text-white/80 text-sm ml-1">5-star luxury hotel</span>
             </div>
 
             <h1 className="text-5xl md:text-7xl font-bold text-white mb-4 leading-tight tracking-tight">
@@ -160,14 +168,14 @@ export const HomePage = () => {
                   onClick={() => navigate('/rooms')}
                   className="hp-btn-primary flex items-center gap-2"
                 >
-                  Explore Rooms
+                  Explore rooms
                   <ArrowRight className="h-5 w-5" />
                 </button>
                 <button
                   onClick={() => navigate('/login')}
                   className="flex items-center gap-2 bg-white/15 hover:bg-white/25 backdrop-blur-sm border border-white/30 text-white px-8 py-3.5 rounded-xl font-medium transition-all"
                 >
-                  Sign In
+                  Sign in
                 </button>
               </div>
             ) : (
@@ -209,7 +217,7 @@ export const HomePage = () => {
           <div ref={actionsRef} className="hp-reveal">
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h2 className="text-3xl font-bold hp-section-title">Quick Actions</h2>
+                <h2 className="text-3xl font-bold hp-section-title">Quick actions</h2>
                 <p className="hp-section-sub mt-1">Jump straight to your most-used modules</p>
               </div>
             </div>
@@ -264,7 +272,7 @@ export const HomePage = () => {
                   onClick={() => navigate('/rooms')}
                   className="hp-btn-primary inline-flex items-center gap-2 text-sm"
                 >
-                  View Our Rooms
+                  View our rooms
                   <ArrowRight className="h-4 w-4" />
                 </button>
               </div>
@@ -288,14 +296,14 @@ export const HomePage = () => {
             <div className="max-w-6xl mx-auto px-8">
               <div ref={whyRef} className="hp-reveal">
                 <div className="text-center mb-12">
-                  <span className="hp-label">Why Us</span>
+                  <span className="hp-label">Why us</span>
                   <h2 className="text-4xl font-bold hp-section-title mt-2">Crafted for excellence</h2>
                 </div>
                 <div className="grid md:grid-cols-3 gap-8">
                   {[
-                    { icon: Building, title: 'Luxury Rooms', desc: 'From cozy doubles to sprawling penthouse suites, every space is meticulously appointed for your comfort.', color: 'hp-why-icon-navy' },
-                    { icon: Sparkles, title: 'Pristine Service', desc: 'Our housekeeping and maintenance teams work around the clock to ensure every detail is perfect.', color: 'hp-why-icon-gold' },
-                    { icon: DoorOpen, title: 'Seamless Check-in', desc: 'Arrive and relax — our front desk team makes arrivals and departures effortless.', color: 'hp-why-icon-rose' },
+                    { icon: Building, title: 'Luxury rooms', desc: 'From cozy doubles to sprawling penthouse suites, every space is meticulously appointed for your comfort.', color: 'hp-why-icon-navy' },
+                    { icon: Sparkles, title: 'Pristine service', desc: 'Our housekeeping and maintenance teams work around the clock to ensure every detail is perfect.', color: 'hp-why-icon-gold' },
+                    { icon: DoorOpen, title: 'Seamless check-in', desc: 'Arrive and relax - our front desk team makes arrivals and departures effortless.', color: 'hp-why-icon-rose' },
                   ].map(({ icon: Icon, title, desc, color }, i) => (
                     <div key={title} className="text-center group hp-why-card" style={{ animationDelay: `${i * 0.12}s` }}>
                       <div className={`w-16 h-16 ${color} rounded-2xl flex items-center justify-center mx-auto mb-5 group-hover:scale-110 transition-transform duration-300`}>
@@ -325,7 +333,7 @@ export const HomePage = () => {
                 onClick={() => navigate('/login')}
                 className="hp-btn-cta inline-flex items-center gap-2"
               >
-                Sign In to Book
+                Sign in to book
                 <ArrowRight className="h-5 w-5" />
               </button>
             </div>

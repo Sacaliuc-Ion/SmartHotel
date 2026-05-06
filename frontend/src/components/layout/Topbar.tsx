@@ -37,7 +37,7 @@ export const Topbar = ({ onToggleSidebar, sidebarOpen }: TopbarProps) => {
           onClick={() => navigate('/login')}
           className="lb-topbar-signin-btn px-5 py-2 rounded-lg text-sm font-medium transition-all"
         >
-          Sign In
+          Sign in
         </button>
       ) : (
         <div className="flex items-center gap-4">
