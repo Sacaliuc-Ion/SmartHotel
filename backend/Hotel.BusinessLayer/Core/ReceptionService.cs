@@ -71,6 +71,7 @@ public class ReceptionService : IReceptionService
           if (res.Status != ReservationStatus.CheckedIn) return ServiceResult.Fail("Reservation is not checked in");
 
           res.Status = ReservationStatus.CheckedOut;
+          res.Room.Status = RoomStatus.Dirty;
 
           _db.Context.CheckOutRecords.Add(new CheckOutRecord
           {

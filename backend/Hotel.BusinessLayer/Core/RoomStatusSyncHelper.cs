@@ -24,6 +24,15 @@ internal static class RoomStatusSyncHelper
             cancellationToken
         );
 
-        room.Status = hasCheckedInReservation ? RoomStatus.Occupied : RoomStatus.Available;
+        if (hasCheckedInReservation)
+        {
+            room.Status = RoomStatus.Occupied;
+            return;
+        }
+
+        if (room.Status == RoomStatus.Occupied)
+        {
+            room.Status = RoomStatus.Available;
+        }
     }
 }

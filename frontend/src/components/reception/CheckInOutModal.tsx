@@ -25,7 +25,7 @@ export const CheckInOutModal = ({ booking, type, onClose, onSuccess }: CheckInOu
         toast.success(`${booking.guestName} a fost cazat in camera ${booking.roomNumber}.`);
       } else {
         await api.post(`/reception/check-out/${booking.id}`, { notes });
-        toast.success(`${booking.guestName} a fost decazat din camera ${booking.roomNumber}.`);
+        toast.success(`${booking.guestName} a fost decazat din camera ${booking.roomNumber}. Camera a fost marcata pentru curatenie.`);
       }
       onSuccess();
       onClose();
