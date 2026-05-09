@@ -43,4 +43,15 @@ public class RoomsController : ControllerBase
 
           return Ok();
      }
+
+     [HttpPatch("types/{type}/price")]
+     [Authorize(Roles = "admin")]
+     public async Task<IActionResult> UpdateTypePrice(string type, [FromBody] UpdateRoomPriceRequest request)
+     {
+          var result = await _roomService.UpdateRoomTypePriceAsync(type, request);
+          if (!result.Success)
+               return BadRequest(new { message = result.Message });
+
+          return Ok();
+     }
 }
