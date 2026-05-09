@@ -19,3 +19,8 @@ public class UpdateRoomStatusRequest
 {
     public RoomStatus Status { get; set; }
 }
+
+public class UpdateRoomPriceRequest
+{
+    public decimal PricePerNight { get; set; }
+}

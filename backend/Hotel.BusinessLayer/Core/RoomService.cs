@@ -54,6 +54,31 @@ public class RoomService : IRoomService
         return ServiceResult.Ok();
     }
 
+    public async Task<ServiceResult> UpdateRoomTypePriceAsync(string roomType, UpdateRoomPriceRequest request)
+    {
+        if (request.PricePerNight <= 0)
+            return ServiceResult.Fail("Room price must be greater than zero");
+
+        var normalizedRoomType = roomType.Trim().ToLower();
+        var type = await _db.Context.RoomTypes
+            .Include(roomTypeEntity => roomTypeEntity.Rooms)
+            .FirstOrDefaultAsync(roomTypeEntity => roomTypeEntity.Name.ToLower() == normalizedRoomType);
+
+        if (type == null)
+            return ServiceResult.Fail("Room type not found");
+
+        type.BasePrice = request.PricePerNight;
+
+        foreach (var room in type.Rooms.Where(room => room.IsActive))
+        {
+            room.PricePerNight = request.PricePerNight;
+        }
+
+        await _db.SaveChangesAsync();
+
+        return ServiceResult.Ok();
+    }
+
     private static RoomDto MapToDto(Domain.Entities.Room room)
     {
         return new RoomDto

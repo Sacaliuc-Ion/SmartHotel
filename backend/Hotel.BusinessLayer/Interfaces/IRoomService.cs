@@ -8,4 +8,5 @@ public interface IRoomService
      Task<ServiceResult<List<RoomDto>>> GetAllRoomsAsync();
      Task<ServiceResult<RoomDto>> GetRoomByIdAsync(int id);
      Task<ServiceResult> UpdateRoomStatusAsync(int roomId, UpdateRoomStatusRequest request);
+     Task<ServiceResult> UpdateRoomTypePriceAsync(string roomType, UpdateRoomPriceRequest request);
 }
