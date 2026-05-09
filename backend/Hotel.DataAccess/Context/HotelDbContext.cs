@@ -15,6 +15,8 @@ public class HotelDbContext : DbContext
     public DbSet<Amenity> Amenities => Set<Amenity>();
     public DbSet<RoomAmenity> RoomAmenities => Set<RoomAmenity>();
     public DbSet<Reservation> Reservations => Set<Reservation>();
+    public DbSet<UserLoginAudit> UserLoginAudits => Set<UserLoginAudit>();
+    public DbSet<UserNotification> UserNotifications => Set<UserNotification>();
     public DbSet<CheckInRecord> CheckInRecords => Set<CheckInRecord>();
     public DbSet<CheckOutRecord> CheckOutRecords => Set<CheckOutRecord>();
     public DbSet<HousekeepingTask> HousekeepingTasks => Set<HousekeepingTask>();
@@ -45,6 +47,24 @@ public class HotelDbContext : DbContext
             .WithMany(u => u.Reservations)
             .HasForeignKey(r => r.UserId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<UserLoginAudit>()
+            .HasOne(audit => audit.User)
+            .WithMany(user => user.LoginAudits)
+            .HasForeignKey(audit => audit.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<UserNotification>()
+            .HasOne(notification => notification.User)
+            .WithMany(user => user.Notifications)
+            .HasForeignKey(notification => notification.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<UserNotification>()
+            .HasOne(notification => notification.Reservation)
+            .WithMany()
+            .HasForeignKey(notification => notification.ReservationId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         modelBuilder.Entity<HousekeepingTask>()
             .HasOne(h => h.AssignedTo)
