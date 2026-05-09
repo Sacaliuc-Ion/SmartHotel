@@ -19,6 +19,7 @@ import {
 import Herro from '../assets/home/HeroIMG.jpg';
 import Lobby from '../assets/home/LobbyIMG.jpg';
 import Pool from '../assets//home/PoolIMG.jpg';
+import { usePreferences } from '../context/PreferencesContext';
 
 /* ─── tiny intersection-observer hook for scroll-in animations ─── */
 function useReveal(isEnabled = true) {
@@ -51,49 +52,50 @@ function useReveal(isEnabled = true) {
 
 export const HomePage = () => {
   const { user } = useAuth();
+  const { t } = usePreferences();
   const navigate = useNavigate();
 
   const roleActions = {
     reception: [
-      { label: 'Front desk', description: 'Manage check-ins, check-outs and reservations', path: '/front-desk', icon: DoorOpen, color: 'from-amber-500 to-orange-500' },
-      { label: 'Room board', description: 'Live overview of all room statuses', path: '/room-board', icon: Calendar, color: 'from-violet-500 to-purple-600' },
+      { label: t('navFrontDesk'), description: t('actionFrontDeskDesc'), path: '/front-desk', icon: DoorOpen, color: 'from-amber-500 to-orange-500' },
+      { label: t('navRoomBoard'), description: t('actionRoomBoardDesc'), path: '/room-board', icon: Calendar, color: 'from-violet-500 to-purple-600' },
     ],
     housekeeping: [
-      { label: 'Housekeeping', description: 'Track and manage room cleaning tasks', path: '/housekeeping', icon: Sparkles, color: 'from-emerald-500 to-teal-600' },
+      { label: t('navHousekeeping'), description: t('actionHousekeepingDesc'), path: '/housekeeping', icon: Sparkles, color: 'from-emerald-500 to-teal-600' },
     ],
     maintenance: [
-      { label: 'Maintenance', description: 'View and resolve maintenance tickets', path: '/maintenance', icon: Wrench, color: 'from-orange-500 to-amber-600' },
+      { label: t('navMaintenance'), description: t('actionMaintenanceDesc'), path: '/maintenance', icon: Wrench, color: 'from-orange-500 to-amber-600' },
     ],
     admin: [
-      { label: 'Dashboard', description: 'Analytics, KPIs and hotel overview', path: '/dashboard', icon: BarChart3, color: 'from-amber-500 to-yellow-600' },
-      { label: 'Admin settings', description: 'Manage users, rooms and settings', path: '/admin', icon: Settings, color: 'from-slate-500 to-gray-700' },
-      { label: 'Front desk', description: 'Manage check-ins, check-outs and reservations', path: '/front-desk', icon: DoorOpen, color: 'from-amber-500 to-orange-500' },
-      { label: 'Room board', description: 'Live overview of all room statuses', path: '/room-board', icon: Calendar, color: 'from-violet-500 to-purple-600' },
+      { label: t('navDashboard'), description: t('actionDashboardDesc'), path: '/dashboard', icon: BarChart3, color: 'from-amber-500 to-yellow-600' },
+      { label: t('navAdmin'), description: t('actionAdminDesc'), path: '/admin', icon: Settings, color: 'from-slate-500 to-gray-700' },
+      { label: t('navFrontDesk'), description: t('actionFrontDeskDesc'), path: '/front-desk', icon: DoorOpen, color: 'from-amber-500 to-orange-500' },
+      { label: t('navRoomBoard'), description: t('actionRoomBoardDesc'), path: '/room-board', icon: Calendar, color: 'from-violet-500 to-purple-600' },
     ],
     manager: [
-      { label: 'Dashboard', description: 'Analytics, KPIs and hotel overview', path: '/dashboard', icon: BarChart3, color: 'from-amber-500 to-yellow-600' },
-      { label: 'Front desk', description: 'Manage check-ins, check-outs and reservations', path: '/front-desk', icon: DoorOpen, color: 'from-amber-500 to-orange-500' },
-      { label: 'Room board', description: 'Live overview of all room statuses', path: '/room-board', icon: Calendar, color: 'from-violet-500 to-purple-600' },
+      { label: t('navDashboard'), description: t('actionDashboardDesc'), path: '/dashboard', icon: BarChart3, color: 'from-amber-500 to-yellow-600' },
+      { label: t('navFrontDesk'), description: t('actionFrontDeskDesc'), path: '/front-desk', icon: DoorOpen, color: 'from-amber-500 to-orange-500' },
+      { label: t('navRoomBoard'), description: t('actionRoomBoardDesc'), path: '/room-board', icon: Calendar, color: 'from-violet-500 to-purple-600' },
     ],
     client: [
-      { label: 'Browse rooms', description: 'Explore our selection of luxury rooms', path: '/rooms', icon: Building, color: 'from-amber-500 to-yellow-600' },
+      { label: t('exploreRooms'), description: t('actionBrowseRoomsDesc'), path: '/rooms', icon: Building, color: 'from-amber-500 to-yellow-600' },
     ],
   };
 
   const actions = user ? roleActions[user.role as keyof typeof roleActions] || [] : roleActions.client;
 
   const amenities = [
-    { icon: Wifi, label: 'Free Wi-Fi' },
-    { icon: Coffee, label: 'Breakfast' },
-    { icon: Car, label: 'Valet Parking' },
-    { icon: Sparkles, label: 'Spa & Pool' },
+    { icon: Wifi, label: t('amenityWifi') },
+    { icon: Coffee, label: t('amenityBreakfast') },
+    { icon: Car, label: t('amenityParking') },
+    { icon: Sparkles, label: t('amenitySpa') },
   ];
 
   const stats = [
-    { value: '120+', label: 'Rooms & Suites' },
-    { value: '4.9', label: 'Guest Rating' },
-    { value: '24/7', label: 'Concierge' },
-    { value: '15+', label: 'Years of Excellence' },
+    { value: '120+', label: t('statRooms') },
+    { value: '4.9', label: t('statRating') },
+    { value: '24/7', label: t('statConcierge') },
+    { value: '15+', label: t('statYears') },
   ];
 
   const aboutRef = useReveal(!user);
@@ -146,20 +148,20 @@ export const HomePage = () => {
                   style={{ animationDelay: `${i * 0.1}s` }}
                 />
               ))}
-              <span className="text-white/80 text-sm ml-1">5-star luxury hotel</span>
+              <span className="text-white/80 text-sm ml-1">{t('homeRating')}</span>
             </div>
 
             <h1 className="text-5xl md:text-7xl font-bold text-white mb-4 leading-tight tracking-tight">
-              {user ? `Welcome back,` : 'Experience True'}<br />
+              {user ? t('homeWelcome') : t('homeGuestPrefix')}<br />
               <span className="hp-accent-text">
-                {user ? user.name.split(' ')[0] : 'Luxury'}
+                {user ? user.name.split(' ')[0] : t('homeGuestAccent')}
               </span>
             </h1>
 
             <p className="text-lg md:text-xl text-white/80 mb-5 max-w-xl leading-relaxed">
               {user
-                ? `You're logged in as ${user.role}. Access your tools below and make today exceptional.`
-                : 'Where every detail is crafted for your comfort. Discover our rooms, exceptional dining, and world-class amenities.'}
+                ? t('homeLoggedDescription', { role: user.role })
+                : t('homeGuestDescription')}
             </p>
 
             {!user ? (
@@ -168,14 +170,14 @@ export const HomePage = () => {
                   onClick={() => navigate('/rooms')}
                   className="hp-btn-primary flex items-center gap-2"
                 >
-                  Explore rooms
+                  {t('exploreRooms')}
                   <ArrowRight className="h-5 w-5" />
                 </button>
                 <button
                   onClick={() => navigate('/login')}
                   className="flex items-center gap-2 bg-white/15 hover:bg-white/25 backdrop-blur-sm border border-white/30 text-white px-8 py-3.5 rounded-xl font-medium transition-all"
                 >
-                  Sign in
+                  {t('signIn')}
                 </button>
               </div>
             ) : (
@@ -217,8 +219,8 @@ export const HomePage = () => {
           <div ref={actionsRef} className="hp-reveal">
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h2 className="text-3xl font-bold hp-section-title">Quick actions</h2>
-                <p className="hp-section-sub mt-1">Jump straight to your most-used modules</p>
+                <h2 className="text-3xl font-bold hp-section-title">{t('quickActions')}</h2>
+                <p className="hp-section-sub mt-1">{t('quickActionsSub')}</p>
               </div>
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -241,7 +243,7 @@ export const HomePage = () => {
                     </h3>
                     <p className="text-sm hp-card-sub leading-relaxed">{action.description}</p>
                     <div className="mt-4 flex items-center text-amber-600 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                      Open <ArrowRight className="ml-1 h-4 w-4" />
+                      {t('open')} <ArrowRight className="ml-1 h-4 w-4" />
                     </div>
                   </button>
                 );
@@ -258,21 +260,19 @@ export const HomePage = () => {
           <section className="max-w-6xl mx-auto px-8 py-16">
             <div ref={aboutRef} className="hp-reveal grid md:grid-cols-2 gap-6 items-center">
               <div>
-                <span className="hp-label">About the hotel</span>
+                <span className="hp-label">{t('aboutLabel')}</span>
                 <h2 className="text-4xl font-bold hp-section-title mt-2 mb-4 leading-snug">
-                  A sanctuary of <br />
-                  <span className="hp-accent-text">elegance & comfort</span>
+                  {t('aboutTitleA')} <br />
+                  <span className="hp-accent-text">{t('aboutTitleB')}</span>
                 </h2>
                 <p className="hp-section-sub leading-relaxed mb-6">
-                  Nestled in the heart of the city, Grand Hotel blends timeless architecture with
-                  modern luxury. Every room is thoughtfully designed to make your stay unforgettable —
-                  from the plush bedding to the panoramic city views.
+                  {t('aboutDescription')}
                 </p>
                 <button
                   onClick={() => navigate('/rooms')}
                   className="hp-btn-primary inline-flex items-center gap-2 text-sm"
                 >
-                  View our rooms
+                  {t('viewRooms')}
                   <ArrowRight className="h-4 w-4" />
                 </button>
               </div>
@@ -296,14 +296,14 @@ export const HomePage = () => {
             <div className="max-w-6xl mx-auto px-8">
               <div ref={whyRef} className="hp-reveal">
                 <div className="text-center mb-12">
-                  <span className="hp-label">Why us</span>
-                  <h2 className="text-4xl font-bold hp-section-title mt-2">Crafted for excellence</h2>
+                  <span className="hp-label">{t('whyLabel')}</span>
+                  <h2 className="text-4xl font-bold hp-section-title mt-2">{t('whyTitle')}</h2>
                 </div>
                 <div className="grid md:grid-cols-3 gap-8">
                   {[
-                    { icon: Building, title: 'Luxury rooms', desc: 'From cozy doubles to sprawling penthouse suites, every space is meticulously appointed for your comfort.', color: 'hp-why-icon-navy' },
-                    { icon: Sparkles, title: 'Pristine service', desc: 'Our housekeeping and maintenance teams work around the clock to ensure every detail is perfect.', color: 'hp-why-icon-gold' },
-                    { icon: DoorOpen, title: 'Seamless check-in', desc: 'Arrive and relax - our front desk team makes arrivals and departures effortless.', color: 'hp-why-icon-rose' },
+                    { icon: Building, title: t('whyLuxuryTitle'), desc: t('whyLuxuryDesc'), color: 'hp-why-icon-navy' },
+                    { icon: Sparkles, title: t('whyServiceTitle'), desc: t('whyServiceDesc'), color: 'hp-why-icon-gold' },
+                    { icon: DoorOpen, title: t('whyCheckinTitle'), desc: t('whyCheckinDesc'), color: 'hp-why-icon-rose' },
                   ].map(({ icon: Icon, title, desc, color }, i) => (
                     <div key={title} className="text-center group hp-why-card" style={{ animationDelay: `${i * 0.12}s` }}>
                       <div className={`w-16 h-16 ${color} rounded-2xl flex items-center justify-center mx-auto mb-5 group-hover:scale-110 transition-transform duration-300`}>
@@ -325,15 +325,15 @@ export const HomePage = () => {
           >
             <div className="absolute inset-0 hp-cta-overlay" />
             <div ref={ctaRef} className="hp-reveal relative text-center text-white max-w-2xl mx-auto px-8">
-              <h2 className="text-4xl font-bold mb-4">Ready to book your stay?</h2>
+              <h2 className="text-4xl font-bold mb-4">{t('ctaTitle')}</h2>
               <p className="hp-cta-sub mb-8 leading-relaxed">
-                Sign in to view availability, make a reservation, and manage your bookings from anywhere.
+                {t('ctaDescription')}
               </p>
               <button
                 onClick={() => navigate('/login')}
                 className="hp-btn-cta inline-flex items-center gap-2"
               >
-                Sign in to book
+                {t('ctaButton')}
                 <ArrowRight className="h-5 w-5" />
               </button>
             </div>

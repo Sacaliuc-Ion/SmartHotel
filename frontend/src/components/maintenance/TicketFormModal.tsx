@@ -60,7 +60,7 @@ export const TicketFormModal = ({ ticketId, onClose }: TicketFormModalProps) => 
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl dark:border-slate-700 dark:bg-slate-900">
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Edit ticket' : 'New maintenance ticket'}</DialogTitle>
           <DialogDescription>{isEditing ? 'Update ticket details and status' : 'Create a new maintenance work order'}</DialogDescription>
@@ -69,14 +69,14 @@ export const TicketFormModal = ({ ticketId, onClose }: TicketFormModalProps) => 
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Room *</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">Room *</label>
                 <Select value={roomId} onValueChange={setRoomId} disabled={isEditing}>
                   <SelectTrigger><SelectValue placeholder="Select room" /></SelectTrigger>
                   <SelectContent>{rooms.map((r) => <SelectItem key={r.id} value={r.id.toString()}>Room {r.number} - {r.type}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Priority *</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">Priority *</label>
                 <Select value={priority} onValueChange={setPriority}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -87,17 +87,17 @@ export const TicketFormModal = ({ ticketId, onClose }: TicketFormModalProps) => 
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Issue title *</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">Issue title *</label>
               <Input placeholder="e.g., Broken AC, Leaky faucet..." value={issue} onChange={(e) => setIssue(e.target.value)} required />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">Description</label>
               <Textarea placeholder="Detailed description..." value={description} onChange={(e) => setDescription(e.target.value)} rows={4} />
             </div>
             {isEditing && (
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">Status</label>
                   <Select value={status} onValueChange={setStatus}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -107,13 +107,13 @@ export const TicketFormModal = ({ ticketId, onClose }: TicketFormModalProps) => 
                   </Select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Assignee</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">Assignee</label>
                   <Input placeholder="Technician name" value={assignee} onChange={(e) => setAssignee(e.target.value)} disabled />
                 </div>
               </div>
             )}
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-              <div><p className="font-medium text-gray-800">Mark room as out of order</p><p className="text-sm text-gray-600">Room will be unavailable for booking</p></div>
+            <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-slate-950 rounded-lg">
+              <div><p className="font-medium text-gray-800 dark:text-slate-100">Mark room as out of order</p><p className="text-sm text-gray-600 dark:text-slate-300">Room will be unavailable for booking</p></div>
               <Switch checked={markOutOfOrder} onCheckedChange={setMarkOutOfOrder} />
             </div>
           </div>

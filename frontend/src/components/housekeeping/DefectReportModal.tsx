@@ -24,7 +24,7 @@ export const DefectReportModal = ({ roomId, onClose }: DefectReportModalProps) =
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent className="dark:border-slate-700 dark:bg-slate-900">
         <DialogHeader>
           <DialogTitle>Report defect</DialogTitle>
           <DialogDescription>Create a maintenance ticket for Room {room?.number || roomId}</DialogDescription>
@@ -32,15 +32,15 @@ export const DefectReportModal = ({ roomId, onClose }: DefectReportModalProps) =
         <form onSubmit={handleSubmit}>
           <div className="space-y-4 py-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Issue title</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">Issue title</label>
               <Input placeholder="e.g., Leaky faucet, Broken AC..." value={issue} onChange={(e) => setIssue(e.target.value)} required />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">Description</label>
               <Textarea placeholder="Provide more details..." value={description} onChange={(e) => setDescription(e.target.value)} rows={4} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">Priority</label>
               <Select value={priority} onValueChange={setPriority}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
