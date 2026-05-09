@@ -247,6 +247,10 @@
   "loadSettingsError": "Error loading settings",
   "userStatusUpdated": "User status updated",
   "userStatusUpdateError": "Error updating user status",
+  "userRoleUpdated": "User role updated",
+  "userRoleUpdateError": "Error updating user role",
+  "changeOwnRoleError": "You cannot change your own role.",
+  "ownRoleLocked": "Your own role is locked here.",
   "deleteOwnAccountError": "You cannot delete your own account from this page.",
   "confirmDeleteUser": "Are you sure you want to delete user {{name}}?",
   "userDeleted": "User deleted successfully",
@@ -314,5 +318,11 @@
   "amenity.AC": "AC",
   "amenity.Mini Bar": "Mini Bar",
   "amenity.Jacuzzi": "Jacuzzi",
-  "amenity.Balcony": "Balcony"
+  "amenity.Balcony": "Balcony",
+  "role.client": "Client",
+  "role.reception": "Reception",
+  "role.housekeeping": "Housekeeping",
+  "role.maintenance": "Maintenance",
+  "role.manager": "Manager",
+  "role.admin": "Admin"
 }

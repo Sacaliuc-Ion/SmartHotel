@@ -33,6 +33,15 @@ public class AdminController : ControllerBase
           return Ok();
      }
 
+     [HttpPatch("users/{id}/role")]
+     public async Task<IActionResult> UpdateUserRole(int id, [FromBody] UpdateUserRoleRequest request)
+     {
+          var requestedByUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+          var result = await _adminService.UpdateUserRoleAsync(id, requestedByUserId, request);
+          if (!result.Success) return BadRequest(new { message = result.Message });
+          return Ok();
+     }
+
      [HttpDelete("users/{id}")]
      public async Task<IActionResult> DeleteUser(int id)
      {

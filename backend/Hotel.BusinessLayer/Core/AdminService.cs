@@ -41,6 +41,26 @@ public class AdminService : IAdminService
           return ServiceResult.Ok();
      }
 
+     public async Task<ServiceResult> UpdateUserRoleAsync(int userId, int requestedByUserId, UpdateUserRoleRequest request)
+     {
+          if (userId == requestedByUserId)
+               return ServiceResult.Fail("You cannot change your own role from the admin panel.");
+
+          var roleName = request.Role?.Trim().ToLower() ?? string.Empty;
+          if (string.IsNullOrWhiteSpace(roleName))
+               return ServiceResult.Fail("Role is required");
+
+          var user = await _db.Context.Users.FindAsync(userId);
+          if (user == null) return ServiceResult.Fail("User not found");
+
+          var role = await _db.Context.Roles.FirstOrDefaultAsync(existingRole => existingRole.Name.ToLower() == roleName);
+          if (role == null) return ServiceResult.Fail("Role not found");
+
+          user.RoleId = role.Id;
+          await _db.SaveChangesAsync();
+          return ServiceResult.Ok();
+     }
+
      public async Task<ServiceResult> DeleteUserAsync(int userId, int requestedByUserId)
      {
           if (userId == requestedByUserId)
