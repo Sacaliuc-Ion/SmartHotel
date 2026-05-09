@@ -49,16 +49,16 @@ export const RoomsPage = () => {
   });
 
   return (
-    <div>
+    <div className="min-h-full bg-background">
       <div className="mb-4 px-4 py-2 lb-sidebar">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">Our rooms</h1>
-        <p className="text-gray-600">Discover your perfect stay from our selection of rooms</p>
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-slate-100 mb-2">Our rooms</h1>
+        <p className="text-gray-600 dark:text-slate-300">Discover your perfect stay from our selection of rooms</p>
       </div>
 
       {/* Filters */}
-      <div className="bg-white mx-4 p-6 rounded-lg border mb-6 grid md:grid-cols-4 gap-4">
+      <div className="bg-white dark:bg-slate-900 mx-4 p-6 rounded-lg border dark:border-slate-700 mb-6 grid md:grid-cols-4 gap-4">
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">Search</label>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
@@ -70,7 +70,7 @@ export const RoomsPage = () => {
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Room type</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">Room type</label>
           <Select value={typeFilter} onValueChange={setTypeFilter}>
             <SelectTrigger>
               <SelectValue />
@@ -85,7 +85,7 @@ export const RoomsPage = () => {
           </Select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Price range</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">Price range</label>
           <Select value={priceFilter} onValueChange={setPriceFilter}>
             <SelectTrigger>
               <SelectValue />
@@ -103,7 +103,7 @@ export const RoomsPage = () => {
       {/* Room Grid */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mx-4">
         {filteredRooms.map((room) => (
-          <div key={room.id} className="bg-white rounded-lg border overflow-hidden hover:shadow-lg transition-shadow">
+          <div key={room.id} className="bg-white dark:bg-slate-900 rounded-lg border dark:border-slate-700 overflow-hidden hover:shadow-lg dark:hover:shadow-black/30 transition-shadow">
             <div className="relative h-48">
               <img
                 src={roomImages[room.type]}
@@ -111,7 +111,7 @@ export const RoomsPage = () => {
                 className="w-full h-full object-cover"
               />
               <div className="absolute top-3 right-3">
-                <Badge variant={room.status === 'available' ? 'default' : 'secondary'} className="bg-white/90 text-gray-800">
+                <Badge variant={room.status === 'available' ? 'default' : 'secondary'} className="bg-white/90 text-gray-800 dark:bg-slate-950/90 dark:text-slate-100">
                   {room.status === 'available' ? 'Available' : 'Not available'}
                 </Badge>
               </div>
@@ -119,27 +119,27 @@ export const RoomsPage = () => {
             <div className="p-5">
               <div className="flex items-start justify-between mb-2">
                 <div>
-                  <h3 className="text-xl font-semibold text-gray-800">Room {room.number}</h3>
-                  <p className="text-sm text-gray-500 capitalize">{room.type} Room • Floor {room.floor}</p>
+                  <h3 className="text-xl font-semibold text-gray-800 dark:text-slate-100">Room {room.number}</h3>
+                  <p className="text-sm text-gray-500 dark:text-slate-400 capitalize">{room.type} Room • Floor {room.floor}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-2xl font-bold text-amber-600">{formatCurrency(room.pricePerNight)}</p>
-                  <p className="text-xs text-gray-500">per night</p>
+                  <p className="text-xs text-gray-500 dark:text-slate-400">per night</p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 mb-3 text-gray-600">
+              <div className="flex items-center gap-2 mb-3 text-gray-600 dark:text-slate-300">
                 <Users className="h-4 w-4" />
                 <span className="text-sm">{room.capacity} Guest{room.capacity > 1 ? 's' : ''}</span>
               </div>
 
-              <p className="text-sm text-gray-600 mb-4">{room.description}</p>
+              <p className="text-sm text-gray-600 dark:text-slate-300 mb-4">{room.description}</p>
 
               <div className="flex flex-wrap gap-2 mb-4">
                 {room.amenities.slice(0, 4).map((amenity) => {
                   const Icon = amenityIcons[amenity] || Wifi;
                   return (
-                    <div key={amenity} className="flex items-center gap-1 text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded">
+                    <div key={amenity} className="flex items-center gap-1 text-xs text-gray-600 dark:text-slate-300 bg-gray-50 dark:bg-slate-800 px-2 py-1 rounded">
                       <Icon className="h-3 w-3" />
                       <span>{amenity}</span>
                     </div>
@@ -161,7 +161,7 @@ export const RoomsPage = () => {
 
       {filteredRooms.length === 0 && (
         <div className="text-center py-12">
-          <p className="text-gray-500 text-lg">No rooms found matching your criteria</p>
+          <p className="text-gray-500 dark:text-slate-400 text-lg">No rooms found matching your criteria</p>
         </div>
       )}
     </div>
