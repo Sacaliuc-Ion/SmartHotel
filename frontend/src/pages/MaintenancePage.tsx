@@ -4,6 +4,7 @@ import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Plus, AlertCircle, Clock, Wrench, CheckCircle } from 'lucide-react';
 import { TicketFormModal } from '../components/maintenance/TicketFormModal';
+import { useTranslation } from 'react-i18next';
 
 const statusConfig: Record<string, { label: string; color: string; icon: React.ElementType }> = {
   'new': { label: 'New', color: 'bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-200', icon: AlertCircle },
@@ -23,6 +24,7 @@ const priorityColors: Record<string, string> = {
 
 export const MaintenancePage = () => {
   const { tickets, rooms } = useHotel();
+  const { t } = useTranslation();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<string | number | null>(null);
 
@@ -46,17 +48,17 @@ export const MaintenancePage = () => {
     <div className="min-h-full bg-background p-4">
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800 dark:text-slate-100 mb-2">Maintenance</h1>
-          <p className="text-gray-600 dark:text-slate-300">Manage maintenance tickets and work orders via live data</p>
+          <h1 className="text-3xl font-bold text-gray-800 dark:text-slate-100 mb-2">{t('maintenanceTitle')}</h1>
+          <p className="text-gray-600 dark:text-slate-300">{t('maintenanceSubtitle')}</p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)}><Plus className="h-4 w-4 mr-2" />New ticket</Button>
+        <Button onClick={() => setIsModalOpen(true)}><Plus className="h-4 w-4 mr-2" />{t('newTicket')}</Button>
       </div>
 
       <div className="grid md:grid-cols-4 gap-4 mb-4">
-        <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border dark:border-slate-700"><p className="text-sm text-gray-600 dark:text-slate-300">Open tickets</p><p className="text-3xl font-bold text-gray-800 dark:text-slate-100">{openTicketsCount}</p></div>
-        <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border dark:border-slate-700"><p className="text-sm text-gray-600 dark:text-slate-300">New</p><p className="text-3xl font-bold text-amber-600">{groupedTickets['new'].length}</p></div>
-        <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border dark:border-slate-700"><p className="text-sm text-gray-600 dark:text-slate-300">In progress</p><p className="text-3xl font-bold text-yellow-600">{groupedTickets['in-progress'].length}</p></div>
-        <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border dark:border-slate-700"><p className="text-sm text-gray-600 dark:text-slate-300">Resolved</p><p className="text-3xl font-bold text-green-600">{groupedTickets['resolved'].length}</p></div>
+        <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border dark:border-slate-700"><p className="text-sm text-gray-600 dark:text-slate-300">{t('openTickets')}</p><p className="text-3xl font-bold text-gray-800 dark:text-slate-100">{openTicketsCount}</p></div>
+        <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border dark:border-slate-700"><p className="text-sm text-gray-600 dark:text-slate-300">{t('new')}</p><p className="text-3xl font-bold text-amber-600">{groupedTickets['new'].length}</p></div>
+        <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border dark:border-slate-700"><p className="text-sm text-gray-600 dark:text-slate-300">{t('inProgress')}</p><p className="text-3xl font-bold text-yellow-600">{groupedTickets['in-progress'].length}</p></div>
+        <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border dark:border-slate-700"><p className="text-sm text-gray-600 dark:text-slate-300">{t('resolved')}</p><p className="text-3xl font-bold text-green-600">{groupedTickets['resolved'].length}</p></div>
       </div>
 
       <div className="grid lg:grid-cols-4 gap-4">
@@ -68,7 +70,7 @@ export const MaintenancePage = () => {
             <div key={status} className="bg-gray-50 dark:bg-slate-900/70 rounded-lg border border-transparent dark:border-slate-800 p-4">
               <div className="flex items-center gap-2 mb-4">
                 <Icon className="h-5 w-5 text-gray-600 dark:text-slate-300" />
-                <h3 className="font-semibold text-gray-800 dark:text-slate-100">{config.label}</h3>
+                <h3 className="font-semibold text-gray-800 dark:text-slate-100">{t(status === 'in-progress' ? 'inProgress' : status === 'waiting-parts' ? 'waitingParts' : status)}</h3>
                 <span className="ml-auto bg-gray-200 dark:bg-slate-800 text-gray-700 dark:text-slate-200 px-2 py-1 rounded text-sm">{statusTickets.length}</span>
               </div>
               <div className="space-y-3">
@@ -79,18 +81,18 @@ export const MaintenancePage = () => {
                     <div key={ticket.id} className="bg-white dark:bg-slate-950 p-4 rounded-lg border dark:border-slate-700 hover:shadow-md dark:hover:shadow-black/30 transition-shadow cursor-pointer" onClick={() => setSelectedTicket(ticket.id)}>
                       <div className="flex items-start justify-between mb-2">
                         <h4 className="font-semibold text-gray-800 dark:text-slate-100 text-sm">{ticket.issue}</h4>
-                        <Badge className={`${priorityColors[ticket.priority.toLowerCase()] || priorityColors['low']} text-xs`}>{ticket.priority}</Badge>
+                        <Badge className={`${priorityColors[ticket.priority.toLowerCase()] || priorityColors['low']} text-xs`}>{t(`priority.${ticket.priority.toLowerCase()}`, { defaultValue: ticket.priority })}</Badge>
                       </div>
-                      <p className="text-sm text-gray-600 dark:text-slate-300 mb-2">Room {ticket.roomNumber || room?.number}</p>
+                      <p className="text-sm text-gray-600 dark:text-slate-300 mb-2">{t('room')} {ticket.roomNumber || room?.number}</p>
                       {ticket.description && <p className="text-xs text-gray-500 dark:text-slate-400 mb-2 line-clamp-2">{ticket.description}</p>}
                       <div className="flex items-center justify-between text-xs text-gray-500 dark:text-slate-400">
-                        <span>{daysSince}d ago</span>
+                        <span>{t('daysAgo', { count: daysSince })}</span>
                         {ticket.assignee && <span className="font-medium text-gray-700 dark:text-slate-200">{ticket.assignee.split(' ')[0]}</span>}
                       </div>
                     </div>
                   );
                 })}
-                {statusTickets.length === 0 && <p className="text-sm text-gray-400 dark:text-slate-500 text-center py-8">No tickets</p>}
+                {statusTickets.length === 0 && <p className="text-sm text-gray-400 dark:text-slate-500 text-center py-8">{t('noTickets')}</p>}
               </div>
             </div>
           );

@@ -19,7 +19,7 @@ import {
 import Herro from '../assets/home/HeroIMG.jpg';
 import Lobby from '../assets/home/LobbyIMG.jpg';
 import Pool from '../assets//home/PoolIMG.jpg';
-import { usePreferences } from '../context/PreferencesContext';
+import { useTranslation } from 'react-i18next';
 
 /* ─── tiny intersection-observer hook for scroll-in animations ─── */
 function useReveal(isEnabled = true) {
@@ -52,7 +52,7 @@ function useReveal(isEnabled = true) {
 
 export const HomePage = () => {
   const { user } = useAuth();
-  const { t } = usePreferences();
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const roleActions = {

@@ -2,14 +2,14 @@ import { useAuth } from '../../context/AuthContext';
 import { LogOut, Hotel, Menu, X } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { Link } from 'react-router-dom';
-import { usePreferences } from '../../context/PreferencesContext';
 import { PreferencesControls } from './PreferencesControls';
+import { useTranslation } from 'react-i18next';
 
 interface TopbarProps { onToggleSidebar?: () => void; sidebarOpen?: boolean; }
 
 export const Topbar = ({ onToggleSidebar, sidebarOpen }: TopbarProps) => {
   const { user, logout } = useAuth();
-  const { t } = usePreferences();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const handleLogout = () => { logout(); navigate('/'); };
 

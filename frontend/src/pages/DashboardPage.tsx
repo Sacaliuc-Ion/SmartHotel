@@ -5,9 +5,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Bed, Wrench, Sparkles, Coins, TrendingUp, AlertCircle } from 'lucide-react';
 import { formatCurrency } from '../utils/hotelFormatting';
+import { useTranslation } from 'react-i18next';
 
 export const DashboardPage = () => {
   const { rooms, tickets } = useHotel();
+  const { t } = useTranslation();
   const [summary, setSummary] = useState<any>(null);
 
   useEffect(() => {
@@ -30,36 +32,36 @@ export const DashboardPage = () => {
   const availableRooms = totalRooms - occupiedRooms - dirtyRooms - outOfOrderRooms;
   
   const roomStatusData = [
-    { name: 'Available', value: Math.max(0, availableRooms), color: '#10b981' },
-    { name: 'Occupied', value: occupiedRooms, color: '#d97706' },
-    { name: 'Dirty/Cleaning', value: dirtyRooms, color: '#f59e0b' },
-    { name: 'Out of order', value: outOfOrderRooms, color: '#ef4444' },
+    { name: t('available'), value: Math.max(0, availableRooms), color: '#10b981' },
+    { name: t('occupied'), value: occupiedRooms, color: '#d97706' },
+    { name: `${t('status.dirty')}/${t('status.cleaning')}`, value: dirtyRooms, color: '#f59e0b' },
+    { name: t('outOfOrder'), value: outOfOrderRooms, color: '#ef4444' },
   ];
 
   const ticketStatusData = [
-    { status: 'New', count: tickets.filter((t) => t.status === 'new').length },
-    { status: 'In progress', count: tickets.filter((t) => t.status === 'in progress' || t.status === 'in-progress').length },
-    { status: 'Waiting', count: tickets.filter((t) => t.status === 'waiting parts' || t.status === 'waiting-parts').length },
-    { status: 'Resolved', count: tickets.filter((t) => t.status === 'resolved').length },
+    { status: t('new'), count: tickets.filter((t) => t.status === 'new').length },
+    { status: t('inProgress'), count: tickets.filter((t) => t.status === 'in progress' || t.status === 'in-progress').length },
+    { status: t('waitingParts'), count: tickets.filter((t) => t.status === 'waiting parts' || t.status === 'waiting-parts').length },
+    { status: t('resolved'), count: tickets.filter((t) => t.status === 'resolved').length },
   ];
 
   return (
     <div className="pb-8">
       <div className="mb-8 px-4 py-2">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">Dashboard</h1>
-        <p className="text-gray-600">Overview of hotel operations and metrics via API</p>
+        <h1 className="text-3xl font-bold text-gray-800 mb-2">{t('dashboardTitle')}</h1>
+        <p className="text-gray-600">{t('dashboardSubtitle')}</p>
       </div>
 
       <div className="grid mx-4 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card><CardHeader className="pb-3"><CardDescription>Occupancy rate</CardDescription></CardHeader><CardContent><div className="flex items-center justify-between"><div><p className="text-3xl font-bold text-gray-800">{occupancyRate}%</p><p className="text-sm text-gray-500">{occupiedRooms}/{totalRooms} rooms</p></div><Bed className="h-10 w-10 text-amber-600" /></div></CardContent></Card>
-        <Card><CardHeader className="pb-3"><CardDescription>Total revenue</CardDescription></CardHeader><CardContent><div className="flex items-center justify-between"><div><p className="text-3xl font-bold text-gray-800">{formatCurrency(totalRevenue)}</p><p className="text-sm text-gray-500">This period</p></div><Coins className="h-10 w-10 text-amber-600" /></div></CardContent></Card>
-        <Card><CardHeader className="pb-3"><CardDescription>Open tickets</CardDescription></CardHeader><CardContent><div className="flex items-center justify-between"><div><p className="text-3xl font-bold text-gray-800">{openTickets}</p><p className="text-sm text-gray-500">{outOfOrderRooms} rooms OOO</p></div><Wrench className="h-10 w-10 text-orange-600" /></div></CardContent></Card>
-        <Card><CardHeader className="pb-3"><CardDescription>Housekeeping</CardDescription></CardHeader><CardContent><div className="flex items-center justify-between"><div><p className="text-3xl font-bold text-gray-800">{dirtyRooms}</p><p className="text-sm text-gray-500">Rooms pending</p></div><Sparkles className="h-10 w-10 text-purple-600" /></div></CardContent></Card>
+        <Card><CardHeader className="pb-3"><CardDescription>{t('occupancyRate')}</CardDescription></CardHeader><CardContent><div className="flex items-center justify-between"><div><p className="text-3xl font-bold text-gray-800">{occupancyRate}%</p><p className="text-sm text-gray-500">{t('roomsRatio', { occupied: occupiedRooms, total: totalRooms })}</p></div><Bed className="h-10 w-10 text-amber-600" /></div></CardContent></Card>
+        <Card><CardHeader className="pb-3"><CardDescription>{t('totalRevenue')}</CardDescription></CardHeader><CardContent><div className="flex items-center justify-between"><div><p className="text-3xl font-bold text-gray-800">{formatCurrency(totalRevenue)}</p><p className="text-sm text-gray-500">{t('thisPeriod')}</p></div><Coins className="h-10 w-10 text-amber-600" /></div></CardContent></Card>
+        <Card><CardHeader className="pb-3"><CardDescription>{t('openTickets')}</CardDescription></CardHeader><CardContent><div className="flex items-center justify-between"><div><p className="text-3xl font-bold text-gray-800">{openTickets}</p><p className="text-sm text-gray-500">{t('roomsOOO', { count: outOfOrderRooms })}</p></div><Wrench className="h-10 w-10 text-orange-600" /></div></CardContent></Card>
+        <Card><CardHeader className="pb-3"><CardDescription>{t('housekeepingTitle')}</CardDescription></CardHeader><CardContent><div className="flex items-center justify-between"><div><p className="text-3xl font-bold text-gray-800">{dirtyRooms}</p><p className="text-sm text-gray-500">{t('roomsPending')}</p></div><Sparkles className="h-10 w-10 text-purple-600" /></div></CardContent></Card>
       </div>
 
       <div className="grid mx-4 lg:grid-cols-2 gap-6 mb-8">
         <Card>
-          <CardHeader><CardTitle>Occupancy trend</CardTitle><CardDescription>Last 7 days</CardDescription></CardHeader>
+          <CardHeader><CardTitle>{t('occupancyTrend')}</CardTitle><CardDescription>{t('last7Days')}</CardDescription></CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={last7Days}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="day" /><YAxis /><Tooltip /><Line type="monotone" dataKey="occupancy" stroke="#d97706" strokeWidth={2} /></LineChart>
@@ -67,7 +69,7 @@ export const DashboardPage = () => {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle>Room status distribution</CardTitle><CardDescription>Current breakdown</CardDescription></CardHeader>
+          <CardHeader><CardTitle>{t('roomStatusDistribution')}</CardTitle><CardDescription>{t('currentBreakdown')}</CardDescription></CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart><Pie data={roomStatusData} cx="50%" cy="50%" labelLine={false} label={(e) => `${e.name}: ${e.value}`} outerRadius={100} dataKey="value">
@@ -80,7 +82,7 @@ export const DashboardPage = () => {
 
       <div className="grid mx-4 lg:grid-cols-2 gap-6">
         <Card>
-          <CardHeader><CardTitle>Maintenance tickets</CardTitle><CardDescription>Status breakdown</CardDescription></CardHeader>
+          <CardHeader><CardTitle>{t('maintenanceTickets')}</CardTitle><CardDescription>{t('statusBreakdown')}</CardDescription></CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={250}>
               <BarChart data={ticketStatusData}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="status" /><YAxis /><Tooltip /><Bar dataKey="count" fill="#d97706" /></BarChart>
@@ -88,12 +90,12 @@ export const DashboardPage = () => {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle>Key metrics</CardTitle><CardDescription>Important indicators</CardDescription></CardHeader>
+          <CardHeader><CardTitle>{t('keyMetrics')}</CardTitle><CardDescription>{t('importantIndicators')}</CardDescription></CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between p-3 bg-amber-50 rounded-lg"><div className="flex items-center gap-3"><TrendingUp className="h-5 w-5 text-amber-600" /><div><p className="text-sm text-gray-600">Average daily rate</p><p className="font-bold text-gray-800">{formatCurrency(156)}</p></div></div></div>
-            <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg"><div className="flex items-center gap-3"><Sparkles className="h-5 w-5 text-green-600" /><div><p className="text-sm text-gray-600">Avg. Cleaning Time</p><p className="font-bold text-gray-800">28 minutes</p></div></div></div>
-            <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg"><div className="flex items-center gap-3"><Wrench className="h-5 w-5 text-orange-600" /><div><p className="text-sm text-gray-600">Avg. Resolution Time</p><p className="font-bold text-gray-800">2.3 days</p></div></div></div>
-            <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg"><div className="flex items-center gap-3"><AlertCircle className="h-5 w-5 text-red-600" /><div><p className="text-sm text-gray-600">Critical issues</p><p className="font-bold text-gray-800">{tickets.filter((t) => t.priority === 'urgent').length}</p></div></div></div>
+            <div className="flex items-center justify-between p-3 bg-amber-50 rounded-lg"><div className="flex items-center gap-3"><TrendingUp className="h-5 w-5 text-amber-600" /><div><p className="text-sm text-gray-600">{t('averageDailyRate')}</p><p className="font-bold text-gray-800">{formatCurrency(156)}</p></div></div></div>
+            <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg"><div className="flex items-center gap-3"><Sparkles className="h-5 w-5 text-green-600" /><div><p className="text-sm text-gray-600">{t('avgCleaningTime')}</p><p className="font-bold text-gray-800">{t('minutesValue', { count: 28 })}</p></div></div></div>
+            <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg"><div className="flex items-center gap-3"><Wrench className="h-5 w-5 text-orange-600" /><div><p className="text-sm text-gray-600">{t('avgResolutionTime')}</p><p className="font-bold text-gray-800">{t('daysValue', { count: 2.3 })}</p></div></div></div>
+            <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg"><div className="flex items-center gap-3"><AlertCircle className="h-5 w-5 text-red-600" /><div><p className="text-sm text-gray-600">{t('criticalIssues')}</p><p className="font-bold text-gray-800">{tickets.filter((t) => t.priority === 'urgent').length}</p></div></div></div>
           </CardContent>
         </Card>
       </div>

@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { api } from '../../services/api';
 import { Input } from '../ui/input';
 import { formatCurrency } from '../../utils/hotelFormatting';
+import { useTranslation } from 'react-i18next';
 
 interface CheckInOutModalProps {
   booking: any;
@@ -14,6 +15,7 @@ interface CheckInOutModalProps {
 }
 
 export const CheckInOutModal = ({ booking, type, onClose, onSuccess }: CheckInOutModalProps) => {
+  const { t } = useTranslation();
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -22,15 +24,15 @@ export const CheckInOutModal = ({ booking, type, onClose, onSuccess }: CheckInOu
       setIsSubmitting(true);
       if (type === 'checkin') {
         await api.post(`/reception/check-in/${booking.id}`, { notes });
-        toast.success(`${booking.guestName} a fost cazat in camera ${booking.roomNumber}.`);
+        toast.success(t('checkInSuccess', { guest: booking.guestName, room: booking.roomNumber }));
       } else {
         await api.post(`/reception/check-out/${booking.id}`, { notes });
-        toast.success(`${booking.guestName} a fost decazat din camera ${booking.roomNumber}. Camera a fost marcata pentru curatenie.`);
+        toast.success(t('checkOutSuccess', { guest: booking.guestName, room: booking.roomNumber }));
       }
       onSuccess();
       onClose();
     } catch (e: any) {
-      toast.error(e.message || `Eroare la operatiunea de ${type}`);
+      toast.error(e.message || t('operationError', { type }));
     } finally {
       setIsSubmitting(false);
     }
@@ -40,28 +42,28 @@ export const CheckInOutModal = ({ booking, type, onClose, onSuccess }: CheckInOu
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{type === 'checkin' ? 'Check in guest' : 'Check out guest'}</DialogTitle>
-          <DialogDescription>Confirma detaliile de {type === 'checkin' ? 'check-in' : 'check-out'} mai jos</DialogDescription>
+          <DialogTitle>{type === 'checkin' ? t('checkInGuest') : t('checkOutGuest')}</DialogTitle>
+          <DialogDescription>{t('confirmCheckOperation', { type: type === 'checkin' ? 'check-in' : 'check-out' })}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="grid grid-cols-2 gap-4">
-            <div><p className="text-sm text-gray-500">Guest name</p><p className="font-semibold">{booking.guestName}</p></div>
-            <div><p className="text-sm text-gray-500">Room</p><p className="font-semibold">Room {booking.roomNumber}</p></div>
-            <div><p className="text-sm text-gray-500">Check-in</p><p className="font-semibold">{booking.checkIn}</p></div>
-            <div><p className="text-sm text-gray-500">Check-out</p><p className="font-semibold">{booking.checkOut}</p></div>
-            <div><p className="text-sm text-gray-500">Guests</p><p className="font-semibold">{booking.guests ?? 1}</p></div>
-            <div><p className="text-sm text-gray-500">Total amount</p><p className="font-semibold">{formatCurrency(booking.totalAmount)}</p></div>
-            <div><p className="text-sm text-gray-500">Payment</p><p className="font-semibold capitalize">{booking.paymentStatus}</p></div>
+            <div><p className="text-sm text-gray-500">{t('guestName')}</p><p className="font-semibold">{booking.guestName}</p></div>
+            <div><p className="text-sm text-gray-500">{t('room')}</p><p className="font-semibold">{t('room')} {booking.roomNumber}</p></div>
+            <div><p className="text-sm text-gray-500">{t('checkIn')}</p><p className="font-semibold">{booking.checkIn}</p></div>
+            <div><p className="text-sm text-gray-500">{t('checkOut')}</p><p className="font-semibold">{booking.checkOut}</p></div>
+            <div><p className="text-sm text-gray-500">{t('guests')}</p><p className="font-semibold">{booking.guests ?? 1}</p></div>
+            <div><p className="text-sm text-gray-500">{t('totalAmount')}</p><p className="font-semibold">{formatCurrency(booking.totalAmount)}</p></div>
+            <div><p className="text-sm text-gray-500">{t('payment')}</p><p className="font-semibold capitalize">{t(`status.${booking.paymentStatus}`, { defaultValue: booking.paymentStatus })}</p></div>
           </div>
           <div>
-            <label className="text-sm text-gray-500 block mb-1">Notes</label>
-            <Input placeholder="Optional notes" value={notes} onChange={(e) => setNotes(e.target.value)} />
+            <label className="text-sm text-gray-500 block mb-1">{t('notes')}</label>
+            <Input placeholder={t('optionalNotes')} value={notes} onChange={(e) => setNotes(e.target.value)} />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
+          <Button variant="outline" onClick={onClose} disabled={isSubmitting}>{t('cancel')}</Button>
           <Button onClick={handleConfirm} disabled={isSubmitting}>
-            {isSubmitting ? 'Processing...' : `Confirm ${type === 'checkin' ? 'check-in' : 'check-out'}`}
+            {isSubmitting ? t('processing') : t('confirmOperation', { type: type === 'checkin' ? 'check-in' : 'check-out' })}
           </Button>
         </DialogFooter>
       </DialogContent>

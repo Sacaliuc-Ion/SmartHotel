@@ -5,6 +5,7 @@ import { Button } from '../components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { AlertTriangle, Sparkles } from 'lucide-react';
 import { DefectReportModal } from '../components/housekeeping/DefectReportModal';
+import { useTranslation } from 'react-i18next';
 
 const statusColors: Record<string, string> = {
   'dirty': 'bg-red-100 text-red-800 border-red-200 dark:bg-red-950/50 dark:text-red-200 dark:border-red-900',
@@ -24,6 +25,7 @@ const statusFlow: Record<string, string | null> = {
 
 export const HousekeepingPage = () => {
   const { rooms, updateRoomStatus, bookings } = useHotel();
+  const { t } = useTranslation();
   const [filterStatus, setFilterStatus] = useState('all');
   const [selectedRoom, setSelectedRoom] = useState<string | number | null>(null);
 
@@ -46,24 +48,24 @@ export const HousekeepingPage = () => {
   return (
     <div className="min-h-full bg-background p-4">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-800 dark:text-slate-100 mb-2">Housekeeping</h1>
-        <p className="text-gray-600 dark:text-slate-300">Manage room cleaning status and maintenance via live data</p>
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-slate-100 mb-2">{t('housekeepingTitle')}</h1>
+        <p className="text-gray-600 dark:text-slate-300">{t('housekeepingSubtitle')}</p>
       </div>
 
       <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border dark:border-slate-700 mb-6 flex items-center gap-4">
-        <label className="text-sm font-medium text-gray-700 dark:text-slate-200">Filter by status:</label>
+        <label className="text-sm font-medium text-gray-700 dark:text-slate-200">{t('filterByStatus')}</label>
         <Select value={filterStatus} onValueChange={setFilterStatus}>
           <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All rooms</SelectItem>
-            <SelectItem value="dirty">Dirty</SelectItem>
-            <SelectItem value="cleaning">Cleaning</SelectItem>
-            <SelectItem value="clean">Clean</SelectItem>
-            <SelectItem value="ready">Ready</SelectItem>
+            <SelectItem value="all">{t('allRooms')}</SelectItem>
+            <SelectItem value="dirty">{t('status.dirty')}</SelectItem>
+            <SelectItem value="cleaning">{t('status.cleaning')}</SelectItem>
+            <SelectItem value="clean">{t('status.clean')}</SelectItem>
+            <SelectItem value="ready">{t('status.ready')}</SelectItem>
           </SelectContent>
         </Select>
         <div className="ml-auto flex items-center gap-2 text-sm text-gray-600 dark:text-slate-300">
-          <Sparkles className="h-4 w-4" /><span>{filteredRooms.length} rooms</span>
+          <Sparkles className="h-4 w-4" /><span>{filteredRooms.length} {t('rooms')}</span>
         </div>
       </div>
 
@@ -71,8 +73,8 @@ export const HousekeepingPage = () => {
         <div className="bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-900 rounded-lg p-4 mb-6 flex items-start gap-3">
           <AlertTriangle className="h-5 w-5 text-orange-600 mt-0.5" />
           <div>
-            <h3 className="font-semibold text-orange-900 dark:text-orange-200 mb-1">Priority rooms</h3>
-            <p className="text-sm text-orange-800 dark:text-orange-300">{priorityRooms.length} room{priorityRooms.length > 1 ? 's' : ''} need to be ready for today's check-ins</p>
+            <h3 className="font-semibold text-orange-900 dark:text-orange-200 mb-1">{t('priorityRooms')}</h3>
+            <p className="text-sm text-orange-800 dark:text-orange-300">{t('priorityRoomsDescription', { count: priorityRooms.length, plural: priorityRooms.length > 1 ? 'e' : '' })}</p>
           </div>
         </div>
       )}
@@ -86,25 +88,25 @@ export const HousekeepingPage = () => {
             <div key={room.id} className={`bg-white dark:bg-slate-900 rounded-lg border dark:border-slate-700 p-5 ${isPriority ? 'border-orange-400 dark:border-orange-500 shadow-md dark:shadow-black/30' : ''}`}>
               <div className="flex items-start justify-between mb-3">
                 <div>
-                  <h3 className="text-xl font-bold text-gray-800 dark:text-slate-100">Room {room.number}</h3>
-                  <p className="text-sm text-gray-500 dark:text-slate-400 capitalize">{room.type} · Floor {room.floor}</p>
+                  <h3 className="text-xl font-bold text-gray-800 dark:text-slate-100">{t('room')} {room.number}</h3>
+                  <p className="text-sm text-gray-500 dark:text-slate-400 capitalize">{t(`roomType.${room.type}`)} · {t('floor')} {room.floor}</p>
                 </div>
                 {isPriority && (
                   <div className="flex items-center gap-1 text-orange-600 dark:text-orange-300 bg-orange-50 dark:bg-orange-950/40 px-2 py-1 rounded text-xs font-medium">
-                    <AlertTriangle className="h-3 w-3" />Priority
+                    <AlertTriangle className="h-3 w-3" />{t('priorityLabel')}
                   </div>
                 )}
               </div>
               <div className="mb-4">
-                <Badge className={`${statusColors[currentStatus] || 'bg-gray-100'} border`}>{currentStatus.replace('-', ' ')}</Badge>
+                <Badge className={`${statusColors[currentStatus] || 'bg-gray-100'} border`}>{t(`status.${currentStatus}`, { defaultValue: currentStatus.replace('-', ' ') })}</Badge>
               </div>
               <div className="flex gap-2">
                 {nextStatus && (
                   <Button size="sm" className="flex-1" onClick={() => handleStatusChange(room.id, currentStatus)}>
-                    Mark as {nextStatus.replace('-', ' ')}
+                    {t('markAs', { status: t(`status.${nextStatus}`, { defaultValue: nextStatus.replace('-', ' ') }) })}
                   </Button>
                 )}
-                <Button size="sm" variant="outline" onClick={() => setSelectedRoom(room.id)}>Report issue</Button>
+                <Button size="sm" variant="outline" onClick={() => setSelectedRoom(room.id)}>{t('reportIssue')}</Button>
               </div>
             </div>
           );
@@ -112,7 +114,7 @@ export const HousekeepingPage = () => {
       </div>
 
       {filteredRooms.length === 0 && (
-        <div className="text-center py-12"><p className="text-gray-500 dark:text-slate-400">No rooms match the selected filter</p></div>
+        <div className="text-center py-12"><p className="text-gray-500 dark:text-slate-400">{t('noRoomsMatch')}</p></div>
       )}
 
       {selectedRoom && (

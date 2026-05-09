@@ -8,13 +8,13 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { usePreferences } from '../context/PreferencesContext';
 import { PreferencesControls } from '../components/layout/PreferencesControls';
+import { useTranslation } from 'react-i18next';
 
 export const LoginPage = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
-  const { t } = usePreferences();
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('login');
   
   // Login form state
