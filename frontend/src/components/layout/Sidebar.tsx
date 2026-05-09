@@ -1,22 +1,24 @@
 import { useAuth } from '../../context/AuthContext';
 import { NavLink } from 'react-router';
 import { Home, DoorOpen, Calendar, Sparkles, Wrench, Settings, BarChart3, Building } from 'lucide-react';
+import { TranslationKey, usePreferences } from '../../context/PreferencesContext';
 
-interface NavItem { label: string; path: string; icon: React.ElementType; roles: string[]; }
+interface NavItem { labelKey: TranslationKey; path: string; icon: React.ElementType; roles: string[]; }
 
 const navItems: NavItem[] = [
-  { label: 'Home',         path: '/',            icon: Home,      roles: ['client','reception','housekeeping','maintenance','admin','manager'] },
-  { label: 'Rooms',        path: '/rooms',        icon: Building,  roles: ['client','reception','housekeeping','maintenance','admin','manager'] },
-  { label: 'Front desk',   path: '/front-desk',  icon: DoorOpen,  roles: ['reception','admin','manager'] },
-  { label: 'Room board',   path: '/room-board',  icon: Calendar,  roles: ['reception','admin','manager'] },
-  { label: 'Housekeeping', path: '/housekeeping', icon: Sparkles,  roles: ['housekeeping','admin','manager'] },
-  { label: 'Maintenance',  path: '/maintenance',  icon: Wrench,    roles: ['maintenance','admin','manager'] },
-  { label: 'Dashboard',    path: '/dashboard',   icon: BarChart3, roles: ['admin','manager'] },
-  { label: 'Admin',        path: '/admin',        icon: Settings,  roles: ['admin'] },
+  { labelKey: 'navHome',         path: '/',            icon: Home,      roles: ['client','reception','housekeeping','maintenance','admin','manager'] },
+  { labelKey: 'navRooms',        path: '/rooms',        icon: Building,  roles: ['client','reception','housekeeping','maintenance','admin','manager'] },
+  { labelKey: 'navFrontDesk',    path: '/front-desk',   icon: DoorOpen,  roles: ['reception','admin','manager'] },
+  { labelKey: 'navRoomBoard',    path: '/room-board',   icon: Calendar,  roles: ['reception','admin','manager'] },
+  { labelKey: 'navHousekeeping', path: '/housekeeping', icon: Sparkles,  roles: ['housekeeping','admin','manager'] },
+  { labelKey: 'navMaintenance',  path: '/maintenance',  icon: Wrench,    roles: ['maintenance','admin','manager'] },
+  { labelKey: 'navDashboard',    path: '/dashboard',    icon: BarChart3, roles: ['admin','manager'] },
+  { labelKey: 'navAdmin',        path: '/admin',        icon: Settings,  roles: ['admin'] },
 ];
 
 export const Sidebar = ({ isOpen = true }: { isOpen?: boolean }) => {
   const { user } = useAuth();
+  const { t } = usePreferences();
   const filtered = navItems.filter((item) =>
     user ? item.roles.includes(user.role) : item.roles.includes('client')
   );
@@ -42,7 +44,7 @@ export const Sidebar = ({ isOpen = true }: { isOpen?: boolean }) => {
                 }
               >
                 <Icon className="h-5 w-5 shrink-0" />
-                <span>{item.label}</span>
+                <span>{t(item.labelKey)}</span>
               </NavLink>
             );
           })}
