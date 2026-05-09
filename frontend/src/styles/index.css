@@ -12,6 +12,33 @@
   --hp-cream: #fdf8f2;
   --hp-text: #1e2d45;
   --hp-muted: #6b7a94;
+  --hp-surface: #ffffff;
+  --hp-surface-soft: #f5efe6;
+  --hp-border: rgba(200, 151, 58, 0.22);
+  --hp-panel-shadow: rgba(15, 27, 53, 0.08);
+  --hp-login-bg: linear-gradient(135deg, var(--hp-gold-pale) 0%, #fff8ee 52%, var(--hp-cream) 100%);
+}
+
+.dark {
+  --hp-navy: #f8fafc;
+  --hp-navy-light: #d7e0ee;
+  --hp-gold: #e7bd63;
+  --hp-gold-light: #f2d489;
+  --hp-gold-pale: #2a2418;
+  --hp-cream: #0b1220;
+  --hp-text: #f8fafc;
+  --hp-muted: #a9b4c6;
+  --hp-surface: #111827;
+  --hp-surface-soft: #162033;
+  --hp-border: rgba(231, 189, 99, 0.24);
+  --hp-panel-shadow: rgba(0, 0, 0, 0.35);
+  --hp-login-bg: linear-gradient(135deg, #0b1220 0%, #151f32 52%, #2a2418 100%);
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
 }
 
 /* ── Keyframes ──────────────────────────────────── */
@@ -126,6 +153,10 @@
 /* ── Page background ────────────────────────────── */
 .hp-bg {
   background-color: var(--hp-cream);
+}
+
+.login-shell {
+  background: var(--hp-login-bg);
 }
 
 /* ── Hero overlay ───────────────────────────────── */
@@ -293,8 +324,8 @@
 
 /* ── Action cards (logged-in) ───────────────────── */
 .hp-action-card {
-  background: #ffffff;
-  border-color: #e8e0d4;
+  background: var(--hp-surface);
+  border-color: var(--hp-border);
   box-shadow: 0 1px 4px rgba(15, 27, 53, 0.06);
   transition: box-shadow 0.3s, transform 0.3s;
 }
@@ -313,7 +344,7 @@
 }
 
 /* ── Why-us section ─────────────────────────────── */
-.hp-why-section { background: #f5efe6; }
+.hp-why-section { background: var(--hp-surface-soft); }
 
 .hp-why-card {
   transition: transform 0.25s;
@@ -362,9 +393,9 @@
 
 /* ── Topbar ─────────────────────────────────────── */
 .lb-topbar {
-  background: #fdf8f2;
-  border-bottom: 1px solid rgba(200, 151, 58, 0.22);
-  box-shadow: 0 1px 8px rgba(15, 27, 53, 0.08);
+  background: var(--hp-cream);
+  border-bottom: 1px solid var(--hp-border);
+  box-shadow: 0 1px 8px var(--hp-panel-shadow);
 }
 
 .lb-topbar-title {
@@ -383,6 +414,10 @@
 .lb-topbar-icon-btn:hover {
   color: var(--hp-text);
   background: rgba(15, 27, 53, 0.06);
+}
+
+.dark .lb-topbar-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
 }
 
 /* Sign-in button (guest) */
@@ -411,7 +446,7 @@
 /* Logout button */
 .lb-topbar-logout-btn {
   color: var(--hp-muted);
-  border: 1px solid rgba(15, 27, 53, 0.14);
+  border: 1px solid var(--hp-border);
   border-radius: 10px;
 }
 .lb-topbar-logout-btn:hover {
@@ -422,8 +457,8 @@
 
 /* ── Sidebar ────────────────────────────────────── */
 .lb-sidebar {
-  background: #fdf8f2;
-  border-right: 1px solid rgba(200, 151, 58, 0.22);
+  background: var(--hp-cream);
+  border-right: 1px solid var(--hp-border);
 }
 
 /* Nav links — default */
@@ -445,4 +480,19 @@
 .lb-sidebar-footer {
   border-color: rgba(200, 151, 58, 0.2);
 }
-.lb-sidebar-footer-text { color: var(--hp-muted); }
+.lb-sidebar-footer-text { color: var(--hp-muted); }
+
+.lb-preference-control {
+  background: color-mix(in srgb, var(--hp-surface) 88%, transparent);
+  border-color: var(--hp-border);
+  color: var(--hp-text);
+}
+
+.lb-preference-control:hover {
+  background: color-mix(in srgb, var(--hp-gold-pale) 70%, var(--hp-surface));
+}
+
+.dark .lb-nav-inactive:hover,
+.dark .lb-topbar-logout-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}

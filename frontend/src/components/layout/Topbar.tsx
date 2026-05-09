@@ -2,11 +2,14 @@ import { useAuth } from '../../context/AuthContext';
 import { LogOut, Hotel, Menu, X } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { Link } from 'react-router-dom';
+import { usePreferences } from '../../context/PreferencesContext';
+import { PreferencesControls } from './PreferencesControls';
 
 interface TopbarProps { onToggleSidebar?: () => void; sidebarOpen?: boolean; }
 
 export const Topbar = ({ onToggleSidebar, sidebarOpen }: TopbarProps) => {
   const { user, logout } = useAuth();
+  const { t } = usePreferences();
   const navigate = useNavigate();
   const handleLogout = () => { logout(); navigate('/'); };
 
@@ -17,7 +20,7 @@ export const Topbar = ({ onToggleSidebar, sidebarOpen }: TopbarProps) => {
           <button
             onClick={onToggleSidebar}
             className="lb-topbar-icon-btn p-2 rounded-lg transition-colors"
-            aria-label="Toggle sidebar"
+            aria-label={t('toggleSidebar')}
           >
             {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
@@ -33,14 +36,18 @@ export const Topbar = ({ onToggleSidebar, sidebarOpen }: TopbarProps) => {
       </div>
 
       {!user ? (
-        <button
-          onClick={() => navigate('/login')}
-          className="lb-topbar-signin-btn px-5 py-2 rounded-lg text-sm font-medium transition-all"
-        >
-          Sign in
-        </button>
+        <div className="flex items-center gap-2">
+          <PreferencesControls compact />
+          <button
+            onClick={() => navigate('/login')}
+            className="lb-topbar-signin-btn px-5 py-2 rounded-lg text-sm font-medium transition-all"
+          >
+            {t('signIn')}
+          </button>
+        </div>
       ) : (
         <div className="flex items-center gap-4">
+          <PreferencesControls compact />
           <div className="text-right hidden sm:block">
             <p className="text-sm font-medium lb-topbar-username">{user.name}</p>
             <p className="text-xs lb-topbar-role capitalize">{user.role}</p>
@@ -52,7 +59,7 @@ export const Topbar = ({ onToggleSidebar, sidebarOpen }: TopbarProps) => {
             onClick={handleLogout}
             className="lb-topbar-logout-btn flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all"
           >
-            <LogOut className="h-4 w-4" /><span className="hidden sm:inline">Logout</span>
+            <LogOut className="h-4 w-4" /><span className="hidden sm:inline">{t('logout')}</span>
           </button>
         </div>
       )}
