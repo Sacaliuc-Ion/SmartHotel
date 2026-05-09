@@ -12,6 +12,7 @@ import Double from '../assets/rooms/Double.jpg';
 import Suite from '../assets/rooms/Suite.jpg';
 import Deluxe from '../assets/rooms/Deluxe.jpg';
 import { formatCurrency } from '../utils/hotelFormatting';
+import { useTranslation } from 'react-i18next';
 
 const roomImages: Record<string, string> = {
   single: Single,
@@ -29,6 +30,7 @@ export const RoomDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const { rooms, addBooking } = useHotel();
   const { isAuthenticated } = useAuth();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const room = rooms.find((r) => r.id.toString() === id);
   const today = useMemo(() => new Date().toISOString().split('T')[0], []);
@@ -46,29 +48,29 @@ export const RoomDetailPage = () => {
     if (!room) return;
 
     if (!isAuthenticated) {
-      toast.error('Trebuie sa fii autentificat pentru a face o rezervare.');
+      toast.error(t('bookingAuthRequired'));
       navigate('/login');
       return;
     }
 
     if (!checkIn || !checkOut) {
-      toast.error('Selecteaza datele de check-in si check-out.');
+      toast.error(t('bookingDatesRequired'));
       return;
     }
 
     if (checkOut <= checkIn) {
-      toast.error('Data de check-out trebuie sa fie dupa check-in.');
+      toast.error(t('bookingInvalidDates'));
       return;
     }
 
     const guestCount = Number(guests);
     if (!Number.isInteger(guestCount) || guestCount < 1) {
-      toast.error('Numarul de oaspeti trebuie sa fie cel putin 1.');
+      toast.error(t('bookingInvalidGuests'));
       return;
     }
 
     if (guestCount > room.capacity) {
-      toast.error(`Aceasta camera accepta maximum ${room.capacity} oaspeti.`);
+      toast.error(t('bookingTooManyGuests', { count: room.capacity }));
       return;
     }
 
@@ -88,15 +90,15 @@ export const RoomDetailPage = () => {
 
   if (!room) return (
     <div className="text-center py-12">
-      <p className="text-gray-500 text-lg mb-4">Room not found</p>
-      <Button onClick={() => navigate('/rooms')}>Back to rooms</Button>
+      <p className="text-gray-500 text-lg mb-4">{t('roomNotFound')}</p>
+      <Button onClick={() => navigate('/rooms')}>{t('backToRooms')}</Button>
     </div>
   );
 
   return (
     <div>
       <Button variant="ghost" onClick={() => navigate('/rooms')} className="mb-6">
-        <ArrowLeft className="h-4 w-4 mr-2" />Back to rooms
+        <ArrowLeft className="h-4 w-4 mr-2" />{t('backToRooms')}
       </Button>
       <div className="grid lg:grid-cols-2 gap-8">
         <div className="space-y-4">
@@ -106,33 +108,33 @@ export const RoomDetailPage = () => {
         </div>
         <div>
           <Badge variant={room.status === 'available' ? 'default' : 'secondary'} className="mb-3">
-            {room.status === 'available' ? 'Available' : 'Not available'}
+            {room.status === 'available' ? t('available') : t('notAvailable')}
           </Badge>
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">Room {room.number}</h1>
-          <p className="text-lg text-gray-600 capitalize mb-4">{room.type} room</p>
+          <h1 className="text-4xl font-bold text-gray-800 mb-2">{t('room')} {room.number}</h1>
+          <p className="text-lg text-gray-600 capitalize mb-4">{t(`roomType.${room.type}`)}</p>
           <div className="flex items-center gap-3 mb-6 text-gray-600">
-            <div className="flex items-center gap-2"><MapPin className="h-5 w-5" /><span>Floor {room.floor}</span></div>
-            <div className="flex items-center gap-2"><Users className="h-5 w-5" /><span>{room.capacity} Guest{room.capacity > 1 ? 's' : ''}</span></div>
+            <div className="flex items-center gap-2"><MapPin className="h-5 w-5" /><span>{t('floor')} {room.floor}</span></div>
+            <div className="flex items-center gap-2"><Users className="h-5 w-5" /><span>{room.capacity} {room.capacity > 1 ? t('guests') : t('guest')}</span></div>
           </div>
           <p className="text-gray-700 leading-relaxed mb-6">{room.description}</p>
           <div className="bg-amber-50 p-6 rounded-lg mb-6">
-            <p className="text-sm text-gray-600 mb-1">Price per night</p>
+            <p className="text-sm text-gray-600 mb-1">{t('pricePerNight')}</p>
             <p className="text-4xl font-bold text-amber-600">{formatCurrency(room.pricePerNight)}</p>
           </div>
           <div className="mb-6 rounded-lg border border-gray-200 p-4 space-y-4">
-            <h3 className="text-lg font-semibold text-gray-800">Reserve this room</h3>
+            <h3 className="text-lg font-semibold text-gray-800">{t('reserveRoom')}</h3>
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
-                <label className="mb-1 block text-sm text-gray-600">Check-in</label>
+                <label className="mb-1 block text-sm text-gray-600">{t('checkIn')}</label>
                 <Input type="date" value={checkIn} min={today} onChange={(e) => setCheckIn(e.target.value)} />
               </div>
               <div>
-                <label className="mb-1 block text-sm text-gray-600">Check-out</label>
+                <label className="mb-1 block text-sm text-gray-600">{t('checkOut')}</label>
                 <Input type="date" value={checkOut} min={checkIn || today} onChange={(e) => setCheckOut(e.target.value)} />
               </div>
             </div>
             <div>
-              <label className="mb-1 block text-sm text-gray-600">Guests</label>
+              <label className="mb-1 block text-sm text-gray-600">{t('guests')}</label>
               <Input
                 type="number"
                 min="1"
@@ -140,18 +142,18 @@ export const RoomDetailPage = () => {
                 value={guests}
                 onChange={(e) => setGuests(e.target.value)}
               />
-              <p className="mt-1 text-xs text-gray-500">Maximum {room.capacity} guests for this room.</p>
+              <p className="mt-1 text-xs text-gray-500">{t('maxGuests', { count: room.capacity })}</p>
             </div>
           </div>
           <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-3">Amenities</h3>
+            <h3 className="text-lg font-semibold text-gray-800 mb-3">{t('amenities')}</h3>
             <div className="grid grid-cols-2 gap-3">
               {room.amenities.map((amenity) => {
                 const Icon = amenityIcons[amenity] || Wifi;
                 return (
                   <div key={amenity} className="flex items-center gap-2 text-gray-700">
                     <div className="p-2 bg-gray-100 rounded"><Icon className="h-5 w-5 text-amber-600" /></div>
-                    <span>{amenity}</span>
+                    <span>{t(`amenity.${amenity}`, { defaultValue: amenity })}</span>
                   </div>
                 );
               })}
@@ -164,10 +166,10 @@ export const RoomDetailPage = () => {
             onClick={handleBookNow}
           >
             {room.status !== 'available'
-              ? 'Currently unavailable'
+              ? t('currentlyUnavailable')
               : isSubmitting
-                ? 'Booking...'
-                : 'Book now'}
+                ? t('booking')
+                : t('bookNow')}
           </Button>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import { Languages, Moon, Sun } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Language, usePreferences } from '../../context/PreferencesContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
@@ -9,7 +10,8 @@ const languageLabels: Record<Language, string> = {
 };
 
 export const PreferencesControls = ({ compact = false }: { compact?: boolean }) => {
-  const { language, setLanguage, theme, toggleTheme, t } = usePreferences();
+  const { t } = useTranslation();
+  const { language, setLanguage, theme, toggleTheme } = usePreferences();
   const ThemeIcon = theme === 'dark' ? Sun : Moon;
 
   return (
@@ -25,7 +27,7 @@ export const PreferencesControls = ({ compact = false }: { compact?: boolean }) 
             <SelectValue>{languageLabels[language]}</SelectValue>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="ro">Romana</SelectItem>
+            <SelectItem value="ro">Română</SelectItem>
             <SelectItem value="en">English</SelectItem>
             <SelectItem value="ru">Русский</SelectItem>
           </SelectContent>

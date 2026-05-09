@@ -5,11 +5,13 @@ import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
+import { useTranslation } from 'react-i18next';
 
 interface DefectReportModalProps { roomId: string | number; onClose: () => void; }
 
 export const DefectReportModal = ({ roomId, onClose }: DefectReportModalProps) => {
   const { rooms, addTicket } = useHotel();
+  const { t } = useTranslation();
   const [issue, setIssue] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState<string>('medium');
@@ -26,35 +28,35 @@ export const DefectReportModal = ({ roomId, onClose }: DefectReportModalProps) =
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent className="dark:border-slate-700 dark:bg-slate-900">
         <DialogHeader>
-          <DialogTitle>Report defect</DialogTitle>
-          <DialogDescription>Create a maintenance ticket for Room {room?.number || roomId}</DialogDescription>
+          <DialogTitle>{t('reportDefect')}</DialogTitle>
+          <DialogDescription>{t('reportDefectDescription', { room: room?.number || roomId })}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="space-y-4 py-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">Issue title</label>
-              <Input placeholder="e.g., Leaky faucet, Broken AC..." value={issue} onChange={(e) => setIssue(e.target.value)} required />
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">{t('issueTitle')}</label>
+              <Input placeholder={t('defectIssuePlaceholder')} value={issue} onChange={(e) => setIssue(e.target.value)} required />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">Description</label>
-              <Textarea placeholder="Provide more details..." value={description} onChange={(e) => setDescription(e.target.value)} rows={4} />
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">{t('description')}</label>
+              <Textarea placeholder={t('provideMoreDetails')} value={description} onChange={(e) => setDescription(e.target.value)} rows={4} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">Priority</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">{t('priority')}</label>
               <Select value={priority} onValueChange={setPriority}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="urgent">Urgent</SelectItem>
+                  <SelectItem value="low">{t('priority.low')}</SelectItem>
+                  <SelectItem value="medium">{t('priority.medium')}</SelectItem>
+                  <SelectItem value="high">{t('priority.high')}</SelectItem>
+                  <SelectItem value="urgent">{t('priority.urgent')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-            <Button type="submit">Create ticket</Button>
+            <Button type="button" variant="outline" onClick={onClose}>{t('cancel')}</Button>
+            <Button type="submit">{t('createTicket')}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

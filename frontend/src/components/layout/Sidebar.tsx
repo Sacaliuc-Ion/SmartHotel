@@ -1,9 +1,9 @@
 import { useAuth } from '../../context/AuthContext';
 import { NavLink } from 'react-router';
 import { Home, DoorOpen, Calendar, Sparkles, Wrench, Settings, BarChart3, Building } from 'lucide-react';
-import { TranslationKey, usePreferences } from '../../context/PreferencesContext';
+import { useTranslation } from 'react-i18next';
 
-interface NavItem { labelKey: TranslationKey; path: string; icon: React.ElementType; roles: string[]; }
+interface NavItem { labelKey: string; path: string; icon: React.ElementType; roles: string[]; }
 
 const navItems: NavItem[] = [
   { labelKey: 'navHome',         path: '/',            icon: Home,      roles: ['client','reception','housekeeping','maintenance','admin','manager'] },
@@ -18,7 +18,7 @@ const navItems: NavItem[] = [
 
 export const Sidebar = ({ isOpen = true }: { isOpen?: boolean }) => {
   const { user } = useAuth();
-  const { t } = usePreferences();
+  const { t } = useTranslation();
   const filtered = navItems.filter((item) =>
     user ? item.roles.includes(user.role) : item.roles.includes('client')
   );

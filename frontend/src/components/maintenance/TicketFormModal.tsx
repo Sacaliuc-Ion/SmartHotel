@@ -7,11 +7,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Switch } from '../ui/switch';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 interface TicketFormModalProps { ticketId?: string | number; onClose: () => void; }
 
 export const TicketFormModal = ({ ticketId, onClose }: TicketFormModalProps) => {
   const { rooms, tickets, addTicket, updateTicket, updateRoomStatus } = useHotel();
+  const { t } = useTranslation();
   const [roomId, setRoomId] = useState('');
   const [issue, setIssue] = useState('');
   const [description, setDescription] = useState('');
@@ -38,7 +40,7 @@ export const TicketFormModal = ({ ticketId, onClose }: TicketFormModalProps) => 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!roomId || !issue.trim()) { toast.error('Please fill in all required fields'); return; }
+    if (!roomId || !issue.trim()) { toast.error(t('ticketRequiredFields')); return; }
 
     if (isEditing && ticketId) {
       updateTicket(ticketId, { roomId, issue, description, priority, status, assignee: assignee || undefined });
@@ -49,11 +51,11 @@ export const TicketFormModal = ({ ticketId, onClose }: TicketFormModalProps) => 
           updateRoomStatus(roomId, 'available'); 
         }
       }
-      toast.success('Cererea a fost inregistrata!');
+      toast.success(t('ticketRegistered'));
     } else {
       addTicket({ roomId, issue, description, priority });
       if (markOutOfOrder) updateRoomStatus(roomId, 'out-of-order');
-      toast.success('Serviciul de mentenanta apelat.');
+      toast.success(t('maintenanceCalled'));
     }
     onClose();
   };
@@ -62,64 +64,64 @@ export const TicketFormModal = ({ ticketId, onClose }: TicketFormModalProps) => 
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl dark:border-slate-700 dark:bg-slate-900">
         <DialogHeader>
-          <DialogTitle>{isEditing ? 'Edit ticket' : 'New maintenance ticket'}</DialogTitle>
-          <DialogDescription>{isEditing ? 'Update ticket details and status' : 'Create a new maintenance work order'}</DialogDescription>
+          <DialogTitle>{isEditing ? t('editTicket') : t('newMaintenanceTicket')}</DialogTitle>
+          <DialogDescription>{isEditing ? t('updateTicketDetails') : t('createMaintenanceWorkOrder')}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">Room *</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">{t('room')} *</label>
                 <Select value={roomId} onValueChange={setRoomId} disabled={isEditing}>
-                  <SelectTrigger><SelectValue placeholder="Select room" /></SelectTrigger>
-                  <SelectContent>{rooms.map((r) => <SelectItem key={r.id} value={r.id.toString()}>Room {r.number} - {r.type}</SelectItem>)}</SelectContent>
+                  <SelectTrigger><SelectValue placeholder={t('selectRoom')} /></SelectTrigger>
+                  <SelectContent>{rooms.map((r) => <SelectItem key={r.id} value={r.id.toString()}>{t('room')} {r.number} - {t(`roomType.${r.type}`)}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">Priority *</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">{t('priority')} *</label>
                 <Select value={priority} onValueChange={setPriority}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="low">Low</SelectItem><SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="high">High</SelectItem><SelectItem value="urgent">Urgent</SelectItem>
+                    <SelectItem value="low">{t('priority.low')}</SelectItem><SelectItem value="medium">{t('priority.medium')}</SelectItem>
+                    <SelectItem value="high">{t('priority.high')}</SelectItem><SelectItem value="urgent">{t('priority.urgent')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">Issue title *</label>
-              <Input placeholder="e.g., Broken AC, Leaky faucet..." value={issue} onChange={(e) => setIssue(e.target.value)} required />
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">{t('issueTitleRequired')}</label>
+              <Input placeholder={t('issuePlaceholder')} value={issue} onChange={(e) => setIssue(e.target.value)} required />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">Description</label>
-              <Textarea placeholder="Detailed description..." value={description} onChange={(e) => setDescription(e.target.value)} rows={4} />
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">{t('description')}</label>
+              <Textarea placeholder={t('detailedDescription')} value={description} onChange={(e) => setDescription(e.target.value)} rows={4} />
             </div>
             {isEditing && (
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">Status</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">{t('status')}</label>
                   <Select value={status} onValueChange={setStatus}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="new">New</SelectItem><SelectItem value="in-progress">In Progress</SelectItem>
-                      <SelectItem value="resolved">Resolved</SelectItem>
+                      <SelectItem value="new">{t('new')}</SelectItem><SelectItem value="in-progress">{t('inProgress')}</SelectItem>
+                      <SelectItem value="resolved">{t('resolved')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">Assignee</label>
-                  <Input placeholder="Technician name" value={assignee} onChange={(e) => setAssignee(e.target.value)} disabled />
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">{t('assignee')}</label>
+                  <Input placeholder={t('technicianName')} value={assignee} onChange={(e) => setAssignee(e.target.value)} disabled />
                 </div>
               </div>
             )}
             <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-slate-950 rounded-lg">
-              <div><p className="font-medium text-gray-800 dark:text-slate-100">Mark room as out of order</p><p className="text-sm text-gray-600 dark:text-slate-300">Room will be unavailable for booking</p></div>
+              <div><p className="font-medium text-gray-800 dark:text-slate-100">{t('markRoomOutOfOrder')}</p><p className="text-sm text-gray-600 dark:text-slate-300">{t('roomUnavailableForBooking')}</p></div>
               <Switch checked={markOutOfOrder} onCheckedChange={setMarkOutOfOrder} />
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-            <Button type="submit">{isEditing ? 'Update' : 'Create'} Ticket</Button>
+            <Button type="button" variant="outline" onClick={onClose}>{t('cancel')}</Button>
+            <Button type="submit">{isEditing ? t('updateTicket') : t('createTicket')}</Button>
           </DialogFooter>
         </form>
       </DialogContent>
