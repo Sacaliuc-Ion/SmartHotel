@@ -24,10 +24,10 @@ export const formatStatusLabel = (value: string) =>
     .map((chunk) => chunk.charAt(0).toUpperCase() + chunk.slice(1))
     .join(' ');
 
-export const formatCurrency = (value: number) =>
+export const formatCurrency = (value: number, currency = localStorage.getItem('smart-hotel-currency') || 'MDL') =>
   new Intl.NumberFormat('ro-MD', {
     style: 'currency',
-    currency: 'MDL',
+    currency,
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(value);

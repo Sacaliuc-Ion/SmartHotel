@@ -8,9 +8,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { Badge } from '../components/ui/badge';
 import { Building, Users, Settings } from 'lucide-react';
 import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { useAuth } from '../context/AuthContext';
 import { formatCurrency } from '../utils/hotelFormatting';
 import { useTranslation } from 'react-i18next';
+
+const editableSettingKeys = ['Currency', 'CheckInTime', 'CheckOutTime'] as const;
+const currencyOptions = ['MDL', 'EUR', 'USD', 'RON'] as const;
 
 export const AdminPage = () => {
   const { rooms, refreshData } = useHotel();
@@ -20,6 +25,10 @@ export const AdminPage = () => {
   
   const [users, setUsers] = useState<any[]>([]);
   const [settings, setSettings] = useState<any[]>([]);
+  const [settingDrafts, setSettingDrafts] = useState<Record<string, string>>({});
+  const [priceDrafts, setPriceDrafts] = useState<Record<string, string>>({});
+  const [savingSetting, setSavingSetting] = useState<string | null>(null);
+  const [savingRoomType, setSavingRoomType] = useState<string | null>(null);
 
   useEffect(() => {
     // Only fetch admin data when its tab is visited
@@ -30,10 +39,27 @@ export const AdminPage = () => {
     }
     if (activeTab === 'settings') {
       api.get<any[]>('/admin/settings')
-        .then(res => setSettings(res))
+        .then(res => {
+          setSettings(res);
+          setSettingDrafts(Object.fromEntries(res.map((setting) => [setting.key, setting.value])));
+          const currency = res.find((setting) => setting.key === 'Currency')?.value;
+          if (currency) localStorage.setItem('smart-hotel-currency', currency);
+        })
         .catch(() => toast.error(t('loadSettingsError')));
     }
   }, [activeTab]);
+
+  useEffect(() => {
+    const typePrices = Object.fromEntries(
+      Object.entries(
+        rooms.reduce((acc, room) => {
+          if (!acc[room.type]) acc[room.type] = room.pricePerNight;
+          return acc;
+        }, {} as Record<string, number>)
+      ).map(([type, price]) => [type, String(price)])
+    );
+    setPriceDrafts(typePrices);
+  }, [rooms]);
 
   const toggleUserActive = async (userId: number) => {
     try {
@@ -73,6 +99,63 @@ export const AdminPage = () => {
     return acc;
   }, {} as Record<string, number>);
 
+  const currency = settingDrafts.Currency || localStorage.getItem('smart-hotel-currency') || 'MDL';
+
+  const getSettingLabel = (key: string) => {
+    if (key === 'Currency') return t('currency');
+    if (key === 'CheckInTime') return t('standardCheckInTime');
+    if (key === 'CheckOutTime') return t('standardCheckOutTime');
+    return key;
+  };
+
+  const getSettingDescription = (key: string, fallback?: string) => {
+    if (key === 'Currency') return t('currencySettingDescription');
+    if (key === 'CheckInTime') return t('checkInTimeDescription');
+    if (key === 'CheckOutTime') return t('checkOutTimeDescription');
+    return fallback || '';
+  };
+
+  const saveSetting = async (key: string) => {
+    const value = settingDrafts[key]?.trim();
+    if (!value) {
+      toast.error(t('settingValueRequired'));
+      return;
+    }
+
+    try {
+      setSavingSetting(key);
+      await api.put(`/admin/settings/${key}`, { value });
+      setSettings((prev) => prev.map((setting) => setting.key === key ? { ...setting, value } : setting));
+      if (key === 'Currency') localStorage.setItem('smart-hotel-currency', value);
+      toast.success(t('settingUpdated'));
+    } catch (e: any) {
+      toast.error(e.message || t('settingUpdateError'));
+    } finally {
+      setSavingSetting(null);
+    }
+  };
+
+  const saveRoomTypePrice = async (roomType: string) => {
+    const draft = priceDrafts[roomType];
+    const pricePerNight = Number(draft);
+
+    if (!Number.isFinite(pricePerNight) || pricePerNight <= 0) {
+      toast.error(t('roomPriceInvalid'));
+      return;
+    }
+
+    try {
+      setSavingRoomType(roomType);
+      await api.patch(`/rooms/types/${roomType}/price`, { pricePerNight });
+      toast.success(t('roomPriceUpdated'));
+      await refreshData();
+    } catch (e: any) {
+      toast.error(e.message || t('roomPriceUpdateError'));
+    } finally {
+      setSavingRoomType(null);
+    }
+  };
+
   return (
     <div className="pb-8">
       <div className="mb-8 px-4 py-2">
@@ -102,7 +185,7 @@ export const AdminPage = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>{t('room')}</TableHead><TableHead>{t('type')}</TableHead><TableHead>{t('floor')}</TableHead>
-                    <TableHead>{t('capacity')}</TableHead><TableHead>{t('priceNight')}</TableHead><TableHead>{t('status')}</TableHead>
+                      <TableHead>{t('capacity')}</TableHead><TableHead>{t('priceNight')}</TableHead><TableHead>{t('status')}</TableHead>
                     <TableHead>{t('amenities')}</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -113,7 +196,7 @@ export const AdminPage = () => {
                       <TableCell className="capitalize">{t(`roomType.${room.type}`)}</TableCell>
                       <TableCell>{room.floor}</TableCell>
                       <TableCell>{room.capacity}</TableCell>
-                      <TableCell>{formatCurrency(room.pricePerNight)}</TableCell>
+                      <TableCell>{formatCurrency(room.pricePerNight, currency)}</TableCell>
                       <TableCell><Badge variant={room.status === 'Available' || room.status === 'available' ? 'default' : 'secondary'}>{t(`status.${room.status.toLowerCase()}`, { defaultValue: room.status })}</Badge></TableCell>
                       <TableCell className="text-sm text-gray-600">{(room.amenities || []).map((amenity) => t(`amenity.${amenity}`, { defaultValue: amenity })).join(', ')}</TableCell>
                     </TableRow>
@@ -164,10 +247,42 @@ export const AdminPage = () => {
             <Card>
               <CardHeader><CardTitle>{t('generalSettings')}</CardTitle><CardDescription>{t('generalSettingsDescription')}</CardDescription></CardHeader>
               <CardContent className="space-y-4">
-                {settings.length === 0 ? <p className="text-sm text-gray-500">{t('noSettings')}</p> : settings.map((s) => (
-                  <div key={s.key} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div><p className="font-medium text-gray-800">{s.key}</p><p className="text-sm text-gray-600">{s.description}</p></div>
-                    <p className="font-semibold text-gray-800">{s.value}</p>
+                {settings.length === 0 ? <p className="text-sm text-gray-500">{t('noSettings')}</p> : settings
+                  .filter((setting) => editableSettingKeys.includes(setting.key))
+                  .map((setting) => (
+                  <div key={setting.key} className="grid gap-3 rounded-lg border p-3 md:grid-cols-[1fr_220px_auto] md:items-center">
+                    <div>
+                      <p className="font-medium text-gray-800">{getSettingLabel(setting.key)}</p>
+                      <p className="text-sm text-gray-600">{getSettingDescription(setting.key, setting.description)}</p>
+                    </div>
+                    {setting.key === 'Currency' ? (
+                      <Select
+                        value={settingDrafts[setting.key] || setting.value}
+                        onValueChange={(value) => setSettingDrafts((prev) => ({ ...prev, [setting.key]: value }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {currencyOptions.map((option) => (
+                            <SelectItem key={option} value={option}>{option}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <Input
+                        type="time"
+                        value={settingDrafts[setting.key] || setting.value}
+                        onChange={(event) => setSettingDrafts((prev) => ({ ...prev, [setting.key]: event.target.value }))}
+                      />
+                    )}
+                    <Button
+                      variant="outline"
+                      onClick={() => saveSetting(setting.key)}
+                      disabled={savingSetting === setting.key || (settingDrafts[setting.key] || setting.value) === setting.value}
+                    >
+                      {savingSetting === setting.key ? t('saving') : t('save')}
+                    </Button>
                   </div>
                 ))}
               </CardContent>
@@ -175,12 +290,39 @@ export const AdminPage = () => {
             <Card>
               <CardHeader><CardTitle>{t('roomTypeRates')}</CardTitle><CardDescription>{t('roomTypeRatesDescription')}</CardDescription></CardHeader>
               <CardContent className="space-y-4">
-                {[[t('roomType.singleRoom'), t('baseRatePerNight'), formatCurrency(89)], [t('roomType.doubleRoom'), t('baseRatePerNight'), formatCurrency(129)], [t('roomType.deluxeRoom'), t('baseRatePerNight'), formatCurrency(189)], [t('roomType.suite'), t('baseRatePerNight'), formatCurrency(249)]].map(([label, desc, val]) => (
-                  <div key={label} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div><p className="font-medium text-gray-800">{label}</p><p className="text-sm text-gray-600">{desc}</p></div>
-                    <p className="font-semibold text-gray-800">{val}</p>
+                {Object.entries(roomTypeStats).map(([type]) => {
+                  const prices = rooms.filter((room) => room.type === type).map((room) => room.pricePerNight);
+                  const min = Math.min(...prices);
+                  const max = Math.max(...prices);
+                  const currentPrice = min === max ? min : Number(priceDrafts[type] || min);
+                  return (
+                  <div key={type} className="grid gap-3 rounded-lg border p-3 md:grid-cols-[1fr_220px_auto] md:items-center">
+                    <div>
+                      <p className="font-medium text-gray-800">{t(`roomType.${type}`)}</p>
+                      <p className="text-sm text-gray-600">{t('appliesToAllRoomsOfType', { count: roomTypeStats[type] })}</p>
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          min="1"
+                          step="1"
+                          value={priceDrafts[type] ?? currentPrice}
+                          onChange={(event) => setPriceDrafts((prev) => ({ ...prev, [type]: event.target.value }))}
+                        />
+                        <span className="text-xs text-muted-foreground">{currency}</span>
+                      </div>
+                      <p className="mt-1 text-xs text-muted-foreground">{formatCurrency(Number(priceDrafts[type] || currentPrice), currency)}</p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      onClick={() => saveRoomTypePrice(type)}
+                      disabled={savingRoomType === type || String(priceDrafts[type] ?? currentPrice) === String(currentPrice)}
+                    >
+                      {savingRoomType === type ? t('saving') : t('save')}
+                    </Button>
                   </div>
-                ))}
+                )})}
               </CardContent>
             </Card>
           </div>
