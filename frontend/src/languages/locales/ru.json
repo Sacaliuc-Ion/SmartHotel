@@ -247,6 +247,10 @@
   "loadSettingsError": "Ошибка загрузки настроек",
   "userStatusUpdated": "Статус пользователя обновлен",
   "userStatusUpdateError": "Ошибка обновления статуса",
+  "userRoleUpdated": "Роль пользователя обновлена",
+  "userRoleUpdateError": "Ошибка обновления роли",
+  "changeOwnRoleError": "Нельзя изменить свою собственную роль.",
+  "ownRoleLocked": "Ваша собственная роль здесь заблокирована.",
   "deleteOwnAccountError": "Нельзя удалить свой аккаунт с этой страницы.",
   "confirmDeleteUser": "Вы уверены, что хотите удалить пользователя {{name}}?",
   "userDeleted": "Пользователь успешно удален",
@@ -314,5 +318,11 @@
   "amenity.AC": "Кондиционер",
   "amenity.Mini Bar": "Мини-бар",
   "amenity.Jacuzzi": "Джакузи",
-  "amenity.Balcony": "Балкон"
+  "amenity.Balcony": "Балкон",
+  "role.client": "Клиент",
+  "role.reception": "Ресепшен",
+  "role.housekeeping": "Хаускипинг",
+  "role.maintenance": "Обслуживание",
+  "role.manager": "Менеджер",
+  "role.admin": "Админ"
 }

@@ -11,3 +11,8 @@ public class UpdateSettingRequest
 {
     public string Value { get; set; } = string.Empty;
 }
+
+public class UpdateUserRoleRequest
+{
+    public string Role { get; set; } = string.Empty;
+}

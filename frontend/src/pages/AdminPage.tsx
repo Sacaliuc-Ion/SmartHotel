@@ -16,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 
 const editableSettingKeys = ['Currency', 'CheckInTime', 'CheckOutTime'] as const;
 const currencyOptions = ['MDL', 'EUR', 'USD', 'RON'] as const;
+const roleOptions = ['client', 'reception', 'housekeeping', 'maintenance', 'manager', 'admin'] as const;
 
 export const AdminPage = () => {
   const { rooms, refreshData } = useHotel();
@@ -29,6 +30,7 @@ export const AdminPage = () => {
   const [priceDrafts, setPriceDrafts] = useState<Record<string, string>>({});
   const [savingSetting, setSavingSetting] = useState<string | null>(null);
   const [savingRoomType, setSavingRoomType] = useState<string | null>(null);
+  const [savingUserRoleId, setSavingUserRoleId] = useState<number | null>(null);
 
   useEffect(() => {
     // Only fetch admin data when its tab is visited
@@ -70,6 +72,25 @@ export const AdminPage = () => {
       setUsers(updated);
     } catch (e: any) {
       toast.error(e.message || t('userStatusUpdateError'));
+    }
+  };
+
+  const updateUserRole = async (userId: number, role: string) => {
+    if (currentUser?.id === userId) {
+      toast.error(t('changeOwnRoleError'));
+      return;
+    }
+
+    try {
+      setSavingUserRoleId(userId);
+      await api.patch(`/admin/users/${userId}/role`, { role });
+      toast.success(t('userRoleUpdated'));
+      const updatedUsers = await api.get<any[]>('/admin/users');
+      setUsers(updatedUsers);
+    } catch (e: any) {
+      toast.error(e.message || t('userRoleUpdateError'));
+    } finally {
+      setSavingUserRoleId(null);
     }
   };
 
@@ -218,7 +239,25 @@ export const AdminPage = () => {
                     <TableRow key={user.id}>
                       <TableCell className="font-semibold">{user.name}</TableCell>
                       <TableCell>{user.email}</TableCell>
-                      <TableCell><Badge className="capitalize">{user.role}</Badge></TableCell>
+                      <TableCell className="min-w-44">
+                        <Select
+                          value={user.role}
+                          onValueChange={(role) => updateUserRole(user.id, role)}
+                          disabled={currentUser?.id === user.id || savingUserRoleId === user.id}
+                        >
+                          <SelectTrigger className="h-8">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {roleOptions.map((role) => (
+                              <SelectItem key={role} value={role}>{t(`role.${role}`)}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {currentUser?.id === user.id && (
+                          <p className="mt-1 text-xs text-muted-foreground">{t('ownRoleLocked')}</p>
+                        )}
+                      </TableCell>
                       <TableCell>
                         <Badge variant={user.isActive ? 'default' : 'secondary'}>
                           {user.isActive ? t('active') : t('inactive')}

@@ -247,6 +247,10 @@
   "loadSettingsError": "Eroare incarcare setari",
   "userStatusUpdated": "Status utilizator actualizat",
   "userStatusUpdateError": "Eroare la actualizarea statusului",
+  "userRoleUpdated": "Rolul utilizatorului a fost actualizat",
+  "userRoleUpdateError": "Eroare la actualizarea rolului",
+  "changeOwnRoleError": "Nu iti poti schimba propriul rol.",
+  "ownRoleLocked": "Rolul tau este blocat aici.",
   "deleteOwnAccountError": "Nu iti poti sterge propriul cont din aceasta pagina.",
   "confirmDeleteUser": "Sigur vrei sa stergi utilizatorul {{name}}?",
   "userDeleted": "Utilizator sters cu succes",
@@ -314,5 +318,11 @@
   "amenity.AC": "Aer conditionat",
   "amenity.Mini Bar": "Mini bar",
   "amenity.Jacuzzi": "Jacuzzi",
-  "amenity.Balcony": "Balcon"
+  "amenity.Balcony": "Balcon",
+  "role.client": "Client",
+  "role.reception": "Receptie",
+  "role.housekeeping": "Housekeeping",
+  "role.maintenance": "Mentenanta",
+  "role.manager": "Manager",
+  "role.admin": "Admin"
 }
