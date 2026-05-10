@@ -114,6 +114,16 @@ body,
   }
 }
 
+@keyframes hp-accent-drift {
+  0% {
+    background-position: 30% 50%;
+  }
+
+  100% {
+    background-position: 100% 100%;
+  }
+}
+
 @keyframes hp-glow {
 
   0%,
@@ -240,12 +250,20 @@ body,
 
 /* ── Accent gradient text ───────────────────────── */
 .hp-accent-text {
-  background: linear-gradient(90deg, var(--hp-gold-light) 0%, #f0d085 50%, var(--hp-gold) 100%);
-  background-size: 200% auto;
+  background: linear-gradient(90deg,
+      var(--hp-gold-light) 0%,
+      #f8e8c3 20%,
+      #f0d085 48%,
+      #dfb659 78%,
+      var(--hp-gold) 100%);
+  background-size: 210% 100%;
+  background-repeat: no-repeat;
+  background-position: 50% 50%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  animation: hp-shimmer 3.5s linear infinite;
+  color: var(--hp-gold);
+  animation: hp-accent-drift 3.2s ease-in-out infinite alternate;
 }
 
 /* ── Primary CTA button ─────────────────────────── */
