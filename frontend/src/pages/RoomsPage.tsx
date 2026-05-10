@@ -50,6 +50,11 @@ export const RoomsPage = () => {
     return matchesSearch && matchesType && matchesPrice && room.status !== 'out-of-order';
   });
 
+  const formatAvailabilityDate = (value?: string | null) => {
+    if (!value) return null;
+    return new Intl.DateTimeFormat('ro-RO', { dateStyle: 'medium' }).format(new Date(value));
+  };
+
   return (
     <div className="min-h-full bg-background">
       <div className="mb-4 px-4 py-2 lb-sidebar">
@@ -114,7 +119,7 @@ export const RoomsPage = () => {
               />
               <div className="absolute top-3 right-3">
                 <Badge variant={room.status === 'available' ? 'default' : 'secondary'} className="bg-white/90 text-gray-800 dark:bg-slate-950/90 dark:text-slate-100">
-                  {room.status === 'available' ? t('available') : t('notAvailable')}
+                  {room.nextAvailableDate ? t('availableFromLabel') : room.status === 'available' ? t('available') : t('notAvailable')}
                 </Badge>
               </div>
             </div>
@@ -135,6 +140,12 @@ export const RoomsPage = () => {
                 <span className="text-sm">{room.capacity} {room.capacity > 1 ? t('guests') : t('guest')}</span>
               </div>
 
+              {room.nextAvailableDate && (
+                <p className="mb-3 text-sm font-medium text-amber-700 dark:text-amber-300">
+                  {t('availableFromText', { date: formatAvailabilityDate(room.nextAvailableDate) })}
+                </p>
+              )}
+
               <div className="flex flex-wrap gap-2 mb-4">
                 {room.amenities.slice(0, 4).map((amenity) => {
                   const Icon = amenityIcons[amenity] || Wifi;
@@ -150,9 +161,8 @@ export const RoomsPage = () => {
               <Button
                 className="w-full"
                 onClick={() => navigate(`/rooms/${room.id}`)}
-                disabled={room.status !== 'available'}
               >
-                {room.status === 'available' ? t('viewDetails') : t('notAvailable')}
+                {t('viewDetails')}
               </Button>
             </div>
           </div>

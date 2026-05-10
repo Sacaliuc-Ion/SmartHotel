@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { useHotel } from '../context/HotelContext';
 import { useAuth } from '../context/AuthContext';
@@ -44,6 +44,20 @@ export const RoomDetailPage = () => {
   const [checkOut, setCheckOut] = useState(tomorrow);
   const [guests, setGuests] = useState('1');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const canBookRoom = room ? !['out-of-order', 'out-of-service'].includes(room.status.toLowerCase()) : false;
+  const firstBookableDate = room?.nextAvailableDate || today;
+  const isFutureOnlyBooking = Boolean(room?.nextAvailableDate);
+
+  useEffect(() => {
+    if (!room?.nextAvailableDate) return;
+
+    const nextAvailable = room.nextAvailableDate;
+    const defaultCheckOut = new Date(nextAvailable);
+    defaultCheckOut.setDate(defaultCheckOut.getDate() + 1);
+
+    setCheckIn(nextAvailable);
+    setCheckOut(defaultCheckOut.toISOString().split('T')[0]);
+  }, [room?.id, room?.nextAvailableDate]);
 
   const handleBookNow = async () => {
     if (!room) return;
@@ -131,19 +145,45 @@ export const RoomDetailPage = () => {
           <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
             <p className="mb-1 text-xs uppercase tracking-wide text-gray-500 dark:text-slate-400">{t('pricePerNight')}</p>
             <p className="text-2xl font-bold text-amber-600 lg:text-3xl">{formatCurrency(room.pricePerNight)}</p>
+            {room.nextAvailableDate && (
+              <p className="mt-2 text-sm text-amber-700 dark:text-amber-300">
+                {t('availableFromText', {
+                  date: new Intl.DateTimeFormat('ro-RO', { dateStyle: 'medium' }).format(new Date(room.nextAvailableDate)),
+                })}
+              </p>
+            )}
           </div>
           <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
             <h3 className="mb-2 text-base font-semibold text-gray-800 dark:text-slate-100">{t('reserveRoom')}</h3>
             <div className="grid gap-2 sm:grid-cols-2">
               <div>
                 <label className="mb-1 block text-xs text-gray-600 dark:text-slate-300">{t('checkIn')}</label>
-                <Input type="date" value={checkIn} min={today} onChange={(e) => setCheckIn(e.target.value)} />
+                <Input
+                  type="date"
+                  value={checkIn}
+                  min={firstBookableDate}
+                  onChange={(e) => setCheckIn(e.target.value)}
+                  className={`booking-date-input cursor-pointer ${isFutureOnlyBooking ? 'booking-date-input-occupied' : ''}`}
+                />
               </div>
               <div>
                 <label className="mb-1 block text-xs text-gray-600 dark:text-slate-300">{t('checkOut')}</label>
-                <Input type="date" value={checkOut} min={checkIn || today} onChange={(e) => setCheckOut(e.target.value)} />
+                <Input
+                  type="date"
+                  value={checkOut}
+                  min={checkIn || firstBookableDate}
+                  onChange={(e) => setCheckOut(e.target.value)}
+                  className={`booking-date-input cursor-pointer ${isFutureOnlyBooking ? 'booking-date-input-occupied' : ''}`}
+                />
               </div>
             </div>
+            {isFutureOnlyBooking && (
+              <p className="mt-2 text-xs font-medium text-amber-700 dark:text-amber-300">
+                {t('bookingStartsFromText', {
+                  date: new Intl.DateTimeFormat('ro-RO', { dateStyle: 'medium' }).format(new Date(firstBookableDate)),
+                })}
+              </p>
+            )}
             <div className="mt-2">
               <label className="mb-1 block text-xs text-gray-600 dark:text-slate-300">{t('guests')}</label>
               <Input
@@ -158,10 +198,10 @@ export const RoomDetailPage = () => {
             <Button
               size="lg"
               className="mt-3 w-full"
-              disabled={room.status !== 'available' || isSubmitting}
+              disabled={!canBookRoom || isSubmitting}
               onClick={handleBookNow}
             >
-              {room.status !== 'available'
+              {!canBookRoom
                 ? t('currentlyUnavailable')
                 : isSubmitting
                   ? t('booking')
