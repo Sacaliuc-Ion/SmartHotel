@@ -7,6 +7,8 @@ import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Badge } from '../components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
+import { Textarea } from '../components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { formatCurrency } from '../utils/hotelFormatting';
 
@@ -38,6 +40,12 @@ type Reservation = {
   paymentStatus: string;
   totalAmount: number;
   guests: number;
+  review?: {
+    id: number;
+    rating: number;
+    comment?: string | null;
+    createdAt: string;
+  } | null;
 };
 
 type LoginAudit = {
@@ -72,6 +80,10 @@ export const ProfilePage = () => {
   const [logins, setLogins] = useState<LoginAudit[]>([]);
   const [passwords, setPasswords] = useState({ currentPassword: '', newPassword: '' });
   const [expandedReservation, setExpandedReservation] = useState<number | null>(null);
+  const [reviewForms, setReviewForms] = useState<Record<number, { rating: number; comment: string }>>({});
+  const [submittingReviewId, setSubmittingReviewId] = useState<number | null>(null);
+  const [ticketForms, setTicketForms] = useState<Record<number, { type: 'maintenance' | 'housekeeping'; issue: string; description: string; priority: string }>>({});
+  const [submittingTicketId, setSubmittingTicketId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -111,6 +123,109 @@ export const ProfilePage = () => {
       history: reservations.filter((reservation) => ['checked-out', 'cancelled', 'no-show'].includes(reservation.status) || reservation.checkOut < today),
     };
   }, [reservations]);
+
+  const updateReviewForm = (reservationId: number, field: 'rating' | 'comment', value: number | string) => {
+    setReviewForms((current) => ({
+      ...current,
+      [reservationId]: {
+        rating: current[reservationId]?.rating || 5,
+        comment: current[reservationId]?.comment || '',
+        [field]: value,
+      },
+    }));
+  };
+
+  const submitReview = async (reservationId: number) => {
+    const form = reviewForms[reservationId] || { rating: 5, comment: '' };
+
+    if (form.rating < 1 || form.rating > 5) {
+      toast.error('Alege un rating intre 1 si 5.');
+      return;
+    }
+
+    setSubmittingReviewId(reservationId);
+    try {
+      const review = await api.post<{ id: number; rating: number; comment?: string | null; createdAt: string }>(`/reservations/${reservationId}/review`, {
+        rating: form.rating,
+        comment: form.comment,
+      });
+
+      setReservations((current) =>
+        current.map((reservation) =>
+          reservation.id === reservationId
+            ? { ...reservation, review }
+            : reservation
+        )
+      );
+      toast.success('Review-ul a fost adaugat.');
+    } catch (error: any) {
+      toast.error(error.message || 'Nu am putut salva review-ul.');
+    } finally {
+      setSubmittingReviewId(null);
+    }
+  };
+
+  const updateTicketForm = (
+    reservationId: number,
+    field: 'type' | 'issue' | 'description' | 'priority',
+    value: string
+  ) => {
+    setTicketForms((current) => ({
+      ...current,
+      [reservationId]: {
+        type: current[reservationId]?.type || 'maintenance',
+        issue: current[reservationId]?.issue || '',
+        description: current[reservationId]?.description || '',
+        priority: current[reservationId]?.priority || 'medium',
+        [field]: value,
+      },
+    }));
+  };
+
+  const submitTicket = async (reservation: Reservation) => {
+    const form = ticketForms[reservation.id] || {
+      type: 'maintenance' as const,
+      issue: '',
+      description: '',
+      priority: 'medium',
+    };
+
+    if (!form.issue.trim()) {
+      toast.error('Completeaza subiectul cererii.');
+      return;
+    }
+
+    setSubmittingTicketId(reservation.id);
+    try {
+      const payload = {
+        roomId: reservation.roomId,
+        issue: form.issue.trim(),
+        description: form.description.trim() || undefined,
+        priority: form.priority,
+      };
+
+      if (form.type === 'maintenance') {
+        await api.post('/maintenance/tickets', payload);
+      } else {
+        await api.post('/housekeeping/report-issue', payload);
+      }
+
+      setTicketForms((current) => ({
+        ...current,
+        [reservation.id]: {
+          type: form.type,
+          issue: '',
+          description: '',
+          priority: 'medium',
+        },
+      }));
+      toast.success('Cererea a fost trimisa.');
+    } catch (error: any) {
+      toast.error(error.message || 'Nu am putut trimite cererea.');
+    } finally {
+      setSubmittingTicketId(null);
+    }
+  };
 
   const updateDraft = (field: keyof Profile, value: string) => {
     setDraft((current) => ({ ...current, [field]: value }));
@@ -196,10 +311,125 @@ export const ProfilePage = () => {
             </Button>
           </div>
           {expandedReservation === reservation.id && (
-            <div className="mt-4 grid gap-3 border-t pt-4 text-sm text-gray-600 dark:border-slate-700 dark:text-slate-300 sm:grid-cols-3">
-              <div><span className="block text-xs uppercase text-gray-400">Plata</span>{reservation.paymentStatus}</div>
-              <div><span className="block text-xs uppercase text-gray-400">Total</span>{formatCurrency(reservation.totalAmount)}</div>
-              <div><span className="block text-xs uppercase text-gray-400">Camera</span>{reservation.roomNumber}</div>
+            <div className="mt-4 space-y-4 border-t pt-4 dark:border-slate-700">
+              <div className="grid gap-3 text-sm text-gray-600 dark:text-slate-300 sm:grid-cols-3">
+                <div><span className="block text-xs uppercase text-gray-400">Plata</span>{reservation.paymentStatus}</div>
+                <div><span className="block text-xs uppercase text-gray-400">Total</span>{formatCurrency(reservation.totalAmount)}</div>
+                <div><span className="block text-xs uppercase text-gray-400">Camera</span>{reservation.roomNumber}</div>
+              </div>
+
+              {reservation.status !== 'cancelled' && (
+                <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-slate-700 dark:bg-slate-800/60">
+                  <h4 className="mb-3 font-medium text-gray-900 dark:text-slate-100">Solicita asistenta pentru camera</h4>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div>
+                      <label className="mb-1 block text-xs uppercase text-gray-500 dark:text-slate-400">Tip cerere</label>
+                      <Select
+                        value={ticketForms[reservation.id]?.type || 'maintenance'}
+                        onValueChange={(value) => updateTicketForm(reservation.id, 'type', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="maintenance">Maintenance</SelectItem>
+                          <SelectItem value="housekeeping">Housekeeping</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs uppercase text-gray-500 dark:text-slate-400">Prioritate</label>
+                      <Select
+                        value={ticketForms[reservation.id]?.priority || 'medium'}
+                        onValueChange={(value) => updateTicketForm(reservation.id, 'priority', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="low">Scazuta</SelectItem>
+                          <SelectItem value="medium">Medie</SelectItem>
+                          <SelectItem value="high">Ridicata</SelectItem>
+                          <SelectItem value="urgent">Urgenta</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="mt-3">
+                    <label className="mb-1 block text-xs uppercase text-gray-500 dark:text-slate-400">Subiect</label>
+                    <Input
+                      value={ticketForms[reservation.id]?.issue || ''}
+                      onChange={(event) => updateTicketForm(reservation.id, 'issue', event.target.value)}
+                      placeholder="ex: Aer conditionat, prosoape, curatenie, baie"
+                    />
+                  </div>
+
+                  <div className="mt-3">
+                    <label className="mb-1 block text-xs uppercase text-gray-500 dark:text-slate-400">Detalii</label>
+                    <Textarea
+                      rows={3}
+                      value={ticketForms[reservation.id]?.description || ''}
+                      onChange={(event) => updateTicketForm(reservation.id, 'description', event.target.value)}
+                      placeholder="Descrie exact ce ai nevoie in camera."
+                    />
+                  </div>
+
+                  <Button className="mt-3" onClick={() => submitTicket(reservation)} disabled={submittingTicketId === reservation.id}>
+                    {submittingTicketId === reservation.id ? 'Se trimite...' : 'Trimite ticket'}
+                  </Button>
+                </div>
+              )}
+
+              {reservation.status === 'checked-out' && (
+                <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-slate-700 dark:bg-slate-800/60">
+                  <h4 className="mb-3 font-medium text-gray-900 dark:text-slate-100">Review camera</h4>
+
+                  {reservation.review ? (
+                    <div className="space-y-2 text-sm text-gray-600 dark:text-slate-300">
+                      <p className="font-medium text-amber-600">{'★'.repeat(reservation.review.rating)}{'☆'.repeat(5 - reservation.review.rating)}</p>
+                      <p>{reservation.review.comment || 'Fara comentariu adaugat.'}</p>
+                      <p className="text-xs text-gray-500 dark:text-slate-400">Adaugat la {formatDateTime(reservation.review.createdAt)}</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <div>
+                        <label className="mb-1 block text-xs uppercase text-gray-500 dark:text-slate-400">Rating</label>
+                        <div className="flex gap-2">
+                          {[1, 2, 3, 4, 5].map((value) => (
+                            <button
+                              key={value}
+                              type="button"
+                              onClick={() => updateReviewForm(reservation.id, 'rating', value)}
+                              className={`rounded-md border px-3 py-1 text-sm transition ${
+                                (reviewForms[reservation.id]?.rating || 5) === value
+                                  ? 'border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-400 dark:bg-amber-500/20 dark:text-amber-300'
+                                  : 'border-gray-200 bg-white text-gray-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300'
+                              }`}
+                            >
+                              {value}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="mb-1 block text-xs uppercase text-gray-500 dark:text-slate-400">Comentariu</label>
+                        <Textarea
+                          rows={4}
+                          value={reviewForms[reservation.id]?.comment || ''}
+                          onChange={(event) => updateReviewForm(reservation.id, 'comment', event.target.value)}
+                          placeholder="Cum a fost experienta ta in aceasta camera?"
+                        />
+                      </div>
+
+                      <Button onClick={() => submitReview(reservation.id)} disabled={submittingReviewId === reservation.id}>
+                        {submittingReviewId === reservation.id ? 'Se trimite...' : 'Adauga review'}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>

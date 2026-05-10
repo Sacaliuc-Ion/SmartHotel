@@ -34,6 +34,14 @@ public class ReservationsController : ControllerBase
           return Ok(result.Data);
      }
 
+     [HttpGet("reviews/summary")]
+     [AllowAnonymous]
+     public async Task<IActionResult> GetReviewSummary()
+     {
+          var result = await _reservationService.GetReviewSummaryAsync();
+          return Ok(result.Data);
+     }
+
      [HttpPost]
      public async Task<IActionResult> Create([FromBody] CreateReservationRequest request)
      {
@@ -52,5 +60,14 @@ public class ReservationsController : ControllerBase
           var result = await _reservationService.CancelReservationAsync(id, userId, isAdminOrReception);
           if (!result.Success) return BadRequest(new { message = result.Message });
           return Ok();
+     }
+
+     [HttpPost("{id}/review")]
+     public async Task<IActionResult> AddReview(int id, [FromBody] CreateRoomReviewRequest request)
+     {
+          var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+          var result = await _reservationService.AddReviewAsync(id, userId, request);
+          if (!result.Success) return BadRequest(new { message = result.Message });
+          return Ok(result.Data);
      }
 }

@@ -12,6 +12,19 @@ public class HousekeepingTaskDto
      public string? Notes { get; set; }
 }
 
+public class ClientHousekeepingRequestDto
+{
+     public int Id { get; set; }
+     public int RoomId { get; set; }
+     public string RoomNumber { get; set; } = string.Empty;
+     public string Issue { get; set; } = string.Empty;
+     public string? Description { get; set; }
+     public string Priority { get; set; } = string.Empty;
+     public string Status { get; set; } = string.Empty;
+     public string? ReportedBy { get; set; }
+     public string CreatedAt { get; set; } = string.Empty;
+}
+
 public class ReportIssueRequest
 {
      public int RoomId { get; set; }

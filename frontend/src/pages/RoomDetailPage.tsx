@@ -13,6 +13,7 @@ import Suite from '../assets/rooms/Suite.jpg';
 import Deluxe from '../assets/rooms/Deluxe.jpg';
 import { formatCurrency } from '../utils/hotelFormatting';
 import { useTranslation } from 'react-i18next';
+import { getRoomDescriptionLines } from '../utils/roomDescriptions';
 
 const roomImages: Record<string, string> = {
   single: Single,
@@ -96,45 +97,55 @@ export const RoomDetailPage = () => {
   );
 
   return (
-    <div>
-      <Button variant="ghost" onClick={() => navigate('/rooms')} className="mb-6">
+    <div className="px-4 pb-4">
+      <Button variant="ghost" onClick={() => navigate('/rooms')} className="mb-3">
         <ArrowLeft className="h-4 w-4 mr-2" />{t('backToRooms')}
       </Button>
-      <div className="grid lg:grid-cols-2 gap-8">
-        <div className="space-y-4">
-          <div className="relative h-96 rounded-lg overflow-hidden">
+      <div className="grid gap-3 lg:grid-cols-[0.95fr_1.05fr]">
+        <div className="flex flex-col gap-3">
+          <div className="relative h-56 rounded-lg overflow-hidden border border-gray-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900 lg:h-64">
             <img src={roomImages[room.type]} alt={`Room ${room.number}`} className="w-full h-full object-cover" />
           </div>
+          <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <div className="space-y-1.5 text-left">
+              {getRoomDescriptionLines(room, t).map((line, index) => (
+                <p key={`${room.id}-detail-description-${index}`} className="text-xs leading-5 text-gray-700 dark:text-slate-300 lg:text-sm">
+                  {line}
+                </p>
+              ))}
+            </div>
+          </div>
         </div>
-        <div>
-          <Badge variant={room.status === 'available' ? 'default' : 'secondary'} className="mb-3">
+        <div className="flex flex-col gap-3">
+          <Badge variant={room.status === 'available' ? 'default' : 'secondary'} className="w-fit">
             {room.status === 'available' ? t('available') : t('notAvailable')}
           </Badge>
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">{t('room')} {room.number}</h1>
-          <p className="text-lg text-gray-600 capitalize mb-4">{t(`roomType.${room.type}`)}</p>
-          <div className="flex items-center gap-3 mb-6 text-gray-600">
+          <div>
+            <h1 className="mb-1 text-2xl font-bold text-gray-800 dark:text-slate-100 lg:text-3xl">{t('room')} {room.number}</h1>
+            <p className="text-sm text-gray-600 dark:text-slate-300 capitalize lg:text-base">{t(`roomType.${room.type}`)}</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 dark:text-slate-300">
             <div className="flex items-center gap-2"><MapPin className="h-5 w-5" /><span>{t('floor')} {room.floor}</span></div>
             <div className="flex items-center gap-2"><Users className="h-5 w-5" /><span>{room.capacity} {room.capacity > 1 ? t('guests') : t('guest')}</span></div>
           </div>
-          <p className="text-gray-700 leading-relaxed mb-6">{room.description}</p>
-          <div className="bg-amber-50 p-6 rounded-lg mb-6">
-            <p className="text-sm text-gray-600 mb-1">{t('pricePerNight')}</p>
-            <p className="text-4xl font-bold text-amber-600">{formatCurrency(room.pricePerNight)}</p>
+          <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <p className="mb-1 text-xs uppercase tracking-wide text-gray-500 dark:text-slate-400">{t('pricePerNight')}</p>
+            <p className="text-2xl font-bold text-amber-600 lg:text-3xl">{formatCurrency(room.pricePerNight)}</p>
           </div>
-          <div className="mb-6 rounded-lg border border-gray-200 p-4 space-y-4">
-            <h3 className="text-lg font-semibold text-gray-800">{t('reserveRoom')}</h3>
-            <div className="grid sm:grid-cols-2 gap-4">
+          <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <h3 className="mb-2 text-base font-semibold text-gray-800 dark:text-slate-100">{t('reserveRoom')}</h3>
+            <div className="grid gap-2 sm:grid-cols-2">
               <div>
-                <label className="mb-1 block text-sm text-gray-600">{t('checkIn')}</label>
+                <label className="mb-1 block text-xs text-gray-600 dark:text-slate-300">{t('checkIn')}</label>
                 <Input type="date" value={checkIn} min={today} onChange={(e) => setCheckIn(e.target.value)} />
               </div>
               <div>
-                <label className="mb-1 block text-sm text-gray-600">{t('checkOut')}</label>
+                <label className="mb-1 block text-xs text-gray-600 dark:text-slate-300">{t('checkOut')}</label>
                 <Input type="date" value={checkOut} min={checkIn || today} onChange={(e) => setCheckOut(e.target.value)} />
               </div>
             </div>
-            <div>
-              <label className="mb-1 block text-sm text-gray-600">{t('guests')}</label>
+            <div className="mt-2">
+              <label className="mb-1 block text-xs text-gray-600 dark:text-slate-300">{t('guests')}</label>
               <Input
                 type="number"
                 min="1"
@@ -142,35 +153,35 @@ export const RoomDetailPage = () => {
                 value={guests}
                 onChange={(e) => setGuests(e.target.value)}
               />
-              <p className="mt-1 text-xs text-gray-500">{t('maxGuests', { count: room.capacity })}</p>
+              <p className="mt-1 text-[11px] text-gray-500 dark:text-slate-400">{t('maxGuests', { count: room.capacity })}</p>
             </div>
+            <Button
+              size="lg"
+              className="mt-3 w-full"
+              disabled={room.status !== 'available' || isSubmitting}
+              onClick={handleBookNow}
+            >
+              {room.status !== 'available'
+                ? t('currentlyUnavailable')
+                : isSubmitting
+                  ? t('booking')
+                  : t('bookNow')}
+            </Button>
           </div>
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-3">{t('amenities')}</h3>
-            <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <h3 className="mb-2 text-base font-semibold text-gray-800 dark:text-slate-100">{t('amenities')}</h3>
+            <div className="grid grid-cols-2 gap-2 lg:grid-cols-3">
               {room.amenities.map((amenity) => {
                 const Icon = amenityIcons[amenity] || Wifi;
                 return (
-                  <div key={amenity} className="flex items-center gap-2 text-gray-700">
-                    <div className="p-2 bg-gray-100 rounded"><Icon className="h-5 w-5 text-amber-600" /></div>
+                  <div key={amenity} className="flex items-center gap-2 rounded-md border border-gray-100 bg-white px-2 py-1.5 text-xs text-gray-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+                    <div className="rounded bg-gray-100 p-1.5 dark:bg-slate-800"><Icon className="h-4 w-4 text-amber-600" /></div>
                     <span>{t(`amenity.${amenity}`, { defaultValue: amenity })}</span>
                   </div>
                 );
               })}
             </div>
           </div>
-          <Button
-            size="lg"
-            className="w-full"
-            disabled={room.status !== 'available' || isSubmitting}
-            onClick={handleBookNow}
-          >
-            {room.status !== 'available'
-              ? t('currentlyUnavailable')
-              : isSubmitting
-                ? t('booking')
-                : t('bookNow')}
-          </Button>
         </div>
       </div>
     </div>

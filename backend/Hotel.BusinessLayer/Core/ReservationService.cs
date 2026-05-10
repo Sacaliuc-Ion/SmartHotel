@@ -22,6 +22,7 @@ public class ReservationService : IReservationService
         var res = await _db.Context.Reservations
             .Include(r => r.User)
             .Include(r => r.Room)
+            .Include(r => r.Review)
             .OrderByDescending(r => r.CreatedAt)
             .ToListAsync();
 
@@ -33,6 +34,7 @@ public class ReservationService : IReservationService
         var res = await _db.Context.Reservations
             .Include(r => r.User)
             .Include(r => r.Room)
+            .Include(r => r.Review)
             .Where(r => r.UserId == userId)
             .OrderByDescending(r => r.CreatedAt)
             .ToListAsync();
@@ -105,6 +107,54 @@ public class ReservationService : IReservationService
         return ServiceResult.Ok();
     }
 
+    public async Task<ServiceResult<RoomReviewDto>> AddReviewAsync(int reservationId, int userId, CreateRoomReviewRequest request)
+    {
+        if (request.Rating is < 1 or > 5)
+            return ServiceResult<RoomReviewDto>.Fail("Rating must be between 1 and 5.");
+
+        var reservation = await _db.Context.Reservations
+            .Include(r => r.Review)
+            .FirstOrDefaultAsync(r => r.Id == reservationId);
+
+        if (reservation == null)
+            return ServiceResult<RoomReviewDto>.Fail("Reservation not found.");
+
+        if (reservation.UserId != userId)
+            return ServiceResult<RoomReviewDto>.Fail("Unauthorized to review this reservation.");
+
+        if (reservation.Status != ReservationStatus.CheckedOut)
+            return ServiceResult<RoomReviewDto>.Fail("You can add a review only after checkout.");
+
+        if (reservation.Review != null)
+            return ServiceResult<RoomReviewDto>.Fail("A review already exists for this reservation.");
+
+        var review = new RoomReview
+        {
+            ReservationId = reservation.Id,
+            RoomId = reservation.RoomId,
+            UserId = userId,
+            Rating = request.Rating,
+            Comment = string.IsNullOrWhiteSpace(request.Comment) ? null : request.Comment.Trim(),
+        };
+
+        _db.Context.RoomReviews.Add(review);
+        await _db.SaveChangesAsync();
+
+        return ServiceResult<RoomReviewDto>.Ok(MapToReviewDto(review));
+    }
+
+    public async Task<ServiceResult<ReviewSummaryDto>> GetReviewSummaryAsync()
+    {
+        var reviews = await _db.Context.RoomReviews.ToListAsync();
+        var averageRating = reviews.Count == 0 ? 0 : Math.Round(reviews.Average(review => review.Rating), 1);
+
+        return ServiceResult<ReviewSummaryDto>.Ok(new ReviewSummaryDto
+        {
+            AverageRating = averageRating,
+            TotalReviews = reviews.Count
+        });
+    }
+
     private static ReservationDto MapToDto(Reservation r) => new()
     {
         Id = r.Id,
@@ -116,6 +166,15 @@ public class ReservationService : IReservationService
         Status = ClientValueFormatter.ToClientValue(r.Status),
         PaymentStatus = ClientValueFormatter.ToClientValue(r.PaymentStatus),
         TotalAmount = r.TotalPrice,
-        Guests = r.Guests
+        Guests = r.Guests,
+        Review = r.Review == null ? null : MapToReviewDto(r.Review)
+    };
+
+    private static RoomReviewDto MapToReviewDto(RoomReview review) => new()
+    {
+        Id = review.Id,
+        Rating = review.Rating,
+        Comment = review.Comment,
+        CreatedAt = review.CreatedAt.ToString("yyyy-MM-ddTHH:mm:ssZ")
     };
 }

@@ -20,6 +20,7 @@ public class User
 
     public Role Role { get; set; } = null!;
     public ICollection<Reservation> Reservations { get; set; } = new List<Reservation>();
+    public ICollection<RoomReview> RoomReviews { get; set; } = new List<RoomReview>();
     public ICollection<UserLoginAudit> LoginAudits { get; set; } = new List<UserLoginAudit>();
     public ICollection<UserNotification> Notifications { get; set; } = new List<UserNotification>();
     public ICollection<HousekeepingTask> HousekeepingTasks { get; set; } = new List<HousekeepingTask>();

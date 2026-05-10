@@ -17,5 +17,6 @@ public class Room
 
     public RoomType RoomType { get; set; } = null!;
     public ICollection<RoomAmenity> RoomAmenities { get; set; } = new List<RoomAmenity>();
+    public ICollection<RoomReview> Reviews { get; set; } = new List<RoomReview>();
 
 }

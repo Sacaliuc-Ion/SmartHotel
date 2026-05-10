@@ -15,6 +15,7 @@ public class HotelDbContext : DbContext
     public DbSet<Amenity> Amenities => Set<Amenity>();
     public DbSet<RoomAmenity> RoomAmenities => Set<RoomAmenity>();
     public DbSet<Reservation> Reservations => Set<Reservation>();
+    public DbSet<RoomReview> RoomReviews => Set<RoomReview>();
     public DbSet<UserLoginAudit> UserLoginAudits => Set<UserLoginAudit>();
     public DbSet<UserNotification> UserNotifications => Set<UserNotification>();
     public DbSet<CheckInRecord> CheckInRecords => Set<CheckInRecord>();
@@ -65,6 +66,32 @@ public class HotelDbContext : DbContext
             .WithMany()
             .HasForeignKey(notification => notification.ReservationId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<RoomReview>()
+            .HasOne(review => review.User)
+            .WithMany(user => user.RoomReviews)
+            .HasForeignKey(review => review.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<RoomReview>()
+            .HasOne(review => review.Room)
+            .WithMany(room => room.Reviews)
+            .HasForeignKey(review => review.RoomId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Reservation>()
+            .HasOne(reservation => reservation.Review)
+            .WithOne(review => review.Reservation)
+            .HasForeignKey<RoomReview>(review => review.ReservationId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<RoomReview>()
+            .HasIndex(review => review.ReservationId)
+            .IsUnique();
+
+        modelBuilder.Entity<RoomReview>()
+            .Property(review => review.Comment)
+            .HasMaxLength(1000);
 
         modelBuilder.Entity<HousekeepingTask>()
             .HasOne(h => h.AssignedTo)

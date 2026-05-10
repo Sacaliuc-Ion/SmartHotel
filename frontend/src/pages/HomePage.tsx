@@ -1,6 +1,7 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router';
+import { api } from '../services/api';
 import {
   DoorOpen,
   Calendar,
@@ -54,6 +55,20 @@ export const HomePage = () => {
   const { user } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [reviewSummary, setReviewSummary] = useState({ averageRating: 0, totalReviews: 0 });
+
+  useEffect(() => {
+    const loadReviewSummary = async () => {
+      try {
+        const data = await api.get<{ averageRating: number; totalReviews: number }>('/reservations/reviews/summary');
+        setReviewSummary(data);
+      } catch {
+        setReviewSummary({ averageRating: 0, totalReviews: 0 });
+      }
+    };
+
+    loadReviewSummary();
+  }, []);
 
   const roleActions = {
     reception: [
@@ -93,7 +108,7 @@ export const HomePage = () => {
 
   const stats = [
     { value: '120+', label: t('statRooms') },
-    { value: '4.9', label: t('statRating') },
+    { value: reviewSummary.totalReviews > 0 ? reviewSummary.averageRating.toFixed(1) : '-', label: t('statRating') },
     { value: '24/7', label: t('statConcierge') },
     { value: '15+', label: t('statYears') },
   ];
