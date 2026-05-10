@@ -20,4 +20,5 @@ public class Reservation
     public Room Room { get; set; } = null!;
     public CheckInRecord? CheckInRecord { get; set; }
     public CheckOutRecord? CheckOutRecord { get; set; }
+    public RoomReview? Review { get; set; }
 }
