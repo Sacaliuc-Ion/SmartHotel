@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Badge } from '../components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Textarea } from '../components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { formatCurrency } from '../utils/hotelFormatting';
@@ -81,6 +82,8 @@ export const ProfilePage = () => {
   const [expandedReservation, setExpandedReservation] = useState<number | null>(null);
   const [reviewForms, setReviewForms] = useState<Record<number, { rating: number; comment: string }>>({});
   const [submittingReviewId, setSubmittingReviewId] = useState<number | null>(null);
+  const [ticketForms, setTicketForms] = useState<Record<number, { type: 'maintenance' | 'housekeeping'; issue: string; description: string; priority: string }>>({});
+  const [submittingTicketId, setSubmittingTicketId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -159,6 +162,68 @@ export const ProfilePage = () => {
       toast.error(error.message || 'Nu am putut salva review-ul.');
     } finally {
       setSubmittingReviewId(null);
+    }
+  };
+
+  const updateTicketForm = (
+    reservationId: number,
+    field: 'type' | 'issue' | 'description' | 'priority',
+    value: string
+  ) => {
+    setTicketForms((current) => ({
+      ...current,
+      [reservationId]: {
+        type: current[reservationId]?.type || 'maintenance',
+        issue: current[reservationId]?.issue || '',
+        description: current[reservationId]?.description || '',
+        priority: current[reservationId]?.priority || 'medium',
+        [field]: value,
+      },
+    }));
+  };
+
+  const submitTicket = async (reservation: Reservation) => {
+    const form = ticketForms[reservation.id] || {
+      type: 'maintenance' as const,
+      issue: '',
+      description: '',
+      priority: 'medium',
+    };
+
+    if (!form.issue.trim()) {
+      toast.error('Completeaza subiectul cererii.');
+      return;
+    }
+
+    setSubmittingTicketId(reservation.id);
+    try {
+      const payload = {
+        roomId: reservation.roomId,
+        issue: form.issue.trim(),
+        description: form.description.trim() || undefined,
+        priority: form.priority,
+      };
+
+      if (form.type === 'maintenance') {
+        await api.post('/maintenance/tickets', payload);
+      } else {
+        await api.post('/housekeeping/report-issue', payload);
+      }
+
+      setTicketForms((current) => ({
+        ...current,
+        [reservation.id]: {
+          type: form.type,
+          issue: '',
+          description: '',
+          priority: 'medium',
+        },
+      }));
+      toast.success('Cererea a fost trimisa.');
+    } catch (error: any) {
+      toast.error(error.message || 'Nu am putut trimite cererea.');
+    } finally {
+      setSubmittingTicketId(null);
     }
   };
 
@@ -252,6 +317,69 @@ export const ProfilePage = () => {
                 <div><span className="block text-xs uppercase text-gray-400">Total</span>{formatCurrency(reservation.totalAmount)}</div>
                 <div><span className="block text-xs uppercase text-gray-400">Camera</span>{reservation.roomNumber}</div>
               </div>
+
+              {reservation.status !== 'cancelled' && (
+                <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-slate-700 dark:bg-slate-800/60">
+                  <h4 className="mb-3 font-medium text-gray-900 dark:text-slate-100">Solicita asistenta pentru camera</h4>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div>
+                      <label className="mb-1 block text-xs uppercase text-gray-500 dark:text-slate-400">Tip cerere</label>
+                      <Select
+                        value={ticketForms[reservation.id]?.type || 'maintenance'}
+                        onValueChange={(value) => updateTicketForm(reservation.id, 'type', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="maintenance">Maintenance</SelectItem>
+                          <SelectItem value="housekeeping">Housekeeping</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs uppercase text-gray-500 dark:text-slate-400">Prioritate</label>
+                      <Select
+                        value={ticketForms[reservation.id]?.priority || 'medium'}
+                        onValueChange={(value) => updateTicketForm(reservation.id, 'priority', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="low">Scazuta</SelectItem>
+                          <SelectItem value="medium">Medie</SelectItem>
+                          <SelectItem value="high">Ridicata</SelectItem>
+                          <SelectItem value="urgent">Urgenta</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="mt-3">
+                    <label className="mb-1 block text-xs uppercase text-gray-500 dark:text-slate-400">Subiect</label>
+                    <Input
+                      value={ticketForms[reservation.id]?.issue || ''}
+                      onChange={(event) => updateTicketForm(reservation.id, 'issue', event.target.value)}
+                      placeholder="ex: Aer conditionat, prosoape, curatenie, baie"
+                    />
+                  </div>
+
+                  <div className="mt-3">
+                    <label className="mb-1 block text-xs uppercase text-gray-500 dark:text-slate-400">Detalii</label>
+                    <Textarea
+                      rows={3}
+                      value={ticketForms[reservation.id]?.description || ''}
+                      onChange={(event) => updateTicketForm(reservation.id, 'description', event.target.value)}
+                      placeholder="Descrie exact ce ai nevoie in camera."
+                    />
+                  </div>
+
+                  <Button className="mt-3" onClick={() => submitTicket(reservation)} disabled={submittingTicketId === reservation.id}>
+                    {submittingTicketId === reservation.id ? 'Se trimite...' : 'Trimite ticket'}
+                  </Button>
+                </div>
+              )}
 
               {reservation.status === 'checked-out' && (
                 <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-slate-700 dark:bg-slate-800/60">
