@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useHotel, RoomStatus } from '../context/HotelContext';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
@@ -6,6 +6,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { AlertTriangle, Sparkles } from 'lucide-react';
 import { DefectReportModal } from '../components/housekeeping/DefectReportModal';
 import { useTranslation } from 'react-i18next';
+import { api } from '../services/api';
+
+type ClientHousekeepingRequest = {
+  id: number;
+  roomId: number;
+  roomNumber: string;
+  issue: string;
+  description?: string;
+  priority: string;
+  status: string;
+  reportedBy?: string;
+  createdAt: string;
+};
 
 const statusColors: Record<string, string> = {
   'dirty': 'bg-red-100 text-red-800 border-red-200 dark:bg-red-950/50 dark:text-red-200 dark:border-red-900',
@@ -28,6 +41,8 @@ export const HousekeepingPage = () => {
   const { t } = useTranslation();
   const [filterStatus, setFilterStatus] = useState('all');
   const [selectedRoom, setSelectedRoom] = useState<string | number | null>(null);
+  const [clientRequests, setClientRequests] = useState<ClientHousekeepingRequest[]>([]);
+  const [resolvingRequestId, setResolvingRequestId] = useState<number | null>(null);
 
   const today = new Date().toISOString().split('T')[0];
   const todaysArrivals = bookings.filter((b) => b.checkIn === today && b.status === 'confirmed');
@@ -44,6 +59,22 @@ export const HousekeepingPage = () => {
     todaysArrivals.some((b) => b.roomId === room.id) &&
     room.status.toLowerCase() !== 'ready' && room.status.toLowerCase() !== 'available'
   );
+
+  useEffect(() => {
+    api.get<ClientHousekeepingRequest[]>('/housekeeping/client-requests')
+      .then((data) => setClientRequests(data || []))
+      .catch(() => setClientRequests([]));
+  }, []);
+
+  const resolveClientRequest = async (requestId: number) => {
+    try {
+      setResolvingRequestId(requestId);
+      await api.patch(`/housekeeping/client-requests/${requestId}/resolve`);
+      setClientRequests((current) => current.filter((request) => request.id !== requestId));
+    } finally {
+      setResolvingRequestId(null);
+    }
+  };
 
   return (
     <div className="min-h-full bg-background p-4">
@@ -78,6 +109,48 @@ export const HousekeepingPage = () => {
           </div>
         </div>
       )}
+
+      <div className="mb-6 rounded-lg border bg-white p-5 dark:border-slate-700 dark:bg-slate-900">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-slate-100">Solicitari de la oaspeti</h2>
+            <p className="text-sm text-gray-500 dark:text-slate-400">Cereri de housekeeping trimise direct de clienti pentru camerele lor.</p>
+          </div>
+          <Badge className="border bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300">
+            {clientRequests.length}
+          </Badge>
+        </div>
+
+        {clientRequests.length === 0 ? (
+          <p className="text-sm text-gray-500 dark:text-slate-400">Nu exista solicitari noi de la oaspeti.</p>
+        ) : (
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {clientRequests.map((request) => (
+              <div key={request.id} className="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-950">
+                <div className="mb-2 flex items-start justify-between gap-3">
+                  <div>
+                    <h3 className="font-semibold text-gray-800 dark:text-slate-100">{request.issue}</h3>
+                    <p className="text-sm text-gray-500 dark:text-slate-400">{t('room')} {request.roomNumber}</p>
+                  </div>
+                  <Badge className="border bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-200">
+                    {request.status}
+                  </Badge>
+                </div>
+                {request.description && (
+                  <p className="mb-3 text-sm text-gray-600 dark:text-slate-300">{request.description}</p>
+                )}
+                <div className="space-y-1 text-xs text-gray-500 dark:text-slate-400">
+                  <p>Prioritate: {request.priority}</p>
+                  <p>Raportat de: {request.reportedBy || 'Client'}</p>
+                </div>
+                <Button size="sm" className="mt-3" onClick={() => resolveClientRequest(request.id)} disabled={resolvingRequestId === request.id}>
+                  {resolvingRequestId === request.id ? 'Se rezolva...' : 'Marcheaza rezolvata'}
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredRooms.map((room) => {
