@@ -45,7 +45,7 @@ public class ReservationService : IReservationService
     public async Task<ServiceResult<ReservationDto>> CreateReservationAsync(CreateReservationRequest request, int userId)
     {
         var room = await _db.Context.Rooms.FindAsync(request.RoomId);
-        if (room == null || !room.IsActive || room.Status != RoomStatus.Available)
+        if (room == null || !room.IsActive || room.Status is RoomStatus.OutOfOrder or RoomStatus.OutOfService)
             return ServiceResult<ReservationDto>.Fail("Room is not available.");
 
         if (!DateOnly.TryParse(request.CheckIn, out var checkIn) || !DateOnly.TryParse(request.CheckOut, out var checkOut))

@@ -13,6 +13,7 @@ public class RoomDto
     public string Status { get; set; } = string.Empty;
     public List<string> Amenities { get; set; } = new();
     public string? Description { get; set; }
+    public string? NextAvailableDate { get; set; }
 }
 
 public class UpdateRoomStatusRequest
