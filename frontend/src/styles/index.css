@@ -496,3 +496,26 @@ body,
 .dark .lb-topbar-logout-btn:hover {
   background: rgba(255, 255, 255, 0.08);
 }
+
+.booking-date-input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 2px;
+  transition: transform 0.2s ease, filter 0.2s ease, background-color 0.2s ease;
+}
+
+.booking-date-input::-webkit-calendar-picker-indicator:hover {
+  background-color: rgba(200, 151, 58, 0.14);
+  filter: brightness(1.15);
+  transform: scale(1.08);
+}
+
+.booking-date-input-occupied {
+  border-color: rgba(200, 151, 58, 0.42);
+  background-color: rgba(245, 230, 204, 0.38);
+}
+
+.dark .booking-date-input-occupied {
+  border-color: rgba(231, 189, 99, 0.42);
+  background-color: rgba(231, 189, 99, 0.12);
+}

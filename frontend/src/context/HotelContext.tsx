@@ -17,6 +17,7 @@ export interface Room {
   status: RoomStatus | string;
   amenities: string[];
   description?: string;
+  nextAvailableDate?: string | null;
 }
 
 export interface Booking {
