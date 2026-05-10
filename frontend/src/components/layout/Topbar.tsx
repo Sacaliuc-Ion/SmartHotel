@@ -9,6 +9,16 @@ import { useTranslation } from 'react-i18next';
 
 interface TopbarProps { onToggleSidebar?: () => void; sidebarOpen?: boolean; }
 
+const getNotificationTarget = (notification: any) => {
+  const text = `${notification.title || ''} ${notification.message || ''}`.toLowerCase();
+
+  if (text.includes('maintenance')) return '/maintenance';
+  if (text.includes('housekeeping')) return '/housekeeping';
+  if (notification.reservationId) return '/profile';
+
+  return null;
+};
+
 export const Topbar = ({ onToggleSidebar, sidebarOpen }: TopbarProps) => {
   const { user, logout } = useAuth();
   const { t } = useTranslation();
@@ -18,25 +28,47 @@ export const Topbar = ({ onToggleSidebar, sidebarOpen }: TopbarProps) => {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const unreadCount = notifications.filter((item) => !item.isRead).length;
 
+  const loadNotifications = async () => {
+    if (!user) {
+      setNotifications([]);
+      return;
+    }
+
+    try {
+      const next = await api.get<any[]>('/auth/notifications');
+      const normalized = next || [];
+      setNotifications(normalized);
+      window.dispatchEvent(new CustomEvent('notifications:updated', { detail: normalized }));
+    } catch {
+      setNotifications([]);
+    }
+  };
+
   useEffect(() => {
     if (!user) {
       setNotifications([]);
       return;
     }
 
-    api.get<any[]>('/auth/notifications')
-      .then((data) => setNotifications(data || []))
-      .catch(() => setNotifications([]));
+    loadNotifications();
+
+    const intervalId = window.setInterval(loadNotifications, 15000);
+    return () => window.clearInterval(intervalId);
   }, [user]);
 
   const markRead = async (notification: any) => {
     if (!notification.isRead) {
       await api.patch(`/auth/notifications/${notification.id}/read`);
-      setNotifications((prev) => prev.map((item) => item.id === notification.id ? { ...item, isRead: true } : item));
+      setNotifications((prev) => {
+        const next = prev.map((item) => item.id === notification.id ? { ...item, isRead: true } : item);
+        window.dispatchEvent(new CustomEvent('notifications:updated', { detail: next }));
+        return next;
+      });
     }
 
-    if (notification.reservationId) {
-      navigate('/profile');
+    const target = getNotificationTarget(notification);
+    if (target) {
+      navigate(target);
     }
   };
 

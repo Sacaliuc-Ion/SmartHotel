@@ -79,6 +79,32 @@ public class MaintenanceService : IMaintenanceService
           _db.Context.MaintenanceTickets.Add(t);
           await _db.SaveChangesAsync();
 
+          var roomNumber = await _db.Context.Rooms
+              .Where(room => room.Id == request.RoomId)
+              .Select(room => room.Number)
+              .FirstOrDefaultAsync();
+
+          var recipients = await _db.Context.Users
+              .Include(user => user.Role)
+              .Where(user =>
+                  user.IsActive &&
+                  user.Id != reportedByUserId &&
+                  (user.Role.Name == "Maintenance" || user.Role.Name == "Admin" || user.Role.Name == "Manager"))
+              .ToListAsync();
+
+          if (recipients.Count > 0)
+          {
+               var notifications = recipients.Select(user => new UserNotification
+               {
+                    UserId = user.Id,
+                    Title = "Maintenance ticket nou",
+                    Message = $"A fost creat un ticket nou pentru camera {roomNumber ?? request.RoomId.ToString()}: {request.Issue}",
+               });
+
+               _db.Context.UserNotifications.AddRange(notifications);
+               await _db.SaveChangesAsync();
+          }
+
           return ServiceResult<TicketDto>.Ok(new TicketDto { Id = t.Id }); // Simplified return since we typically refetch
      }
 
