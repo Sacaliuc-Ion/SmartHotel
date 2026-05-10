@@ -10,6 +10,7 @@ import { HousekeepingPage } from './pages/HousekeepingPage';
 import { MaintenancePage } from './pages/MaintenancePage';
 import { DashboardPage } from './pages/DashboardPage';
 import { AdminPage } from './pages/AdminPage';
+import { ProfilePage } from './pages/ProfilePage';
 
 export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
@@ -22,5 +23,6 @@ export const router = createBrowserRouter([
   { path: '/maintenance', element: <Layout><MaintenancePage /></Layout> },
   { path: '/dashboard', element: <Layout><DashboardPage /></Layout> },
   { path: '/admin', element: <Layout><AdminPage /></Layout> },
+  { path: '/profile', element: <Layout><ProfilePage /></Layout> },
   { path: '*', element: <Navigate to="/" replace /> },
 ]);

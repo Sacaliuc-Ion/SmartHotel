@@ -1,6 +1,6 @@
 import { useAuth } from '../../context/AuthContext';
 import { NavLink } from 'react-router';
-import { Home, DoorOpen, Calendar, Sparkles, Wrench, Settings, BarChart3, Building } from 'lucide-react';
+import { Home, DoorOpen, Calendar, Sparkles, Wrench, Settings, BarChart3, Building, UserCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 interface NavItem { labelKey: string; path: string; icon: React.ElementType; roles: string[]; }
@@ -8,6 +8,7 @@ interface NavItem { labelKey: string; path: string; icon: React.ElementType; rol
 const navItems: NavItem[] = [
   { labelKey: 'navHome',         path: '/',            icon: Home,      roles: ['client','reception','housekeeping','maintenance','admin','manager'] },
   { labelKey: 'navRooms',        path: '/rooms',        icon: Building,  roles: ['client','reception','housekeeping','maintenance','admin','manager'] },
+  { labelKey: 'navProfile',      path: '/profile',      icon: UserCircle, roles: ['client','reception','housekeeping','maintenance','admin','manager'] },
   { labelKey: 'navFrontDesk',    path: '/front-desk',   icon: DoorOpen,  roles: ['reception','admin','manager'] },
   { labelKey: 'navRoomBoard',    path: '/room-board',   icon: Calendar,  roles: ['reception','admin','manager'] },
   { labelKey: 'navHousekeeping', path: '/housekeeping', icon: Sparkles,  roles: ['housekeeping','admin','manager'] },

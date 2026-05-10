@@ -26,6 +26,7 @@ pnpm-debug.log*
 lerna-debug.log*
 
 # .NET build output
+.dotnet_home/
 **/bin/
 **/obj/
 **/out/

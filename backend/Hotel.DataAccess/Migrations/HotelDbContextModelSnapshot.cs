@@ -436,7 +436,7 @@ namespace Hotel.DataAccess.Migrations
                             Number = "102",
                             PricePerNight = 89m,
                             RoomTypeId = 1,
-                            Status = "Occupied"
+                            Status = "Available"
                         },
                         new
                         {
@@ -453,6 +453,78 @@ namespace Hotel.DataAccess.Migrations
                         new
                         {
                             Id = 4,
+                            Capacity = 1,
+                            Description = "Cozy single room with courtyard view",
+                            Floor = 1,
+                            IsActive = true,
+                            Number = "104",
+                            PricePerNight = 89m,
+                            RoomTypeId = 1,
+                            Status = "Available"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Capacity = 1,
+                            Description = "Quiet single room for short business stays",
+                            Floor = 1,
+                            IsActive = true,
+                            Number = "105",
+                            PricePerNight = 89m,
+                            RoomTypeId = 1,
+                            Status = "Available"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Capacity = 2,
+                            Description = "Bright double room with lounge corner",
+                            Floor = 1,
+                            IsActive = true,
+                            Number = "106",
+                            PricePerNight = 129m,
+                            RoomTypeId = 2,
+                            Status = "Available"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            Capacity = 2,
+                            Description = "Comfort double room near the spa wing",
+                            Floor = 1,
+                            IsActive = true,
+                            Number = "107",
+                            PricePerNight = 129m,
+                            RoomTypeId = 2,
+                            Status = "Available"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            Capacity = 3,
+                            Description = "Deluxe room with premium amenities",
+                            Floor = 1,
+                            IsActive = true,
+                            Number = "108",
+                            PricePerNight = 189m,
+                            RoomTypeId = 4,
+                            Status = "Clean"
+                        },
+                        new
+                        {
+                            Id = 9,
+                            Capacity = 1,
+                            Description = "Elegant single room with work desk",
+                            Floor = 1,
+                            IsActive = true,
+                            Number = "109",
+                            PricePerNight = 89m,
+                            RoomTypeId = 1,
+                            Status = "Available"
+                        },
+                        new
+                        {
+                            Id = 10,
                             Capacity = 2,
                             Description = "Spacious double room with city view",
                             Floor = 2,
@@ -464,7 +536,7 @@ namespace Hotel.DataAccess.Migrations
                         },
                         new
                         {
-                            Id = 5,
+                            Id = 11,
                             Capacity = 4,
                             Description = "Luxury suite with separate living area",
                             Floor = 2,
@@ -472,11 +544,11 @@ namespace Hotel.DataAccess.Migrations
                             Number = "202",
                             PricePerNight = 249m,
                             RoomTypeId = 3,
-                            Status = "Occupied"
+                            Status = "Available"
                         },
                         new
                         {
-                            Id = 6,
+                            Id = 12,
                             Capacity = 2,
                             Description = "Spacious double room with city view",
                             Floor = 2,
@@ -488,7 +560,79 @@ namespace Hotel.DataAccess.Migrations
                         },
                         new
                         {
-                            Id = 7,
+                            Id = 13,
+                            Capacity = 2,
+                            Description = "Double room with natural light and modern decor",
+                            Floor = 2,
+                            IsActive = true,
+                            Number = "204",
+                            PricePerNight = 129m,
+                            RoomTypeId = 2,
+                            Status = "Available"
+                        },
+                        new
+                        {
+                            Id = 14,
+                            Capacity = 3,
+                            Description = "Deluxe room prepared for premium stays",
+                            Floor = 2,
+                            IsActive = true,
+                            Number = "205",
+                            PricePerNight = 189m,
+                            RoomTypeId = 4,
+                            Status = "Ready"
+                        },
+                        new
+                        {
+                            Id = 15,
+                            Capacity = 4,
+                            Description = "Luxury suite with skyline view",
+                            Floor = 2,
+                            IsActive = true,
+                            Number = "206",
+                            PricePerNight = 249m,
+                            RoomTypeId = 3,
+                            Status = "Available"
+                        },
+                        new
+                        {
+                            Id = 16,
+                            Capacity = 2,
+                            Description = "Double room scheduled for turnover",
+                            Floor = 2,
+                            IsActive = true,
+                            Number = "207",
+                            PricePerNight = 129m,
+                            RoomTypeId = 2,
+                            Status = "Cleaning"
+                        },
+                        new
+                        {
+                            Id = 17,
+                            Capacity = 4,
+                            Description = "Suite with living area and soaking tub",
+                            Floor = 2,
+                            IsActive = true,
+                            Number = "208",
+                            PricePerNight = 249m,
+                            RoomTypeId = 3,
+                            Status = "Available"
+                        },
+                        new
+                        {
+                            Id = 18,
+                            Capacity = 3,
+                            Description = "Deluxe room with premium amenities",
+                            Floor = 2,
+                            IsActive = true,
+                            Number = "209",
+                            PricePerNight = 189m,
+                            RoomTypeId = 4,
+                            Status = "Available"
+                        },
+                        new
+                        {
+                            Id = 19,
                             Capacity = 3,
                             Description = "Deluxe room with premium amenities",
                             Floor = 3,
@@ -500,7 +644,7 @@ namespace Hotel.DataAccess.Migrations
                         },
                         new
                         {
-                            Id = 8,
+                            Id = 20,
                             Capacity = 4,
                             Description = "Luxury suite with separate living area",
                             Floor = 3,
@@ -512,7 +656,7 @@ namespace Hotel.DataAccess.Migrations
                         },
                         new
                         {
-                            Id = 9,
+                            Id = 21,
                             Capacity = 3,
                             Description = "Deluxe room with premium amenities",
                             Floor = 3,
@@ -524,12 +668,72 @@ namespace Hotel.DataAccess.Migrations
                         },
                         new
                         {
-                            Id = 10,
+                            Id = 22,
                             Capacity = 2,
                             Description = "Spacious double room with city view",
                             Floor = 3,
                             IsActive = true,
                             Number = "304",
+                            PricePerNight = 129m,
+                            RoomTypeId = 2,
+                            Status = "Available"
+                        },
+                        new
+                        {
+                            Id = 23,
+                            Capacity = 2,
+                            Description = "Double room with a quiet top-floor setting",
+                            Floor = 3,
+                            IsActive = true,
+                            Number = "305",
+                            PricePerNight = 129m,
+                            RoomTypeId = 2,
+                            Status = "Available"
+                        },
+                        new
+                        {
+                            Id = 24,
+                            Capacity = 1,
+                            Description = "Single room ideal for solo city breaks",
+                            Floor = 3,
+                            IsActive = true,
+                            Number = "306",
+                            PricePerNight = 89m,
+                            RoomTypeId = 1,
+                            Status = "Available"
+                        },
+                        new
+                        {
+                            Id = 25,
+                            Capacity = 3,
+                            Description = "Deluxe room with balcony and reading nook",
+                            Floor = 3,
+                            IsActive = true,
+                            Number = "307",
+                            PricePerNight = 189m,
+                            RoomTypeId = 4,
+                            Status = "Available"
+                        },
+                        new
+                        {
+                            Id = 26,
+                            Capacity = 4,
+                            Description = "Suite with premium lounge and panoramic windows",
+                            Floor = 3,
+                            IsActive = true,
+                            Number = "308",
+                            PricePerNight = 249m,
+                            RoomTypeId = 3,
+                            Status = "Available"
+                        },
+                        new
+                        {
+                            Id = 27,
+                            Capacity = 2,
+                            Description = "Double room with upgraded bedding",
+                            Floor = 3,
+                            IsActive = true,
+                            Number = "309",
                             PricePerNight = 129m,
                             RoomTypeId = 2,
                             Status = "Available"
@@ -598,123 +802,93 @@ namespace Hotel.DataAccess.Migrations
                         },
                         new
                         {
-                            RoomId = 4,
-                            AmenityId = 1
-                        },
-                        new
-                        {
-                            RoomId = 4,
-                            AmenityId = 2
-                        },
-                        new
-                        {
-                            RoomId = 4,
-                            AmenityId = 3
-                        },
-                        new
-                        {
-                            RoomId = 5,
-                            AmenityId = 1
-                        },
-                        new
-                        {
-                            RoomId = 5,
-                            AmenityId = 2
-                        },
-                        new
-                        {
-                            RoomId = 5,
-                            AmenityId = 3
-                        },
-                        new
-                        {
-                            RoomId = 6,
-                            AmenityId = 1
-                        },
-                        new
-                        {
-                            RoomId = 6,
-                            AmenityId = 2
-                        },
-                        new
-                        {
-                            RoomId = 6,
-                            AmenityId = 3
-                        },
-                        new
-                        {
-                            RoomId = 7,
-                            AmenityId = 1
-                        },
-                        new
-                        {
-                            RoomId = 7,
-                            AmenityId = 2
-                        },
-                        new
-                        {
-                            RoomId = 7,
-                            AmenityId = 3
-                        },
-                        new
-                        {
-                            RoomId = 8,
-                            AmenityId = 1
-                        },
-                        new
-                        {
-                            RoomId = 8,
-                            AmenityId = 2
-                        },
-                        new
-                        {
-                            RoomId = 8,
-                            AmenityId = 3
-                        },
-                        new
-                        {
-                            RoomId = 9,
-                            AmenityId = 1
-                        },
-                        new
-                        {
-                            RoomId = 9,
-                            AmenityId = 2
-                        },
-                        new
-                        {
-                            RoomId = 9,
-                            AmenityId = 3
-                        },
-                        new
-                        {
-                            RoomId = 10,
-                            AmenityId = 1
-                        },
-                        new
-                        {
-                            RoomId = 10,
-                            AmenityId = 2
-                        },
-                        new
-                        {
-                            RoomId = 10,
-                            AmenityId = 3
-                        },
-                        new
-                        {
-                            RoomId = 5,
+                            RoomId = 3,
                             AmenityId = 4
                         },
                         new
                         {
-                            RoomId = 5,
-                            AmenityId = 5
+                            RoomId = 4,
+                            AmenityId = 1
+                        },
+                        new
+                        {
+                            RoomId = 4,
+                            AmenityId = 2
+                        },
+                        new
+                        {
+                            RoomId = 4,
+                            AmenityId = 3
                         },
                         new
                         {
                             RoomId = 5,
-                            AmenityId = 6
+                            AmenityId = 1
+                        },
+                        new
+                        {
+                            RoomId = 5,
+                            AmenityId = 2
+                        },
+                        new
+                        {
+                            RoomId = 5,
+                            AmenityId = 3
+                        },
+                        new
+                        {
+                            RoomId = 6,
+                            AmenityId = 1
+                        },
+                        new
+                        {
+                            RoomId = 6,
+                            AmenityId = 2
+                        },
+                        new
+                        {
+                            RoomId = 6,
+                            AmenityId = 3
+                        },
+                        new
+                        {
+                            RoomId = 6,
+                            AmenityId = 4
+                        },
+                        new
+                        {
+                            RoomId = 7,
+                            AmenityId = 1
+                        },
+                        new
+                        {
+                            RoomId = 7,
+                            AmenityId = 2
+                        },
+                        new
+                        {
+                            RoomId = 7,
+                            AmenityId = 3
+                        },
+                        new
+                        {
+                            RoomId = 7,
+                            AmenityId = 4
+                        },
+                        new
+                        {
+                            RoomId = 8,
+                            AmenityId = 1
+                        },
+                        new
+                        {
+                            RoomId = 8,
+                            AmenityId = 2
+                        },
+                        new
+                        {
+                            RoomId = 8,
+                            AmenityId = 3
                         },
                         new
                         {
@@ -724,12 +898,452 @@ namespace Hotel.DataAccess.Migrations
                         new
                         {
                             RoomId = 8,
+                            AmenityId = 6
+                        },
+                        new
+                        {
+                            RoomId = 9,
+                            AmenityId = 1
+                        },
+                        new
+                        {
+                            RoomId = 9,
+                            AmenityId = 2
+                        },
+                        new
+                        {
+                            RoomId = 9,
+                            AmenityId = 3
+                        },
+                        new
+                        {
+                            RoomId = 10,
+                            AmenityId = 1
+                        },
+                        new
+                        {
+                            RoomId = 10,
+                            AmenityId = 2
+                        },
+                        new
+                        {
+                            RoomId = 10,
+                            AmenityId = 3
+                        },
+                        new
+                        {
+                            RoomId = 10,
+                            AmenityId = 4
+                        },
+                        new
+                        {
+                            RoomId = 11,
+                            AmenityId = 1
+                        },
+                        new
+                        {
+                            RoomId = 11,
+                            AmenityId = 2
+                        },
+                        new
+                        {
+                            RoomId = 11,
+                            AmenityId = 3
+                        },
+                        new
+                        {
+                            RoomId = 11,
+                            AmenityId = 4
+                        },
+                        new
+                        {
+                            RoomId = 11,
                             AmenityId = 5
                         },
                         new
                         {
-                            RoomId = 8,
+                            RoomId = 11,
                             AmenityId = 6
+                        },
+                        new
+                        {
+                            RoomId = 12,
+                            AmenityId = 1
+                        },
+                        new
+                        {
+                            RoomId = 12,
+                            AmenityId = 2
+                        },
+                        new
+                        {
+                            RoomId = 12,
+                            AmenityId = 3
+                        },
+                        new
+                        {
+                            RoomId = 12,
+                            AmenityId = 4
+                        },
+                        new
+                        {
+                            RoomId = 13,
+                            AmenityId = 1
+                        },
+                        new
+                        {
+                            RoomId = 13,
+                            AmenityId = 2
+                        },
+                        new
+                        {
+                            RoomId = 13,
+                            AmenityId = 3
+                        },
+                        new
+                        {
+                            RoomId = 13,
+                            AmenityId = 4
+                        },
+                        new
+                        {
+                            RoomId = 14,
+                            AmenityId = 1
+                        },
+                        new
+                        {
+                            RoomId = 14,
+                            AmenityId = 2
+                        },
+                        new
+                        {
+                            RoomId = 14,
+                            AmenityId = 3
+                        },
+                        new
+                        {
+                            RoomId = 14,
+                            AmenityId = 4
+                        },
+                        new
+                        {
+                            RoomId = 14,
+                            AmenityId = 6
+                        },
+                        new
+                        {
+                            RoomId = 15,
+                            AmenityId = 1
+                        },
+                        new
+                        {
+                            RoomId = 15,
+                            AmenityId = 2
+                        },
+                        new
+                        {
+                            RoomId = 15,
+                            AmenityId = 3
+                        },
+                        new
+                        {
+                            RoomId = 15,
+                            AmenityId = 4
+                        },
+                        new
+                        {
+                            RoomId = 15,
+                            AmenityId = 5
+                        },
+                        new
+                        {
+                            RoomId = 15,
+                            AmenityId = 6
+                        },
+                        new
+                        {
+                            RoomId = 16,
+                            AmenityId = 1
+                        },
+                        new
+                        {
+                            RoomId = 16,
+                            AmenityId = 2
+                        },
+                        new
+                        {
+                            RoomId = 16,
+                            AmenityId = 3
+                        },
+                        new
+                        {
+                            RoomId = 16,
+                            AmenityId = 4
+                        },
+                        new
+                        {
+                            RoomId = 17,
+                            AmenityId = 1
+                        },
+                        new
+                        {
+                            RoomId = 17,
+                            AmenityId = 2
+                        },
+                        new
+                        {
+                            RoomId = 17,
+                            AmenityId = 3
+                        },
+                        new
+                        {
+                            RoomId = 17,
+                            AmenityId = 4
+                        },
+                        new
+                        {
+                            RoomId = 17,
+                            AmenityId = 5
+                        },
+                        new
+                        {
+                            RoomId = 17,
+                            AmenityId = 6
+                        },
+                        new
+                        {
+                            RoomId = 18,
+                            AmenityId = 1
+                        },
+                        new
+                        {
+                            RoomId = 18,
+                            AmenityId = 2
+                        },
+                        new
+                        {
+                            RoomId = 18,
+                            AmenityId = 3
+                        },
+                        new
+                        {
+                            RoomId = 18,
+                            AmenityId = 4
+                        },
+                        new
+                        {
+                            RoomId = 18,
+                            AmenityId = 6
+                        },
+                        new
+                        {
+                            RoomId = 19,
+                            AmenityId = 1
+                        },
+                        new
+                        {
+                            RoomId = 19,
+                            AmenityId = 2
+                        },
+                        new
+                        {
+                            RoomId = 19,
+                            AmenityId = 3
+                        },
+                        new
+                        {
+                            RoomId = 19,
+                            AmenityId = 4
+                        },
+                        new
+                        {
+                            RoomId = 19,
+                            AmenityId = 6
+                        },
+                        new
+                        {
+                            RoomId = 20,
+                            AmenityId = 1
+                        },
+                        new
+                        {
+                            RoomId = 20,
+                            AmenityId = 2
+                        },
+                        new
+                        {
+                            RoomId = 20,
+                            AmenityId = 3
+                        },
+                        new
+                        {
+                            RoomId = 20,
+                            AmenityId = 4
+                        },
+                        new
+                        {
+                            RoomId = 20,
+                            AmenityId = 5
+                        },
+                        new
+                        {
+                            RoomId = 20,
+                            AmenityId = 6
+                        },
+                        new
+                        {
+                            RoomId = 21,
+                            AmenityId = 1
+                        },
+                        new
+                        {
+                            RoomId = 21,
+                            AmenityId = 2
+                        },
+                        new
+                        {
+                            RoomId = 21,
+                            AmenityId = 3
+                        },
+                        new
+                        {
+                            RoomId = 21,
+                            AmenityId = 4
+                        },
+                        new
+                        {
+                            RoomId = 21,
+                            AmenityId = 6
+                        },
+                        new
+                        {
+                            RoomId = 22,
+                            AmenityId = 1
+                        },
+                        new
+                        {
+                            RoomId = 22,
+                            AmenityId = 2
+                        },
+                        new
+                        {
+                            RoomId = 22,
+                            AmenityId = 3
+                        },
+                        new
+                        {
+                            RoomId = 22,
+                            AmenityId = 4
+                        },
+                        new
+                        {
+                            RoomId = 23,
+                            AmenityId = 1
+                        },
+                        new
+                        {
+                            RoomId = 23,
+                            AmenityId = 2
+                        },
+                        new
+                        {
+                            RoomId = 23,
+                            AmenityId = 3
+                        },
+                        new
+                        {
+                            RoomId = 23,
+                            AmenityId = 4
+                        },
+                        new
+                        {
+                            RoomId = 24,
+                            AmenityId = 1
+                        },
+                        new
+                        {
+                            RoomId = 24,
+                            AmenityId = 2
+                        },
+                        new
+                        {
+                            RoomId = 24,
+                            AmenityId = 3
+                        },
+                        new
+                        {
+                            RoomId = 25,
+                            AmenityId = 1
+                        },
+                        new
+                        {
+                            RoomId = 25,
+                            AmenityId = 2
+                        },
+                        new
+                        {
+                            RoomId = 25,
+                            AmenityId = 3
+                        },
+                        new
+                        {
+                            RoomId = 25,
+                            AmenityId = 4
+                        },
+                        new
+                        {
+                            RoomId = 25,
+                            AmenityId = 6
+                        },
+                        new
+                        {
+                            RoomId = 26,
+                            AmenityId = 1
+                        },
+                        new
+                        {
+                            RoomId = 26,
+                            AmenityId = 2
+                        },
+                        new
+                        {
+                            RoomId = 26,
+                            AmenityId = 3
+                        },
+                        new
+                        {
+                            RoomId = 26,
+                            AmenityId = 4
+                        },
+                        new
+                        {
+                            RoomId = 26,
+                            AmenityId = 5
+                        },
+                        new
+                        {
+                            RoomId = 26,
+                            AmenityId = 6
+                        },
+                        new
+                        {
+                            RoomId = 27,
+                            AmenityId = 1
+                        },
+                        new
+                        {
+                            RoomId = 27,
+                            AmenityId = 2
+                        },
+                        new
+                        {
+                            RoomId = 27,
+                            AmenityId = 3
+                        },
+                        new
+                        {
+                            RoomId = 27,
+                            AmenityId = 4
                         });
                 });
 
@@ -794,8 +1408,23 @@ namespace Hotel.DataAccess.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Address")
+                        .HasColumnType("text");
+
+                    b.Property<string>("AvatarUrl")
+                        .HasColumnType("text");
+
+                    b.Property<string>("City")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Country")
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly?>("DateOfBirth")
+                        .HasColumnType("date");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -807,6 +1436,9 @@ namespace Hotel.DataAccess.Migrations
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("LastLoginAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("LastName")
                         .IsRequired()
@@ -906,6 +1538,74 @@ namespace Hotel.DataAccess.Migrations
                             PasswordHash = "$2a$11$s5EGEu.A.g4E6QhP1p4C5OTtG0gq6g.0ZJ/E9fM9zMOhWdXXe4/lO",
                             RoleId = 6
                         });
+                });
+
+            modelBuilder.Entity("Hotel.Domain.Entities.UserLoginAudit", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("IpAddress")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("LoggedInAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UserAgent")
+                        .HasColumnType("text");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserLoginAudits");
+                });
+
+            modelBuilder.Entity("Hotel.Domain.Entities.UserNotification", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int?>("ReservationId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReservationId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserNotifications");
                 });
 
             modelBuilder.Entity("Hotel.Domain.Entities.CheckInRecord", b =>
@@ -1050,6 +1750,35 @@ namespace Hotel.DataAccess.Migrations
                     b.Navigation("Role");
                 });
 
+            modelBuilder.Entity("Hotel.Domain.Entities.UserLoginAudit", b =>
+                {
+                    b.HasOne("Hotel.Domain.Entities.User", "User")
+                        .WithMany("LoginAudits")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Hotel.Domain.Entities.UserNotification", b =>
+                {
+                    b.HasOne("Hotel.Domain.Entities.Reservation", "Reservation")
+                        .WithMany()
+                        .HasForeignKey("ReservationId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Hotel.Domain.Entities.User", "User")
+                        .WithMany("Notifications")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Reservation");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Hotel.Domain.Entities.Amenity", b =>
                 {
                     b.Navigation("RoomAmenities");
@@ -1082,6 +1811,10 @@ namespace Hotel.DataAccess.Migrations
                     b.Navigation("AssignedTickets");
 
                     b.Navigation("HousekeepingTasks");
+
+                    b.Navigation("LoginAudits");
+
+                    b.Navigation("Notifications");
 
                     b.Navigation("ProcessedCheckIns");
 

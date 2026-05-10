@@ -59,6 +59,14 @@ public class ReceptionService : IReceptionService
                Notes = request.Notes
           });
 
+          _db.Context.UserNotifications.Add(new UserNotification
+          {
+               UserId = res.UserId,
+               ReservationId = res.Id,
+               Title = "Rezervare confirmata",
+               Message = $"Check-in-ul pentru camera {res.Room.Number} a fost confirmat."
+          });
+
           await _db.SaveChangesAsync();
           return ServiceResult.Ok();
      }

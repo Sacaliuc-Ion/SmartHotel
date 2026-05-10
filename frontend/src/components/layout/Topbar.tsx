@@ -1,5 +1,7 @@
 import { useAuth } from '../../context/AuthContext';
-import { LogOut, Hotel, Menu, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { api } from '../../services/api';
+import { Bell, LogOut, Hotel, Menu, X } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { Link } from 'react-router-dom';
 import { PreferencesControls } from './PreferencesControls';
@@ -12,6 +14,31 @@ export const Topbar = ({ onToggleSidebar, sidebarOpen }: TopbarProps) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const handleLogout = () => { logout(); navigate('/'); };
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const unreadCount = notifications.filter((item) => !item.isRead).length;
+
+  useEffect(() => {
+    if (!user) {
+      setNotifications([]);
+      return;
+    }
+
+    api.get<any[]>('/auth/notifications')
+      .then((data) => setNotifications(data || []))
+      .catch(() => setNotifications([]));
+  }, [user]);
+
+  const markRead = async (notification: any) => {
+    if (!notification.isRead) {
+      await api.patch(`/auth/notifications/${notification.id}/read`);
+      setNotifications((prev) => prev.map((item) => item.id === notification.id ? { ...item, isRead: true } : item));
+    }
+
+    if (notification.reservationId) {
+      navigate('/profile');
+    }
+  };
 
   return (
     <div className="lb-topbar h-16 flex items-center justify-between px-4 shrink-0 z-30">
@@ -46,15 +73,59 @@ export const Topbar = ({ onToggleSidebar, sidebarOpen }: TopbarProps) => {
           </button>
         </div>
       ) : (
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           <PreferencesControls compact />
-          <div className="text-right hidden sm:block">
-            <p className="text-sm font-medium lb-topbar-username">{user.name}</p>
-            <p className="text-xs lb-topbar-role capitalize">{user.role}</p>
+          <div className="relative">
+            <button
+              onClick={() => setNotificationsOpen((open) => !open)}
+              className="lb-topbar-icon-btn relative p-2 rounded-lg transition-colors"
+              aria-label="Notificari"
+            >
+              <Bell className="h-5 w-5" />
+              {unreadCount > 0 && (
+                <span className="absolute -right-1 -top-1 min-w-5 rounded-full bg-red-600 px-1.5 text-xs font-semibold text-white">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+            {notificationsOpen && (
+              <div className="absolute right-0 top-11 z-50 w-80 rounded-lg border bg-white p-2 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+                <div className="px-3 py-2 text-sm font-semibold text-gray-800 dark:text-slate-100">Notificari</div>
+                {notifications.length === 0 ? (
+                  <p className="px-3 py-4 text-sm text-gray-500 dark:text-slate-400">Nu ai notificari noi.</p>
+                ) : (
+                  <div className="max-h-80 overflow-y-auto">
+                    {notifications.map((notification) => (
+                      <button
+                        key={notification.id}
+                        onClick={() => markRead(notification)}
+                        className="w-full rounded-md px-3 py-2 text-left transition hover:bg-gray-50 dark:hover:bg-slate-800"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="text-sm font-medium text-gray-800 dark:text-slate-100">{notification.title}</p>
+                          {!notification.isRead && <span className="mt-1 h-2 w-2 rounded-full bg-amber-500" />}
+                        </div>
+                        <p className="mt-1 text-xs text-gray-500 dark:text-slate-400">{notification.message}</p>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
-          <div className="lb-avatar w-9 h-9 rounded-full flex items-center justify-center font-semibold text-sm shrink-0">
-            {user.name.charAt(0).toUpperCase()}
-          </div>
+          <Link to="/profile" className="flex items-center gap-3">
+            <div className="text-right hidden sm:block">
+              <p className="text-sm font-medium lb-topbar-username">{user.name}</p>
+              <p className="text-xs lb-topbar-role capitalize">{user.role}</p>
+            </div>
+            {user.avatarUrl ? (
+              <img src={user.avatarUrl} alt={user.name} className="lb-avatar h-9 w-9 rounded-full object-cover shrink-0" />
+            ) : (
+              <div className="lb-avatar w-9 h-9 rounded-full flex items-center justify-center font-semibold text-sm shrink-0">
+                {user.name.charAt(0).toUpperCase()}
+              </div>
+            )}
+          </Link>
           <button
             onClick={handleLogout}
             className="lb-topbar-logout-btn flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all"
