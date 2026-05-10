@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Badge } from '../components/ui/badge';
+import { Textarea } from '../components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { formatCurrency } from '../utils/hotelFormatting';
 
@@ -38,6 +39,12 @@ type Reservation = {
   paymentStatus: string;
   totalAmount: number;
   guests: number;
+  review?: {
+    id: number;
+    rating: number;
+    comment?: string | null;
+    createdAt: string;
+  } | null;
 };
 
 type LoginAudit = {
@@ -72,6 +79,8 @@ export const ProfilePage = () => {
   const [logins, setLogins] = useState<LoginAudit[]>([]);
   const [passwords, setPasswords] = useState({ currentPassword: '', newPassword: '' });
   const [expandedReservation, setExpandedReservation] = useState<number | null>(null);
+  const [reviewForms, setReviewForms] = useState<Record<number, { rating: number; comment: string }>>({});
+  const [submittingReviewId, setSubmittingReviewId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -111,6 +120,47 @@ export const ProfilePage = () => {
       history: reservations.filter((reservation) => ['checked-out', 'cancelled', 'no-show'].includes(reservation.status) || reservation.checkOut < today),
     };
   }, [reservations]);
+
+  const updateReviewForm = (reservationId: number, field: 'rating' | 'comment', value: number | string) => {
+    setReviewForms((current) => ({
+      ...current,
+      [reservationId]: {
+        rating: current[reservationId]?.rating || 5,
+        comment: current[reservationId]?.comment || '',
+        [field]: value,
+      },
+    }));
+  };
+
+  const submitReview = async (reservationId: number) => {
+    const form = reviewForms[reservationId] || { rating: 5, comment: '' };
+
+    if (form.rating < 1 || form.rating > 5) {
+      toast.error('Alege un rating intre 1 si 5.');
+      return;
+    }
+
+    setSubmittingReviewId(reservationId);
+    try {
+      const review = await api.post<{ id: number; rating: number; comment?: string | null; createdAt: string }>(`/reservations/${reservationId}/review`, {
+        rating: form.rating,
+        comment: form.comment,
+      });
+
+      setReservations((current) =>
+        current.map((reservation) =>
+          reservation.id === reservationId
+            ? { ...reservation, review }
+            : reservation
+        )
+      );
+      toast.success('Review-ul a fost adaugat.');
+    } catch (error: any) {
+      toast.error(error.message || 'Nu am putut salva review-ul.');
+    } finally {
+      setSubmittingReviewId(null);
+    }
+  };
 
   const updateDraft = (field: keyof Profile, value: string) => {
     setDraft((current) => ({ ...current, [field]: value }));
@@ -196,10 +246,62 @@ export const ProfilePage = () => {
             </Button>
           </div>
           {expandedReservation === reservation.id && (
-            <div className="mt-4 grid gap-3 border-t pt-4 text-sm text-gray-600 dark:border-slate-700 dark:text-slate-300 sm:grid-cols-3">
-              <div><span className="block text-xs uppercase text-gray-400">Plata</span>{reservation.paymentStatus}</div>
-              <div><span className="block text-xs uppercase text-gray-400">Total</span>{formatCurrency(reservation.totalAmount)}</div>
-              <div><span className="block text-xs uppercase text-gray-400">Camera</span>{reservation.roomNumber}</div>
+            <div className="mt-4 space-y-4 border-t pt-4 dark:border-slate-700">
+              <div className="grid gap-3 text-sm text-gray-600 dark:text-slate-300 sm:grid-cols-3">
+                <div><span className="block text-xs uppercase text-gray-400">Plata</span>{reservation.paymentStatus}</div>
+                <div><span className="block text-xs uppercase text-gray-400">Total</span>{formatCurrency(reservation.totalAmount)}</div>
+                <div><span className="block text-xs uppercase text-gray-400">Camera</span>{reservation.roomNumber}</div>
+              </div>
+
+              {reservation.status === 'checked-out' && (
+                <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-slate-700 dark:bg-slate-800/60">
+                  <h4 className="mb-3 font-medium text-gray-900 dark:text-slate-100">Review camera</h4>
+
+                  {reservation.review ? (
+                    <div className="space-y-2 text-sm text-gray-600 dark:text-slate-300">
+                      <p className="font-medium text-amber-600">{'★'.repeat(reservation.review.rating)}{'☆'.repeat(5 - reservation.review.rating)}</p>
+                      <p>{reservation.review.comment || 'Fara comentariu adaugat.'}</p>
+                      <p className="text-xs text-gray-500 dark:text-slate-400">Adaugat la {formatDateTime(reservation.review.createdAt)}</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <div>
+                        <label className="mb-1 block text-xs uppercase text-gray-500 dark:text-slate-400">Rating</label>
+                        <div className="flex gap-2">
+                          {[1, 2, 3, 4, 5].map((value) => (
+                            <button
+                              key={value}
+                              type="button"
+                              onClick={() => updateReviewForm(reservation.id, 'rating', value)}
+                              className={`rounded-md border px-3 py-1 text-sm transition ${
+                                (reviewForms[reservation.id]?.rating || 5) === value
+                                  ? 'border-amber-500 bg-amber-100 text-amber-700 dark:border-amber-400 dark:bg-amber-500/20 dark:text-amber-300'
+                                  : 'border-gray-200 bg-white text-gray-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300'
+                              }`}
+                            >
+                              {value}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="mb-1 block text-xs uppercase text-gray-500 dark:text-slate-400">Comentariu</label>
+                        <Textarea
+                          rows={4}
+                          value={reviewForms[reservation.id]?.comment || ''}
+                          onChange={(event) => updateReviewForm(reservation.id, 'comment', event.target.value)}
+                          placeholder="Cum a fost experienta ta in aceasta camera?"
+                        />
+                      </div>
+
+                      <Button onClick={() => submitReview(reservation.id)} disabled={submittingReviewId === reservation.id}>
+                        {submittingReviewId === reservation.id ? 'Se trimite...' : 'Adauga review'}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>
