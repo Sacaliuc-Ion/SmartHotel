@@ -93,7 +93,7 @@ export const RoomBoardPage = () => {
                     ) : booking ? (
                       <div className={`h-12 rounded text-white text-xs flex flex-col items-center justify-center p-1 ${booking.status === 'checked-in' ? 'bg-amber-500' : 'bg-green-500'}`}>
                         <span className="font-semibold truncate w-full text-center">{booking.guestName.split(' ')[0]}</span>
-                        <span className="text-[10px] opacity-90">{booking.status === 'checked-in' ? 'In' : 'Conf'}</span>
+                        <span className="text-[10px] opacity-90">{booking.status === 'checked-in' ? 'In' : 'Rez'}</span>
                       </div>
                     ) : (
                       <div className="h-12 bg-gray-100 dark:bg-slate-900 rounded border border-gray-200 dark:border-slate-700" />
