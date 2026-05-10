@@ -113,8 +113,8 @@ export const HousekeepingPage = () => {
       <div className="mb-6 rounded-lg border bg-white p-5 dark:border-slate-700 dark:bg-slate-900">
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
-            <h2 className="text-lg font-semibold text-gray-800 dark:text-slate-100">Solicitari de la oaspeti</h2>
-            <p className="text-sm text-gray-500 dark:text-slate-400">Cereri de housekeeping trimise direct de clienti pentru camerele lor.</p>
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-slate-100">{t('guestRequestsTitle')}</h2>
+            <p className="text-sm text-gray-500 dark:text-slate-400">{t('guestRequestsDescription')}</p>
           </div>
           <Badge className="border bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300">
             {clientRequests.length}
@@ -122,7 +122,7 @@ export const HousekeepingPage = () => {
         </div>
 
         {clientRequests.length === 0 ? (
-          <p className="text-sm text-gray-500 dark:text-slate-400">Nu exista solicitari noi de la oaspeti.</p>
+          <p className="text-sm text-gray-500 dark:text-slate-400">{t('guestRequestsEmpty')}</p>
         ) : (
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {clientRequests.map((request) => (
@@ -133,18 +133,18 @@ export const HousekeepingPage = () => {
                     <p className="text-sm text-gray-500 dark:text-slate-400">{t('room')} {request.roomNumber}</p>
                   </div>
                   <Badge className="border bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-200">
-                    {request.status}
+                    {t(`status.${request.status.toLowerCase()}`, { defaultValue: request.status })}
                   </Badge>
                 </div>
                 {request.description && (
                   <p className="mb-3 text-sm text-gray-600 dark:text-slate-300">{request.description}</p>
                 )}
                 <div className="space-y-1 text-xs text-gray-500 dark:text-slate-400">
-                  <p>Prioritate: {request.priority}</p>
-                  <p>Raportat de: {request.reportedBy || 'Client'}</p>
+                  <p>{t('guestRequestPriority', { priority: t(`priority.${request.priority.toLowerCase()}`, { defaultValue: request.priority }) })}</p>
+                  <p>{t('guestRequestReportedBy', { reporter: request.reportedBy || t('role.client') })}</p>
                 </div>
                 <Button size="sm" className="mt-3" onClick={() => resolveClientRequest(request.id)} disabled={resolvingRequestId === request.id}>
-                  {resolvingRequestId === request.id ? 'Se rezolva...' : 'Marcheaza rezolvata'}
+                  {resolvingRequestId === request.id ? t('resolving') : t('markResolved')}
                 </Button>
               </div>
             ))}

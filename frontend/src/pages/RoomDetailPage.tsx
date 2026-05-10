@@ -31,7 +31,7 @@ export const RoomDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const { rooms, addBooking } = useHotel();
   const { isAuthenticated } = useAuth();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const room = rooms.find((r) => r.id.toString() === id);
   const today = useMemo(() => new Date().toISOString().split('T')[0], []);
@@ -148,7 +148,7 @@ export const RoomDetailPage = () => {
             {room.nextAvailableDate && (
               <p className="mt-2 text-sm text-amber-700 dark:text-amber-300">
                 {t('availableFromText', {
-                  date: new Intl.DateTimeFormat('ro-RO', { dateStyle: 'medium' }).format(new Date(room.nextAvailableDate)),
+                  date: new Intl.DateTimeFormat(i18n.language, { dateStyle: 'medium' }).format(new Date(room.nextAvailableDate)),
                 })}
               </p>
             )}
@@ -180,7 +180,7 @@ export const RoomDetailPage = () => {
             {isFutureOnlyBooking && (
               <p className="mt-2 text-xs font-medium text-amber-700 dark:text-amber-300">
                 {t('bookingStartsFromText', {
-                  date: new Intl.DateTimeFormat('ro-RO', { dateStyle: 'medium' }).format(new Date(firstBookableDate)),
+                  date: new Intl.DateTimeFormat(i18n.language, { dateStyle: 'medium' }).format(new Date(firstBookableDate)),
                 })}
               </p>
             )}

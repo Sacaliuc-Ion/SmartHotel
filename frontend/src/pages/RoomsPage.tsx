@@ -31,7 +31,7 @@ const amenityIcons: Record<string, React.ElementType> = {
 
 export const RoomsPage = () => {
   const { rooms } = useHotel();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
@@ -52,7 +52,7 @@ export const RoomsPage = () => {
 
   const formatAvailabilityDate = (value?: string | null) => {
     if (!value) return null;
-    return new Intl.DateTimeFormat('ro-RO', { dateStyle: 'medium' }).format(new Date(value));
+    return new Intl.DateTimeFormat(i18n.language, { dateStyle: 'medium' }).format(new Date(value));
   };
 
   return (

@@ -111,7 +111,7 @@ export const Topbar = ({ onToggleSidebar, sidebarOpen }: TopbarProps) => {
             <button
               onClick={() => setNotificationsOpen((open) => !open)}
               className="lb-topbar-icon-btn relative p-2 rounded-lg transition-colors"
-              aria-label="Notificari"
+              aria-label={t('notifications')}
             >
               <Bell className="h-5 w-5" />
               {unreadCount > 0 && (
@@ -122,9 +122,9 @@ export const Topbar = ({ onToggleSidebar, sidebarOpen }: TopbarProps) => {
             </button>
             {notificationsOpen && (
               <div className="absolute right-0 top-11 z-50 w-80 rounded-lg border bg-white p-2 shadow-lg dark:border-slate-700 dark:bg-slate-900">
-                <div className="px-3 py-2 text-sm font-semibold text-gray-800 dark:text-slate-100">Notificari</div>
+                <div className="px-3 py-2 text-sm font-semibold text-gray-800 dark:text-slate-100">{t('notifications')}</div>
                 {notifications.length === 0 ? (
-                  <p className="px-3 py-4 text-sm text-gray-500 dark:text-slate-400">Nu ai notificari noi.</p>
+                  <p className="px-3 py-4 text-sm text-gray-500 dark:text-slate-400">{t('noNewNotifications')}</p>
                 ) : (
                   <div className="max-h-80 overflow-y-auto">
                     {notifications.map((notification) => (

@@ -8,15 +8,15 @@ import { api } from '../../services/api';
 interface NavItem { labelKey: string; path: string; icon: React.ElementType; roles: string[]; }
 
 const navItems: NavItem[] = [
-  { labelKey: 'navHome',         path: '/',            icon: Home,      roles: ['client','reception','housekeeping','maintenance','admin','manager'] },
-  { labelKey: 'navRooms',        path: '/rooms',        icon: Building,  roles: ['client','reception','housekeeping','maintenance','admin','manager'] },
-  { labelKey: 'navProfile',      path: '/profile',      icon: UserCircle, roles: ['client','reception','housekeeping','maintenance','admin','manager'] },
-  { labelKey: 'navFrontDesk',    path: '/front-desk',   icon: DoorOpen,  roles: ['reception','admin','manager'] },
-  { labelKey: 'navRoomBoard',    path: '/room-board',   icon: Calendar,  roles: ['reception','admin','manager'] },
-  { labelKey: 'navHousekeeping', path: '/housekeeping', icon: Sparkles,  roles: ['housekeeping','admin','manager'] },
-  { labelKey: 'navMaintenance',  path: '/maintenance',  icon: Wrench,    roles: ['maintenance','admin','manager'] },
-  { labelKey: 'navDashboard',    path: '/dashboard',    icon: BarChart3, roles: ['admin','manager'] },
-  { labelKey: 'navAdmin',        path: '/admin',        icon: Settings,  roles: ['admin'] },
+  { labelKey: 'navHome',         path: '/',            icon: Home,       roles: ['client', 'reception', 'housekeeping', 'maintenance', 'admin', 'manager'] },
+  { labelKey: 'navRooms',        path: '/rooms',       icon: Building,   roles: ['client', 'reception', 'housekeeping', 'maintenance', 'admin', 'manager'] },
+  { labelKey: 'navProfile',      path: '/profile',     icon: UserCircle, roles: ['client', 'reception', 'housekeeping', 'maintenance', 'admin', 'manager'] },
+  { labelKey: 'navFrontDesk',    path: '/front-desk',  icon: DoorOpen,   roles: ['reception', 'admin', 'manager'] },
+  { labelKey: 'navRoomBoard',    path: '/room-board',  icon: Calendar,   roles: ['reception', 'admin', 'manager'] },
+  { labelKey: 'navHousekeeping', path: '/housekeeping', icon: Sparkles,  roles: ['housekeeping', 'admin', 'manager'] },
+  { labelKey: 'navMaintenance',  path: '/maintenance', icon: Wrench,     roles: ['maintenance', 'admin', 'manager'] },
+  { labelKey: 'navDashboard',    path: '/dashboard',   icon: BarChart3,  roles: ['admin', 'manager'] },
+  { labelKey: 'navAdmin',        path: '/admin',       icon: Settings,   roles: ['admin'] },
 ];
 
 export const Sidebar = ({ isOpen = true }: { isOpen?: boolean }) => {
@@ -107,7 +107,7 @@ export const Sidebar = ({ isOpen = true }: { isOpen?: boolean }) => {
           })}
         </nav>
         <div className="lb-sidebar-footer p-4 border-t">
-          <p className="text-xs text-center lb-sidebar-footer-text">Smart Hotel © 2026</p>
+          <p className="text-xs text-center lb-sidebar-footer-text">{t('sidebarFooter')}</p>
         </div>
       </div>
     </div>
