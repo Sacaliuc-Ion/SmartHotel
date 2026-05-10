@@ -27,9 +27,9 @@ export const PreferencesControls = ({ compact = false }: { compact?: boolean }) 
             <SelectValue>{languageLabels[language]}</SelectValue>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="ro">Română</SelectItem>
-            <SelectItem value="en">English</SelectItem>
-            <SelectItem value="ru">Русский</SelectItem>
+            <SelectItem value="ro">{t('languageNameRo')}</SelectItem>
+            <SelectItem value="en">{t('languageNameEn')}</SelectItem>
+            <SelectItem value="ru">{t('languageNameRu')}</SelectItem>
           </SelectContent>
         </Select>
       </div>

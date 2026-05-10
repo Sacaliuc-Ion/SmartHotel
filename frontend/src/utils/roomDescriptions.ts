@@ -35,7 +35,7 @@ export const getRoomDescriptionLines = (room: Room, t: TFunction) => {
   const priceTone = room.pricePerNight >= 180 ? 'premium' : 'standard';
 
   return [
-    room.description,
+    t(`roomDescription.summary.${room.type}`, { floor: room.floor }),
     t(`roomDescription.type.${room.type}`, { extras, guests: room.capacity }),
     t(`roomDescription.price.${priceTone}`, { view }),
   ].filter(Boolean);
