@@ -135,8 +135,6 @@ export const RoomsPage = () => {
                 <span className="text-sm">{room.capacity} {room.capacity > 1 ? t('guests') : t('guest')}</span>
               </div>
 
-              <p className="text-sm text-gray-600 dark:text-slate-300 mb-4">{room.description}</p>
-
               <div className="flex flex-wrap gap-2 mb-4">
                 {room.amenities.slice(0, 4).map((amenity) => {
                   const Icon = amenityIcons[amenity] || Wifi;
