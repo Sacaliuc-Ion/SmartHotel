@@ -1,5 +1,5 @@
 import { useAuth } from '../../context/AuthContext';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { api } from '../../services/api';
 import { Bell, LogOut, Hotel, Menu, X } from 'lucide-react';
 import { useNavigate } from 'react-router';
@@ -30,6 +30,7 @@ export const Topbar = ({ onToggleSidebar, sidebarOpen }: TopbarProps) => {
   const handleLogout = () => { logout(); navigate('/'); };
   const [notifications, setNotifications] = useState<any[]>([]);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const notificationsRef = useRef<HTMLDivElement | null>(null);
   const unreadCount = notifications.filter((item) => !item.isRead).length;
 
   const loadNotifications = async () => {
@@ -60,6 +61,19 @@ export const Topbar = ({ onToggleSidebar, sidebarOpen }: TopbarProps) => {
     return () => window.clearInterval(intervalId);
   }, [user]);
 
+  useEffect(() => {
+    if (!notificationsOpen) return;
+
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!notificationsRef.current?.contains(event.target as Node)) {
+        setNotificationsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    return () => document.removeEventListener('mousedown', handlePointerDown);
+  }, [notificationsOpen]);
+
   const markRead = async (notification: any) => {
     if (!notification.isRead) {
       await api.patch(`/auth/notifications/${notification.id}/read`);
@@ -72,8 +86,20 @@ export const Topbar = ({ onToggleSidebar, sidebarOpen }: TopbarProps) => {
 
     const target = getNotificationTarget(notification);
     if (target) {
+      setNotificationsOpen(false);
       navigate(target);
     }
+  };
+
+  const markAllAsSeen = async () => {
+    if (unreadCount === 0) return;
+
+    await api.patch('/auth/notifications/read-all');
+    setNotifications((prev) => {
+      const next = prev.map((item) => ({ ...item, isRead: true }));
+      window.dispatchEvent(new CustomEvent('notifications:updated', { detail: next }));
+      return next;
+    });
   };
 
   return (
@@ -111,7 +137,7 @@ export const Topbar = ({ onToggleSidebar, sidebarOpen }: TopbarProps) => {
       ) : (
         <div className="flex items-center gap-3">
           <PreferencesControls compact />
-          <div className="relative">
+          <div ref={notificationsRef} className="relative">
             <button
               onClick={() => setNotificationsOpen((open) => !open)}
               className="lb-topbar-icon-btn relative p-2 rounded-lg transition-colors"
@@ -126,7 +152,16 @@ export const Topbar = ({ onToggleSidebar, sidebarOpen }: TopbarProps) => {
             </button>
             {notificationsOpen && (
               <div className="absolute right-0 top-11 z-50 w-80 rounded-lg border bg-white p-2 shadow-lg dark:border-slate-700 dark:bg-slate-900">
-                <div className="px-3 py-2 text-sm font-semibold text-gray-800 dark:text-slate-100">{t('notifications')}</div>
+                <div className="flex items-center justify-between gap-3 px-3 py-2">
+                  <div className="text-sm font-semibold text-gray-800 dark:text-slate-100">{t('notifications')}</div>
+                  <button
+                    onClick={markAllAsSeen}
+                    disabled={unreadCount === 0}
+                    className="text-xs font-medium text-amber-600 transition hover:text-amber-500 disabled:cursor-default disabled:opacity-50 dark:text-amber-300 dark:hover:text-amber-200"
+                  >
+                    {t('markAllAsSeen')}
+                  </button>
+                </div>
                 {notifications.length === 0 ? (
                   <p className="px-3 py-4 text-sm text-gray-500 dark:text-slate-400">{t('noNewNotifications')}</p>
                 ) : (

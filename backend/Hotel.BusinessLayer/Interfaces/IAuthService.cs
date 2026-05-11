@@ -13,5 +13,6 @@ public interface IAuthService
      Task<ServiceResult<List<LoginAuditDto>>> GetRecentLoginsAsync(int userId);
      Task<ServiceResult<List<UserNotificationDto>>> GetNotificationsAsync(int userId);
      Task<ServiceResult> MarkNotificationReadAsync(int notificationId, int userId);
+     Task<ServiceResult> MarkAllNotificationsReadAsync(int userId);
      Task<ServiceResult> DeleteAccountAsync(int userId);
 }

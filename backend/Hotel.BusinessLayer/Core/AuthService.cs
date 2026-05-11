@@ -200,6 +200,22 @@ public class AuthService : IAuthService
           return ServiceResult.Ok();
      }
 
+     public async Task<ServiceResult> MarkAllNotificationsReadAsync(int userId)
+     {
+          var notifications = await _db.Context.UserNotifications
+               .Where(notification => notification.UserId == userId && !notification.IsRead)
+               .ToListAsync();
+
+          if (notifications.Count == 0)
+               return ServiceResult.Ok();
+
+          foreach (var notification in notifications)
+               notification.IsRead = true;
+
+          await _db.SaveChangesAsync();
+          return ServiceResult.Ok();
+     }
+
      public async Task<ServiceResult> DeleteAccountAsync(int userId)
      {
           var user = await _db.Context.Users.FirstOrDefaultAsync(u => u.Id == userId);
