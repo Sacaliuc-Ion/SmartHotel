@@ -51,6 +51,16 @@ public class ReservationsController : ControllerBase
           return Ok(result.Data);
      }
 
+     [HttpPut("{id}")]
+     [Authorize(Roles = "admin,reception,manager")]
+     public async Task<IActionResult> Update(int id, [FromBody] UpdateReservationRequest request)
+     {
+          var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+          var result = await _reservationService.UpdateReservationAsync(id, request, userId);
+          if (!result.Success) return BadRequest(new { message = result.Message });
+          return Ok(result.Data);
+     }
+
      [HttpPatch("{id}/cancel")]
      public async Task<IActionResult> Cancel(int id)
      {

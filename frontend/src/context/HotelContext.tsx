@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { api } from '../services/api';
 import { useAuth } from './AuthContext';
 import { toast } from 'sonner';
+import i18n from '../languages';
 import { normalizeBookingStatus, normalizePaymentStatus, normalizeRoomStatus } from '../utils/hotelFormatting';
 
 export type RoomStatus = 'available' | 'occupied' | 'dirty' | 'cleaning' | 'clean' | 'ready' | 'out-of-order' | 'inspected' | 'out-of-service';
@@ -31,6 +32,7 @@ export interface Booking {
   paymentStatus?: string;
   guests: number;
   totalAmount: number;
+  notes?: string | null;
 }
 
 export interface MaintenanceTicket {
@@ -150,7 +152,13 @@ export const HotelProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   const updateBooking = async (bookingId: string | number, updated: any) => {
-    toast.info('Actualizarea partiala a rezervarilor nu este implementata in API momentan.');
+    try {
+      await api.put(`/reservations/${bookingId}`, updated);
+      await refreshData();
+      toast.success(i18n.t('reservationUpdatedFrontDesk'));
+    } catch (e: any) {
+      toast.error(e.message || i18n.t('reservationUpdateError'));
+    }
   };
 
   const deleteBooking = async (bookingId: string | number) => {
