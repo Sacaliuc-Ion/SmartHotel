@@ -83,6 +83,8 @@ public class UserNotificationDto
      public int? ReservationId { get; set; }
      public string Title { get; set; } = string.Empty;
      public string Message { get; set; } = string.Empty;
+     public string Category { get; set; } = "general";
+     public string? TargetPath { get; set; }
      public bool IsRead { get; set; }
      public string CreatedAt { get; set; } = string.Empty;
 }

@@ -115,11 +115,18 @@ public class HousekeepingService : IHousekeepingService
 
           if (recipients.Count > 0)
           {
+               var title = request.Priority == TicketPriority.Urgent
+                    ? "Urgent housekeeping request"
+                    : "Housekeeping ticket nou";
+               var message = request.Priority == TicketPriority.Urgent
+                    ? $"Solicitare urgenta pentru camera {roomNumber ?? request.RoomId.ToString()}: {request.Issue}. Este necesara pregatirea imediata."
+                    : $"A fost creata o solicitare noua pentru camera {roomNumber ?? request.RoomId.ToString()}: {request.Issue}";
+
                var notifications = recipients.Select(user => new UserNotification
                {
                     UserId = user.Id,
-                    Title = "Housekeeping ticket nou",
-                    Message = $"A fost creata o solicitare noua pentru camera {roomNumber ?? request.RoomId.ToString()}: {request.Issue}",
+                    Title = title,
+                    Message = message,
                });
 
                _db.Context.UserNotifications.AddRange(notifications);

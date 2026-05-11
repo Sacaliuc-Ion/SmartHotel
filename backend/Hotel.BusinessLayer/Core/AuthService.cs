@@ -2,6 +2,7 @@ using Hotel.BusinessLayer.Interfaces;
 using Hotel.BusinessLayer.Structure;
 using Hotel.DataAccess;
 using Hotel.Domain.Entities;
+using Hotel.Domain.Enums;
 using Hotel.Domain.Models.Auth;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -170,24 +171,22 @@ public class AuthService : IAuthService
 
      public async Task<ServiceResult<List<UserNotificationDto>>> GetNotificationsAsync(int userId)
      {
-          await EnsureGeneratedNotificationsAsync(userId);
+          var user = await _db.Context.Users
+              .Include(existingUser => existingUser.Role)
+              .FirstOrDefaultAsync(existingUser => existingUser.Id == userId);
+
+          if (user == null)
+               return ServiceResult<List<UserNotificationDto>>.Fail("User not found.");
+
+          await EnsureGeneratedNotificationsAsync(userId, user.Role.Name);
 
           var notifications = await _db.Context.UserNotifications
                .Where(notification => notification.UserId == userId)
                .OrderByDescending(notification => notification.CreatedAt)
                .Take(20)
-               .Select(notification => new UserNotificationDto
-               {
-                    Id = notification.Id,
-                    ReservationId = notification.ReservationId,
-                    Title = notification.Title,
-                    Message = notification.Message,
-                    IsRead = notification.IsRead,
-                    CreatedAt = notification.CreatedAt.ToString("O")
-               })
                .ToListAsync();
 
-          return ServiceResult<List<UserNotificationDto>>.Ok(notifications);
+          return ServiceResult<List<UserNotificationDto>>.Ok(notifications.Select(MapToNotificationDto).ToList());
      }
 
      public async Task<ServiceResult> MarkNotificationReadAsync(int notificationId, int userId)
@@ -305,14 +304,17 @@ public class AuthService : IAuthService
           return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
      }
 
-     private async Task EnsureGeneratedNotificationsAsync(int userId)
+     private async Task EnsureGeneratedNotificationsAsync(int userId, string roleName)
      {
           var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
           var staleNotifications = await _db.Context.UserNotifications
               .Where(notification =>
                   notification.UserId == userId &&
-                  (notification.Title == "Reminder check-in" || notification.Title == "Review pending"))
+                  (notification.Title == "Reminder check-in"
+                   || notification.Title == "Review pending"
+                   || notification.Title == "Checkout today"
+                   || notification.Title == "Room ready for check-in"))
               .ToListAsync();
 
           if (staleNotifications.Count > 0)
@@ -325,7 +327,8 @@ public class AuthService : IAuthService
 
                if (staleReservationIds.Count > 0)
                {
-                    var reservationsById = await _db.Context.Reservations
+                   var reservationsById = await _db.Context.Reservations
+                        .Include(reservation => reservation.Room)
                         .Include(reservation => reservation.Review)
                         .ToDictionaryAsync(reservation => reservation.Id);
 
@@ -336,8 +339,10 @@ public class AuthService : IAuthService
 
                          return notification.Title switch
                          {
-                              "Reminder check-in" => reservation.Status != Domain.Enums.ReservationStatus.Confirmed || reservation.CheckInDate < today,
-                              "Review pending" => reservation.Status != Domain.Enums.ReservationStatus.CheckedOut || reservation.Review != null,
+                              "Reminder check-in" => reservation.Status != ReservationStatus.Confirmed || reservation.CheckInDate < today,
+                              "Review pending" => reservation.Status != ReservationStatus.CheckedOut || reservation.Review != null,
+                              "Checkout today" => reservation.Status != ReservationStatus.CheckedIn || reservation.CheckOutDate != today,
+                              "Room ready for check-in" => reservation.Status != ReservationStatus.Confirmed || reservation.CheckInDate != today || (reservation.Room.Status != RoomStatus.Ready && reservation.Room.Status != RoomStatus.Available),
                               _ => false
                          };
                     }).ToList();
@@ -353,7 +358,7 @@ public class AuthService : IAuthService
               .Include(reservation => reservation.Room)
               .Where(reservation =>
                    reservation.UserId == userId &&
-                   reservation.Status == Domain.Enums.ReservationStatus.Confirmed &&
+                   reservation.Status == ReservationStatus.Confirmed &&
                    (reservation.CheckInDate == today || reservation.CheckInDate == today.AddDays(1)))
               .ToListAsync();
 
@@ -372,7 +377,7 @@ public class AuthService : IAuthService
               .Include(reservation => reservation.Review)
               .Where(reservation =>
                    reservation.UserId == userId &&
-                   reservation.Status == Domain.Enums.ReservationStatus.CheckedOut &&
+                   reservation.Status == ReservationStatus.CheckedOut &&
                    reservation.Review == null)
               .ToListAsync();
 
@@ -384,6 +389,27 @@ public class AuthService : IAuthService
                     "Review pending",
                     $"Sejurul pentru camera {reservation.Room.Number} s-a incheiat. Lasa un review daca vrei sa ne spui cum a fost."
                );
+          }
+
+          if (roleName is "Reception" or "Admin" or "Manager")
+          {
+               var departuresToday = await _db.Context.Reservations
+                   .Include(reservation => reservation.Room)
+                   .Include(reservation => reservation.User)
+                   .Where(reservation =>
+                        reservation.Status == ReservationStatus.CheckedIn &&
+                        reservation.CheckOutDate == today)
+                   .ToListAsync();
+
+               foreach (var reservation in departuresToday)
+               {
+                    await EnsureNotificationAsync(
+                         userId,
+                         reservation.Id,
+                         "Checkout today",
+                         $"Camera {reservation.Room.Number} este programata pentru checkout astazi pentru {reservation.User.FirstName} {reservation.User.LastName}."
+                    );
+               }
           }
 
           await _db.SaveChangesAsync();
@@ -406,5 +432,41 @@ public class AuthService : IAuthService
                Title = title,
                Message = message
           });
+     }
+
+     private static UserNotificationDto MapToNotificationDto(UserNotification notification)
+     {
+          var (category, targetPath) = ResolveNotificationMetadata(notification.Title, notification.Message, notification.ReservationId);
+
+          return new UserNotificationDto
+          {
+               Id = notification.Id,
+               ReservationId = notification.ReservationId,
+               Title = notification.Title,
+               Message = notification.Message,
+               Category = category,
+               TargetPath = targetPath,
+               IsRead = notification.IsRead,
+               CreatedAt = notification.CreatedAt.ToString("O")
+          };
+     }
+
+     private static (string Category, string? TargetPath) ResolveNotificationMetadata(string title, string message, int? reservationId)
+     {
+          var text = $"{title} {message}".ToLowerInvariant();
+
+          if (title is "Checkout today" or "Room ready for check-in" or "Rezervare marcata ca neprezentare")
+               return ("front-desk", "/front-desk");
+
+          if (text.Contains("maintenance"))
+               return ("maintenance", "/maintenance");
+
+          if (text.Contains("housekeeping"))
+               return ("housekeeping", "/housekeeping");
+
+          if (reservationId.HasValue)
+               return ("profile", "/profile");
+
+          return ("general", null);
      }
 }

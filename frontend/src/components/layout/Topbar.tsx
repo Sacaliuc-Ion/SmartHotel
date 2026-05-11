@@ -10,9 +10,12 @@ import { useTranslation } from 'react-i18next';
 interface TopbarProps { onToggleSidebar?: () => void; sidebarOpen?: boolean; }
 
 const getNotificationTarget = (notification: any) => {
+  if (notification.targetPath) return notification.targetPath;
+
   const text = `${notification.title || ''} ${notification.message || ''}`.toLowerCase();
 
   if (text.includes('ticket rezolvat')) return '/profile';
+  if (text.includes('checkout today') || text.includes('room ready for check-in') || text.includes('neprezentare')) return '/front-desk';
   if (text.includes('maintenance')) return '/maintenance';
   if (text.includes('housekeeping')) return '/housekeeping';
   if (notification.reservationId) return '/profile';

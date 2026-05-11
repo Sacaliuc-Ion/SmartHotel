@@ -122,11 +122,18 @@ public class MaintenanceService : IMaintenanceService
 
           if (recipients.Count > 0)
           {
+               var title = request.Priority == TicketPriority.Urgent
+                    ? "Urgent maintenance ticket"
+                    : "Maintenance ticket nou";
+               var message = request.Priority == TicketPriority.Urgent
+                    ? $"Ticket urgent pentru camera {roomNumber ?? request.RoomId.ToString()}: {request.Issue}. Este necesara interventie rapida."
+                    : $"A fost creat un ticket nou pentru camera {roomNumber ?? request.RoomId.ToString()}: {request.Issue}";
+
                var notifications = recipients.Select(user => new UserNotification
                {
                     UserId = user.Id,
-                    Title = "Maintenance ticket nou",
-                    Message = $"A fost creat un ticket nou pentru camera {roomNumber ?? request.RoomId.ToString()}: {request.Issue}",
+                    Title = title,
+                    Message = message,
                });
 
                _db.Context.UserNotifications.AddRange(notifications);

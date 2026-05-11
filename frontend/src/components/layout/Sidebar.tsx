@@ -61,8 +61,9 @@ export const Sidebar = ({ isOpen = true }: { isOpen?: boolean }) => {
     const unread = notifications.filter((item) => !item.isRead);
 
     return {
-      maintenance: unread.filter((item) => `${item.title || ''} ${item.message || ''}`.toLowerCase().includes('maintenance')).length,
-      housekeeping: unread.filter((item) => `${item.title || ''} ${item.message || ''}`.toLowerCase().includes('housekeeping')).length,
+      frontDesk: unread.filter((item) => item.category === 'front-desk').length,
+      maintenance: unread.filter((item) => item.category === 'maintenance').length,
+      housekeeping: unread.filter((item) => item.category === 'housekeeping').length,
     };
   }, [notifications]);
 
@@ -76,7 +77,9 @@ export const Sidebar = ({ isOpen = true }: { isOpen?: boolean }) => {
           {filtered.map((item) => {
             const Icon = item.icon;
             const count =
-              item.path === '/maintenance'
+              item.path === '/front-desk'
+                ? notificationCounts.frontDesk
+                : item.path === '/maintenance'
                 ? notificationCounts.maintenance
                 : item.path === '/housekeeping'
                   ? notificationCounts.housekeeping
