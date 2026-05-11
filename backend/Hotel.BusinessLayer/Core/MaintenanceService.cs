@@ -56,11 +56,25 @@ public class MaintenanceService : IMaintenanceService
 
      public async Task<ServiceResult> ResolveTicketAsync(int ticketId, int assignedUserId)
      {
-          var t = await _db.Context.MaintenanceTickets.FindAsync(ticketId);
+          var t = await _db.Context.MaintenanceTickets
+              .Include(ticket => ticket.Room)
+              .FirstOrDefaultAsync(ticket => ticket.Id == ticketId);
           if (t == null) return ServiceResult.Fail("Ticket not found");
 
+          var wasResolved = t.Status == TicketStatus.Resolved;
           t.Status = TicketStatus.Resolved;
           t.ResolvedAt = DateTime.UtcNow;
+
+          if (!wasResolved)
+          {
+               _db.Context.UserNotifications.Add(new UserNotification
+               {
+                    UserId = t.ReportedByUserId,
+                    Title = "Ticket rezolvat",
+                    Message = $"Solicitarea de mentenanta pentru camera {t.Room.Number} a fost rezolvata: {t.Title}"
+               });
+          }
+
           await _db.SaveChangesAsync();
 
           return ServiceResult.Ok();

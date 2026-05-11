@@ -87,6 +87,15 @@ public class ReservationService : IReservationService
         _db.Context.Reservations.Add(reservation);
         await _db.SaveChangesAsync();
 
+        _db.Context.UserNotifications.Add(new UserNotification
+        {
+            UserId = userId,
+            ReservationId = reservation.Id,
+            Title = "Confirmare rezervare",
+            Message = $"Rezervarea pentru camera {room.Number} a fost confirmata pentru perioada {checkIn:yyyy-MM-dd} - {checkOut:yyyy-MM-dd}."
+        });
+        await _db.SaveChangesAsync();
+
         var created = await _db.Context.Reservations.Include(r => r.User).Include(r => r.Room).FirstAsync(r => r.Id == reservation.Id);
         return ServiceResult<ReservationDto>.Ok(MapToDto(created));
     }
