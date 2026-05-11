@@ -36,18 +36,68 @@ export const RoomsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [priceFilter, setPriceFilter] = useState<string>('all');
+  const [capacityFilter, setCapacityFilter] = useState<string>('all');
+  const [amenityFilter, setAmenityFilter] = useState<string>('all');
+  const [floorFilter, setFloorFilter] = useState<string>('all');
+  const [availabilityFilter, setAvailabilityFilter] = useState<string>('all');
+
+  const availableFloors = Array.from(new Set(rooms.map((room) => room.floor))).sort((a, b) => a - b);
+  const availableAmenities = Array.from(new Set(rooms.flatMap((room) => room.amenities))).sort((a, b) => a.localeCompare(b));
+  const uniquePrices = Array.from(new Set(rooms.map((room) => room.pricePerNight))).sort((a, b) => a - b);
+  const priceStep = uniquePrices.length > 0 ? Math.ceil(uniquePrices.length / 3) : 0;
+  const priceOptions = Array.from({ length: 3 }, (_, index) => {
+    const slice = uniquePrices.slice(index * priceStep, (index + 1) * priceStep);
+
+    if (slice.length === 0) {
+      return null;
+    }
+
+    const min = slice[0];
+    const max = slice[slice.length - 1];
+
+    return {
+      value: `range-${index}`,
+      min,
+      max,
+      label: min === max
+        ? formatCurrency(min)
+        : `${formatCurrency(min)} - ${formatCurrency(max)}`,
+    };
+  }).filter((option): option is { value: string; min: number; max: number; label: string } => option !== null);
 
   const filteredRooms = rooms.filter((room) => {
     const matchesSearch = room.number.toLowerCase().includes(searchTerm.toLowerCase()) ||
       room.type.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = typeFilter === 'all' || room.type === typeFilter;
+    const selectedPriceOption = priceOptions.find((option) => option.value === priceFilter);
     const matchesPrice =
       priceFilter === 'all' ||
-      (priceFilter === 'budget' && room.pricePerNight < 100) ||
-      (priceFilter === 'mid' && room.pricePerNight >= 100 && room.pricePerNight < 200) ||
-      (priceFilter === 'luxury' && room.pricePerNight >= 200);
+      (selectedPriceOption !== undefined &&
+        room.pricePerNight >= selectedPriceOption.min &&
+        room.pricePerNight <= selectedPriceOption.max);
+    const matchesCapacity =
+      capacityFilter === 'all' ||
+      room.capacity >= Number(capacityFilter);
+    const matchesAmenity =
+      amenityFilter === 'all' ||
+      room.amenities.includes(amenityFilter);
+    const matchesFloor =
+      floorFilter === 'all' ||
+      room.floor === Number(floorFilter);
+    const matchesAvailability =
+      availabilityFilter === 'all' ||
+      (availabilityFilter === 'available' && room.status === 'available') ||
+      (availabilityFilter === 'available-soon' && Boolean(room.nextAvailableDate)) ||
+      (availabilityFilter === 'unavailable' && room.status !== 'available' && !room.nextAvailableDate);
 
-    return matchesSearch && matchesType && matchesPrice && room.status !== 'out-of-order';
+    return matchesSearch &&
+      matchesType &&
+      matchesPrice &&
+      matchesCapacity &&
+      matchesAmenity &&
+      matchesFloor &&
+      matchesAvailability &&
+      room.status !== 'out-of-order';
   });
 
   const formatAvailabilityDate = (value?: string | null) => {
@@ -63,8 +113,8 @@ export const RoomsPage = () => {
       </div>
 
       {/* Filters */}
-      <div className="bg-white dark:bg-slate-900 mx-4 p-6 rounded-lg border dark:border-slate-700 mb-6 grid md:grid-cols-4 gap-4">
-        <div className="md:col-span-2">
+      <div className="bg-white dark:bg-slate-900 mx-4 p-6 rounded-lg border dark:border-slate-700 mb-6 grid md:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div className="md:col-span-2 xl:col-span-2">
           <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">{t('search')}</label>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -92,6 +142,21 @@ export const RoomsPage = () => {
           </Select>
         </div>
         <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">{t('capacity')}</label>
+          <Select value={capacityFilter} onValueChange={setCapacityFilter}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('allCapacities')}</SelectItem>
+              <SelectItem value="1">{t('capacityAtLeast', { count: 1 })}</SelectItem>
+              <SelectItem value="2">{t('capacityAtLeast', { count: 2 })}</SelectItem>
+              <SelectItem value="3">{t('capacityAtLeast', { count: 3 })}</SelectItem>
+              <SelectItem value="4">{t('capacityAtLeast', { count: 4 })}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">{t('priceRange')}</label>
           <Select value={priceFilter} onValueChange={setPriceFilter}>
             <SelectTrigger>
@@ -99,9 +164,57 @@ export const RoomsPage = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{t('allPrices')}</SelectItem>
-              <SelectItem value="budget">{t('budgetPrice')}</SelectItem>
-              <SelectItem value="mid">{t('midPrice')}</SelectItem>
-              <SelectItem value="luxury">{t('luxuryPrice')}</SelectItem>
+              {priceOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">{t('amenities')}</label>
+          <Select value={amenityFilter} onValueChange={setAmenityFilter}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('allAmenities')}</SelectItem>
+              {availableAmenities.map((amenity) => (
+                <SelectItem key={amenity} value={amenity}>
+                  {t(`amenity.${amenity}`, { defaultValue: amenity })}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">{t('floor')}</label>
+          <Select value={floorFilter} onValueChange={setFloorFilter}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('allFloors')}</SelectItem>
+              {availableFloors.map((floor) => (
+                <SelectItem key={floor} value={String(floor)}>
+                  {t('floorNumber', { floor })}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-2">{t('availability')}</label>
+          <Select value={availabilityFilter} onValueChange={setAvailabilityFilter}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('allAvailability')}</SelectItem>
+              <SelectItem value="available">{t('availableNow')}</SelectItem>
+              <SelectItem value="available-soon">{t('availableSoon')}</SelectItem>
+              <SelectItem value="unavailable">{t('currentlyUnavailable')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
