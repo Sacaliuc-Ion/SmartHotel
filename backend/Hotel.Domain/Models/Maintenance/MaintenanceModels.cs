@@ -18,6 +18,7 @@ public class TicketDto
 
 public class CreateTicketRequest
 {
+     public int ReservationId { get; set; }
      public int RoomId { get; set; }
      public string Issue { get; set; } = string.Empty;
      public string? Description { get; set; }

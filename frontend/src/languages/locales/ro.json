@@ -357,6 +357,7 @@
   "profileReservationSummary": "Camera {{room}} - {{checkIn}} - {{checkOut}} - {{guests}} oaspeti",
   "reservationDetails": "Detalii rezervare",
   "requestRoomAssistance": "Solicita asistenta pentru camera",
+  "ticketUnavailableAfterCheckout": "Dupa check-out nu mai poti crea tickete pentru aceasta rezervare. Poti lasa doar un review.",
   "requestType": "Tip cerere",
   "ticketSubjectPlaceholder": "ex: Aer conditionat, prosoape, curatenie, baie",
   "ticketDetailsPlaceholder": "Descrie exact ce ai nevoie in camera.",

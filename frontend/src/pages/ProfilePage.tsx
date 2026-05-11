@@ -184,6 +184,11 @@ export const ProfilePage = () => {
   };
 
   const submitTicket = async (reservation: Reservation) => {
+    if (['checked-out', 'cancelled', 'no-show'].includes(reservation.status)) {
+      toast.error(t('ticketUnavailableAfterCheckout'));
+      return;
+    }
+
     const form = ticketForms[reservation.id] || {
       type: 'maintenance' as const,
       issue: '',
@@ -199,6 +204,7 @@ export const ProfilePage = () => {
     setSubmittingTicketId(reservation.id);
     try {
       const payload = {
+        reservationId: reservation.id,
         roomId: reservation.roomId,
         issue: form.issue.trim(),
         description: form.description.trim() || undefined,
@@ -319,7 +325,7 @@ export const ProfilePage = () => {
                 <div><span className="block text-xs uppercase text-gray-400">{t('room')}</span>{reservation.roomNumber}</div>
               </div>
 
-              {reservation.status !== 'cancelled' && (
+              {!['checked-out', 'cancelled', 'no-show'].includes(reservation.status) && (
                 <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-slate-700 dark:bg-slate-800/60">
                   <h4 className="mb-3 font-medium text-gray-900 dark:text-slate-100">{t('requestRoomAssistance')}</h4>
                   <div className="grid gap-3 sm:grid-cols-2">

@@ -71,6 +71,20 @@ public class HousekeepingService : IHousekeepingService
 
      public async Task<ServiceResult> ReportIssueAsync(ReportIssueRequest request, int reportedByUserId)
      {
+          var reservation = await _db.Context.Reservations
+              .FirstOrDefaultAsync(existingReservation =>
+                  existingReservation.Id == request.ReservationId &&
+                  existingReservation.UserId == reportedByUserId);
+
+          if (reservation == null)
+               return ServiceResult.Fail("Reservation not found.");
+
+          if (reservation.RoomId != request.RoomId)
+               return ServiceResult.Fail("Reservation does not match the selected room.");
+
+          if (reservation.Status is ReservationStatus.CheckedOut or ReservationStatus.Cancelled or ReservationStatus.NoShow)
+               return ServiceResult.Fail("Tickets can be created only before checkout.");
+
           var reportedBy = await _db.Context.Users
               .Where(user => user.Id == reportedByUserId)
               .Select(user => $"{user.FirstName} {user.LastName}")
