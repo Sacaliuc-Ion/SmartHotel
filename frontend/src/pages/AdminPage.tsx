@@ -180,8 +180,8 @@ export const AdminPage = () => {
   return (
     <div className="pb-8">
       <div className="mb-8 px-4 py-2">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">{t('adminTitle')}</h1>
-        <p className="text-gray-600">{t('adminSubtitle')}</p>
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-slate-100 mb-2">{t('adminTitle')}</h1>
+        <p className="text-gray-600 dark:text-slate-300">{t('adminSubtitle')}</p>
       </div>
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-6 mx-4">
@@ -195,7 +195,7 @@ export const AdminPage = () => {
             {Object.entries(roomTypeStats).map(([type, count]) => (
                 <Card key={type}>
                 <CardHeader className="pb-3"><CardDescription className="capitalize">{t(`roomType.${type}`)} {t('rooms')}</CardDescription></CardHeader>
-                <CardContent><p className="text-3xl font-bold text-gray-800">{count}</p></CardContent>
+                <CardContent><p className="text-3xl font-bold text-gray-800 dark:text-slate-100">{count}</p></CardContent>
               </Card>
             ))}
           </div>
@@ -219,7 +219,7 @@ export const AdminPage = () => {
                       <TableCell>{room.capacity}</TableCell>
                       <TableCell>{formatCurrency(room.pricePerNight, currency)}</TableCell>
                       <TableCell><Badge variant={room.status === 'Available' || room.status === 'available' ? 'default' : 'secondary'}>{t(`status.${room.status.toLowerCase()}`, { defaultValue: room.status })}</Badge></TableCell>
-                      <TableCell className="text-sm text-gray-600">{(room.amenities || []).map((amenity) => t(`amenity.${amenity}`, { defaultValue: amenity })).join(', ')}</TableCell>
+                      <TableCell className="text-sm text-gray-600 dark:text-slate-300">{(room.amenities || []).map((amenity) => t(`amenity.${amenity}`, { defaultValue: amenity })).join(', ')}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -286,13 +286,13 @@ export const AdminPage = () => {
             <Card>
               <CardHeader><CardTitle>{t('generalSettings')}</CardTitle><CardDescription>{t('generalSettingsDescription')}</CardDescription></CardHeader>
               <CardContent className="space-y-4">
-                {settings.length === 0 ? <p className="text-sm text-gray-500">{t('noSettings')}</p> : settings
+                {settings.length === 0 ? <p className="text-sm text-gray-500 dark:text-slate-400">{t('noSettings')}</p> : settings
                   .filter((setting) => editableSettingKeys.includes(setting.key))
                   .map((setting) => (
                   <div key={setting.key} className="grid gap-3 rounded-lg border p-3 md:grid-cols-[1fr_220px_auto] md:items-center">
                     <div>
-                      <p className="font-medium text-gray-800">{getSettingLabel(setting.key)}</p>
-                      <p className="text-sm text-gray-600">{getSettingDescription(setting.key, setting.description)}</p>
+                      <p className="font-medium text-gray-800 dark:text-slate-100">{getSettingLabel(setting.key)}</p>
+                      <p className="text-sm text-gray-600 dark:text-slate-300">{getSettingDescription(setting.key, setting.description)}</p>
                     </div>
                     {setting.key === 'Currency' ? (
                       <Select
@@ -337,8 +337,8 @@ export const AdminPage = () => {
                   return (
                   <div key={type} className="grid gap-3 rounded-lg border p-3 md:grid-cols-[1fr_220px_auto] md:items-center">
                     <div>
-                      <p className="font-medium text-gray-800">{t(`roomType.${type}`)}</p>
-                      <p className="text-sm text-gray-600">{t('appliesToAllRoomsOfType', { count: roomTypeStats[type] })}</p>
+                      <p className="font-medium text-gray-800 dark:text-slate-100">{t(`roomType.${type}`)}</p>
+                      <p className="text-sm text-gray-600 dark:text-slate-300">{t('appliesToAllRoomsOfType', { count: roomTypeStats[type] })}</p>
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
