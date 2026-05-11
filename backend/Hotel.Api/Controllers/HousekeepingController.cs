@@ -19,7 +19,7 @@ public class HousekeepingController : ControllerBase
      }
 
      [HttpGet("tasks")]
-     [Authorize(Roles = "admin,housekeeping")]
+     [Authorize(Roles = "admin,housekeeping,manager")]
      public async Task<IActionResult> GetTasks()
      {
           var result = await _housekeepingService.GetTasksAsync();

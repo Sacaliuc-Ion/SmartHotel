@@ -8,7 +8,7 @@ namespace Hotel.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "admin")]
+[Authorize(Roles = "admin,manager")]
 public class AdminController : ControllerBase
 {
      private readonly IAdminService _adminService;
@@ -34,6 +34,7 @@ public class AdminController : ControllerBase
      }
 
      [HttpPatch("users/{id}/role")]
+     [Authorize(Roles = "admin")]
      public async Task<IActionResult> UpdateUserRole(int id, [FromBody] UpdateUserRoleRequest request)
      {
           var requestedByUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
@@ -43,6 +44,7 @@ public class AdminController : ControllerBase
      }
 
      [HttpDelete("users/{id}")]
+     [Authorize(Roles = "admin")]
      public async Task<IActionResult> DeleteUser(int id)
      {
           var requestedByUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);

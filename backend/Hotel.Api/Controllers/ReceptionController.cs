@@ -33,7 +33,7 @@ public class ReceptionController : ControllerBase
      }
 
      [HttpPost("check-in/{reservationId}")]
-     [Authorize(Roles = "admin,reception")]
+     [Authorize(Roles = "admin,reception,manager")]
      public async Task<IActionResult> CheckIn(int reservationId, [FromBody] CheckInRequest request)
      {
           var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
@@ -43,7 +43,7 @@ public class ReceptionController : ControllerBase
      }
 
      [HttpPost("check-out/{reservationId}")]
-     [Authorize(Roles = "admin,reception")]
+     [Authorize(Roles = "admin,reception,manager")]
      public async Task<IActionResult> CheckOut(int reservationId, [FromBody] CheckOutRequest request)
      {
           var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);

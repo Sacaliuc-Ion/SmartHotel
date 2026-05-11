@@ -22,6 +22,8 @@ export const AdminPage = () => {
   const { rooms, refreshData } = useHotel();
   const { user: currentUser } = useAuth();
   const { t } = useTranslation();
+  const isManager = currentUser?.role === 'manager';
+  const canManageUsers = !isManager;
   const [activeTab, setActiveTab] = useState('rooms');
   
   const [users, setUsers] = useState<any[]>([]);
@@ -49,7 +51,7 @@ export const AdminPage = () => {
         })
         .catch(() => toast.error(t('loadSettingsError')));
     }
-  }, [activeTab]);
+  }, [activeTab, t]);
 
   useEffect(() => {
     const typePrices = Object.fromEntries(
@@ -76,6 +78,11 @@ export const AdminPage = () => {
   };
 
   const updateUserRole = async (userId: number, role: string) => {
+    if (!canManageUsers) {
+      toast.error(t('managerRoleChangeNotAllowed'));
+      return;
+    }
+
     if (currentUser?.id === userId) {
       toast.error(t('changeOwnRoleError'));
       return;
@@ -95,6 +102,11 @@ export const AdminPage = () => {
   };
 
   const deleteUser = async (userId: number, userName: string) => {
+    if (!canManageUsers) {
+      toast.error(t('managerDeleteNotAllowed'));
+      return;
+    }
+
     if (currentUser?.id === userId) {
       toast.error(t('deleteOwnAccountError'));
       return;
@@ -240,22 +252,33 @@ export const AdminPage = () => {
                       <TableCell className="font-semibold">{user.name}</TableCell>
                       <TableCell>{user.email}</TableCell>
                       <TableCell className="min-w-44">
-                        <Select
-                          value={user.role}
-                          onValueChange={(role) => updateUserRole(user.id, role)}
-                          disabled={currentUser?.id === user.id || savingUserRoleId === user.id}
-                        >
-                          <SelectTrigger className="h-8">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {roleOptions.map((role) => (
-                              <SelectItem key={role} value={role}>{t(`role.${role}`)}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        {currentUser?.id === user.id && (
-                          <p className="mt-1 text-xs text-muted-foreground">{t('ownRoleLocked')}</p>
+                        {canManageUsers ? (
+                          <>
+                            <Select
+                              value={user.role}
+                              onValueChange={(role) => updateUserRole(user.id, role)}
+                              disabled={currentUser?.id === user.id || savingUserRoleId === user.id}
+                            >
+                              <SelectTrigger className="h-8">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {roleOptions.map((role) => (
+                                  <SelectItem key={role} value={role}>{t(`role.${role}`)}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            {currentUser?.id === user.id && (
+                              <p className="mt-1 text-xs text-muted-foreground">{t('ownRoleLocked')}</p>
+                            )}
+                          </>
+                        ) : (
+                          <div>
+                            <p className="font-medium capitalize text-gray-800 dark:text-slate-100">
+                              {t(`role.${user.role}`, { defaultValue: user.role })}
+                            </p>
+                            <p className="mt-1 text-xs text-muted-foreground">{t('managerRoleReadOnly')}</p>
+                          </div>
                         )}
                       </TableCell>
                       <TableCell>
@@ -268,9 +291,11 @@ export const AdminPage = () => {
                           <Button size="sm" variant="outline" onClick={() => toggleUserActive(user.id)}>
                             {user.isActive ? t('deactivate') : t('activate')}
                           </Button>
-                          <Button size="sm" variant="destructive" onClick={() => deleteUser(user.id, user.name)}>
-                            {t('delete')}
-                          </Button>
+                          {canManageUsers && (
+                            <Button size="sm" variant="destructive" onClick={() => deleteUser(user.id, user.name)}>
+                              {t('delete')}
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>

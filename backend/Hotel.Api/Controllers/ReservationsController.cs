@@ -55,7 +55,7 @@ public class ReservationsController : ControllerBase
      public async Task<IActionResult> Cancel(int id)
      {
           var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-          var isAdminOrReception = User.IsInRole("admin") || User.IsInRole("reception");
+          var isAdminOrReception = User.IsInRole("admin") || User.IsInRole("reception") || User.IsInRole("manager");
 
           var result = await _reservationService.CancelReservationAsync(id, userId, isAdminOrReception);
           if (!result.Success) return BadRequest(new { message = result.Message });

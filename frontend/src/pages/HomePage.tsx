@@ -89,6 +89,7 @@ export const HomePage = () => {
     ],
     manager: [
       { label: t('navDashboard'), description: t('actionDashboardDesc'), path: '/dashboard', icon: BarChart3, color: 'from-amber-500 to-yellow-600' },
+      { label: t('navAdmin'), description: t('actionAdminDesc'), path: '/admin', icon: Settings, color: 'from-slate-500 to-gray-700' },
       { label: t('navFrontDesk'), description: t('actionFrontDeskDesc'), path: '/front-desk', icon: DoorOpen, color: 'from-amber-500 to-orange-500' },
       { label: t('navRoomBoard'), description: t('actionRoomBoardDesc'), path: '/room-board', icon: Calendar, color: 'from-violet-500 to-purple-600' },
     ],
