@@ -16,7 +16,7 @@ const navItems: NavItem[] = [
   { labelKey: 'navHousekeeping', path: '/housekeeping', icon: Sparkles,  roles: ['housekeeping', 'admin', 'manager'] },
   { labelKey: 'navMaintenance',  path: '/maintenance', icon: Wrench,     roles: ['maintenance', 'admin', 'manager'] },
   { labelKey: 'navDashboard',    path: '/dashboard',   icon: BarChart3,  roles: ['admin', 'manager'] },
-  { labelKey: 'navAdmin',        path: '/admin',       icon: Settings,   roles: ['admin'] },
+  { labelKey: 'navAdmin',        path: '/admin',       icon: Settings,   roles: ['admin', 'manager'] },
 ];
 
 export const Sidebar = ({ isOpen = true }: { isOpen?: boolean }) => {

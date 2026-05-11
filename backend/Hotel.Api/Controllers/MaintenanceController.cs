@@ -20,7 +20,7 @@ public class MaintenanceController : ControllerBase
      }
 
      [HttpGet("tickets")]
-     [Authorize(Roles = "admin,maintenance")]
+     [Authorize(Roles = "admin,maintenance,manager")]
      public async Task<IActionResult> GetTickets()
      {
           var result = await _maintenanceService.GetTicketsAsync();
@@ -37,7 +37,7 @@ public class MaintenanceController : ControllerBase
      }
 
      [HttpPatch("tickets/{id}/accept")]
-     [Authorize(Roles = "admin,maintenance")]
+     [Authorize(Roles = "admin,maintenance,manager")]
      public async Task<IActionResult> AcceptTicket(int id)
      {
           var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
@@ -47,7 +47,7 @@ public class MaintenanceController : ControllerBase
      }
 
      [HttpPatch("tickets/{id}/resolve")]
-     [Authorize(Roles = "admin,maintenance")]
+     [Authorize(Roles = "admin,maintenance,manager")]
      public async Task<IActionResult> ResolveTicket(int id)
      {
           var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);

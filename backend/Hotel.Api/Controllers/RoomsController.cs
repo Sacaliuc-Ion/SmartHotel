@@ -34,7 +34,7 @@ public class RoomsController : ControllerBase
      }
 
      [HttpPatch("{id}/status")]
-     [Authorize(Roles = "admin,reception,housekeeping")]
+     [Authorize(Roles = "admin,reception,housekeeping,manager")]
      public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateRoomStatusRequest request)
      {
           var result = await _roomService.UpdateRoomStatusAsync(id, request);
@@ -45,7 +45,7 @@ public class RoomsController : ControllerBase
      }
 
      [HttpPatch("types/{type}/price")]
-     [Authorize(Roles = "admin")]
+     [Authorize(Roles = "admin,manager")]
      public async Task<IActionResult> UpdateTypePrice(string type, [FromBody] UpdateRoomPriceRequest request)
      {
           var result = await _roomService.UpdateRoomTypePriceAsync(type, request);
