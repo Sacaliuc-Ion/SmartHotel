@@ -534,7 +534,7 @@ export const ProfilePage = () => {
 
             <section className="rounded-lg border bg-white p-5 dark:border-slate-700 dark:bg-slate-900">
               <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-slate-100">{t('recentLoginsTitle')}</h2>
-              <div className="space-y-3">
+              <div className={`space-y-3 ${logins.length > 3 ? 'max-h-72 overflow-y-auto pr-2' : ''}`}>
                 {logins.length === 0 ? (
                   <p className="text-sm text-gray-500 dark:text-slate-400">{t('noSavedLogins')}</p>
                 ) : logins.map((login) => (

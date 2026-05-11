@@ -63,7 +63,7 @@ public class ReceptionService : IReceptionService
           {
                UserId = res.UserId,
                ReservationId = res.Id,
-               Title = "Rezervare confirmata",
+               Title = "Check-in confirmat",
                Message = $"Check-in-ul pentru camera {res.Room.Number} a fost confirmat."
           });
 

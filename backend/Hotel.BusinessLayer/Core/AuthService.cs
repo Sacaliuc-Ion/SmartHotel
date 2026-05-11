@@ -170,6 +170,8 @@ public class AuthService : IAuthService
 
      public async Task<ServiceResult<List<UserNotificationDto>>> GetNotificationsAsync(int userId)
      {
+          await EnsureGeneratedNotificationsAsync(userId);
+
           var notifications = await _db.Context.UserNotifications
                .Where(notification => notification.UserId == userId)
                .OrderByDescending(notification => notification.CreatedAt)
@@ -301,5 +303,108 @@ public class AuthService : IAuthService
      private static string? CleanOptional(string? value)
      {
           return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+     }
+
+     private async Task EnsureGeneratedNotificationsAsync(int userId)
+     {
+          var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+          var staleNotifications = await _db.Context.UserNotifications
+              .Where(notification =>
+                  notification.UserId == userId &&
+                  (notification.Title == "Reminder check-in" || notification.Title == "Review pending"))
+              .ToListAsync();
+
+          if (staleNotifications.Count > 0)
+          {
+               var staleReservationIds = staleNotifications
+                   .Where(notification => notification.ReservationId.HasValue)
+                   .Select(notification => notification.ReservationId!.Value)
+                   .Distinct()
+                   .ToList();
+
+               if (staleReservationIds.Count > 0)
+               {
+                    var reservationsById = await _db.Context.Reservations
+                        .Include(reservation => reservation.Review)
+                        .ToDictionaryAsync(reservation => reservation.Id);
+
+                    var notificationsToRemove = staleNotifications.Where(notification =>
+                    {
+                         if (!notification.ReservationId.HasValue || !reservationsById.TryGetValue(notification.ReservationId.Value, out var reservation))
+                              return true;
+
+                         return notification.Title switch
+                         {
+                              "Reminder check-in" => reservation.Status != Domain.Enums.ReservationStatus.Confirmed || reservation.CheckInDate < today,
+                              "Review pending" => reservation.Status != Domain.Enums.ReservationStatus.CheckedOut || reservation.Review != null,
+                              _ => false
+                         };
+                    }).ToList();
+
+                    if (notificationsToRemove.Count > 0)
+                    {
+                         _db.Context.UserNotifications.RemoveRange(notificationsToRemove);
+                    }
+               }
+          }
+
+          var upcomingReservations = await _db.Context.Reservations
+              .Include(reservation => reservation.Room)
+              .Where(reservation =>
+                   reservation.UserId == userId &&
+                   reservation.Status == Domain.Enums.ReservationStatus.Confirmed &&
+                   (reservation.CheckInDate == today || reservation.CheckInDate == today.AddDays(1)))
+              .ToListAsync();
+
+          foreach (var reservation in upcomingReservations)
+          {
+               var title = "Reminder check-in";
+               var message = reservation.CheckInDate == today
+                    ? $"Astazi este check-in-ul pentru camera {reservation.Room.Number}. Te asteptam la hotel."
+                    : $"Maine este check-in-ul pentru camera {reservation.Room.Number}. Pregateste-te pentru sosire.";
+
+               await EnsureNotificationAsync(userId, reservation.Id, title, message);
+          }
+
+          var reviewPendingReservations = await _db.Context.Reservations
+              .Include(reservation => reservation.Room)
+              .Include(reservation => reservation.Review)
+              .Where(reservation =>
+                   reservation.UserId == userId &&
+                   reservation.Status == Domain.Enums.ReservationStatus.CheckedOut &&
+                   reservation.Review == null)
+              .ToListAsync();
+
+          foreach (var reservation in reviewPendingReservations)
+          {
+               await EnsureNotificationAsync(
+                    userId,
+                    reservation.Id,
+                    "Review pending",
+                    $"Sejurul pentru camera {reservation.Room.Number} s-a incheiat. Lasa un review daca vrei sa ne spui cum a fost."
+               );
+          }
+
+          await _db.SaveChangesAsync();
+     }
+
+     private async Task EnsureNotificationAsync(int userId, int? reservationId, string title, string message)
+     {
+          var exists = await _db.Context.UserNotifications.AnyAsync(notification =>
+               notification.UserId == userId &&
+               notification.ReservationId == reservationId &&
+               notification.Title == title);
+
+          if (exists)
+               return;
+
+          _db.Context.UserNotifications.Add(new UserNotification
+          {
+               UserId = userId,
+               ReservationId = reservationId,
+               Title = title,
+               Message = message
+          });
      }
 }
