@@ -43,7 +43,6 @@ public static class HotelDbInitializer
             {
                 room.Floor = roomSpec.Floor;
                 room.Capacity = roomSpec.Capacity;
-                room.PricePerNight = roomSpec.PricePerNight;
                 room.RoomTypeId = roomSpec.RoomTypeId;
                 room.Description = roomSpec.Description;
                 room.IsActive = true;

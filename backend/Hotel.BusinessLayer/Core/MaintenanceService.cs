@@ -68,6 +68,20 @@ public class MaintenanceService : IMaintenanceService
 
      public async Task<ServiceResult<TicketDto>> CreateTicketAsync(CreateTicketRequest request, int reportedByUserId)
      {
+          var reservation = await _db.Context.Reservations
+              .FirstOrDefaultAsync(existingReservation =>
+                  existingReservation.Id == request.ReservationId &&
+                  existingReservation.UserId == reportedByUserId);
+
+          if (reservation == null)
+               return ServiceResult<TicketDto>.Fail("Reservation not found.");
+
+          if (reservation.RoomId != request.RoomId)
+               return ServiceResult<TicketDto>.Fail("Reservation does not match the selected room.");
+
+          if (reservation.Status is ReservationStatus.CheckedOut or ReservationStatus.Cancelled or ReservationStatus.NoShow)
+               return ServiceResult<TicketDto>.Fail("Tickets can be created only before checkout.");
+
           var t = new MaintenanceTicket
           {
                RoomId = request.RoomId,

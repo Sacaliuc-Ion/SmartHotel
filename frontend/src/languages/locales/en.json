@@ -357,6 +357,7 @@
   "profileReservationSummary": "Room {{room}} - {{checkIn}} - {{checkOut}} - {{guests}} guests",
   "reservationDetails": "Reservation details",
   "requestRoomAssistance": "Request room assistance",
+  "ticketUnavailableAfterCheckout": "After checkout you can no longer create tickets for this reservation. You can only leave a review.",
   "requestType": "Request type",
   "ticketSubjectPlaceholder": "e.g. Air conditioning, towels, cleaning, bathroom",
   "ticketDetailsPlaceholder": "Describe exactly what you need in the room.",
