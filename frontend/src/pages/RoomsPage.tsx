@@ -10,7 +10,7 @@ import Single from '../assets/rooms/Single.jpg';
 import Double from '../assets/rooms/Double.jpg';
 import Suite from '../assets/rooms/Suite.jpg';
 import Deluxe from '../assets/rooms/Deluxe.jpg';
-import { formatCurrency } from '../utils/hotelFormatting';
+import { formatCurrency, getRoomAvailabilityState } from '../utils/hotelFormatting';
 import { useTranslation } from 'react-i18next';
 
 const roomImages: Record<string, string> = {
@@ -66,6 +66,7 @@ export const RoomsPage = () => {
   }).filter((option): option is { value: string; min: number; max: number; label: string } => option !== null);
 
   const filteredRooms = rooms.filter((room) => {
+    const availabilityState = getRoomAvailabilityState(room);
     const matchesSearch = room.number.toLowerCase().includes(searchTerm.toLowerCase()) ||
       room.type.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = typeFilter === 'all' || room.type === typeFilter;
@@ -86,9 +87,7 @@ export const RoomsPage = () => {
       room.floor === Number(floorFilter);
     const matchesAvailability =
       availabilityFilter === 'all' ||
-      (availabilityFilter === 'available' && room.status === 'available') ||
-      (availabilityFilter === 'available-soon' && Boolean(room.nextAvailableDate)) ||
-      (availabilityFilter === 'unavailable' && room.status !== 'available' && !room.nextAvailableDate);
+      availabilityState === availabilityFilter;
 
     return matchesSearch &&
       matchesType &&
@@ -96,8 +95,7 @@ export const RoomsPage = () => {
       matchesCapacity &&
       matchesAmenity &&
       matchesFloor &&
-      matchesAvailability &&
-      room.status !== 'out-of-order';
+      matchesAvailability;
   });
 
   const formatAvailabilityDate = (value?: string | null) => {
@@ -222,7 +220,16 @@ export const RoomsPage = () => {
 
       {/* Room Grid */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mx-4">
-        {filteredRooms.map((room) => (
+        {filteredRooms.map((room) => {
+          const availabilityState = getRoomAvailabilityState(room);
+          const availabilityLabel =
+            availabilityState === 'available-soon'
+              ? t('availableFromLabel')
+              : availabilityState === 'available'
+                ? t('available')
+                : t('notAvailable');
+
+          return (
           <div key={room.id} className="bg-white dark:bg-slate-900 rounded-lg border dark:border-slate-700 overflow-hidden hover:shadow-lg dark:hover:shadow-black/30 transition-shadow">
             <div className="relative h-48">
               <img
@@ -231,8 +238,8 @@ export const RoomsPage = () => {
                 className="w-full h-full object-cover"
               />
               <div className="absolute top-3 right-3">
-                <Badge variant={room.status === 'available' ? 'default' : 'secondary'} className="bg-white/90 text-gray-800 dark:bg-slate-950/90 dark:text-slate-100">
-                  {room.nextAvailableDate ? t('availableFromLabel') : room.status === 'available' ? t('available') : t('notAvailable')}
+                <Badge variant={availabilityState === 'available' ? 'default' : 'secondary'} className="bg-white/90 text-gray-800 dark:bg-slate-950/90 dark:text-slate-100">
+                  {availabilityLabel}
                 </Badge>
               </div>
             </div>
@@ -279,7 +286,8 @@ export const RoomsPage = () => {
               </Button>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {filteredRooms.length === 0 && (
