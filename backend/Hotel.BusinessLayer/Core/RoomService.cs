@@ -1,6 +1,7 @@
 using Hotel.BusinessLayer.Interfaces;
 using Hotel.BusinessLayer.Structure;
 using Hotel.DataAccess;
+using Hotel.Domain.Entities;
 using Hotel.Domain.Enums;
 using Hotel.Domain.Models.Rooms;
 using Microsoft.EntityFrameworkCore;
@@ -10,6 +11,7 @@ namespace Hotel.BusinessLayer.Core;
 public class RoomService : IRoomService
 {
     private readonly DbSession _db;
+    private static readonly string[] FrontDeskRoles = ["Admin", "Reception", "Manager"];
 
     public RoomService(DbSession db)
     {
@@ -18,6 +20,8 @@ public class RoomService : IRoomService
 
     public async Task<ServiceResult<List<RoomDto>>> GetAllRoomsAsync()
     {
+        await NormalizeOperationalRoomStatusesAsync();
+
         var rooms = await _db.Context.Rooms
             .Include(r => r.RoomType)
             .Include(r => r.RoomAmenities)
@@ -32,6 +36,8 @@ public class RoomService : IRoomService
 
     public async Task<ServiceResult<RoomDto>> GetRoomByIdAsync(int id)
     {
+        await NormalizeOperationalRoomStatusesAsync();
+
         var room = await _db.Context.Rooms
             .Include(r => r.RoomType)
             .Include(r => r.RoomAmenities)
@@ -51,8 +57,15 @@ public class RoomService : IRoomService
         if (room == null || !room.IsActive)
             return ServiceResult.Fail("Room not found");
 
+        var previousStatus = room.Status;
         room.Status = request.Status;
         await _db.SaveChangesAsync();
+
+        if (previousStatus != request.Status && request.Status is RoomStatus.Ready or RoomStatus.Available)
+        {
+            await NotifyRoomReadyForCheckInAsync(room.Id, room.Number);
+            await _db.SaveChangesAsync();
+        }
 
         return ServiceResult.Ok();
     }
@@ -144,5 +157,84 @@ public class RoomService : IRoomService
             Amenities = room.RoomAmenities.Select(ra => ra.Amenity.Name).ToList(),
             NextAvailableDate = nextAvailableDate?.ToString("yyyy-MM-dd")
         };
+    }
+
+    private async Task NotifyRoomReadyForCheckInAsync(int roomId, string roomNumber)
+    {
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var arrival = await _db.Context.Reservations
+            .Include(reservation => reservation.User)
+            .FirstOrDefaultAsync(reservation =>
+                reservation.RoomId == roomId &&
+                reservation.Status == ReservationStatus.Confirmed &&
+                reservation.CheckInDate == today);
+
+        if (arrival == null)
+            return;
+
+        var recipients = await _db.Context.Users
+            .Include(user => user.Role)
+            .Where(user => user.IsActive && FrontDeskRoles.Contains(user.Role.Name))
+            .ToListAsync();
+
+        if (recipients.Count == 0)
+            return;
+
+        foreach (var recipient in recipients)
+        {
+            var exists = await _db.Context.UserNotifications.AnyAsync(notification =>
+                notification.UserId == recipient.Id &&
+                notification.ReservationId == arrival.Id &&
+                notification.Title == "Room ready for check-in");
+
+            if (exists)
+                continue;
+
+            _db.Context.UserNotifications.Add(new UserNotification
+            {
+                UserId = recipient.Id,
+                ReservationId = arrival.Id,
+                Title = "Room ready for check-in",
+                Message = $"Camera {roomNumber} este pregatita pentru sosirea de astazi a oaspetelui {arrival.User.FirstName} {arrival.User.LastName}."
+            });
+        }
+    }
+
+    private async Task NormalizeOperationalRoomStatusesAsync()
+    {
+        var rooms = await _db.Context.Rooms
+            .Where(room => room.IsActive && room.Status != RoomStatus.OutOfOrder && room.Status != RoomStatus.OutOfService)
+            .ToListAsync();
+
+        if (rooms.Count == 0)
+            return;
+
+        var checkedInRoomIds = await _db.Context.Reservations
+            .Where(reservation => reservation.Status == ReservationStatus.CheckedIn)
+            .Select(reservation => reservation.RoomId)
+            .Distinct()
+            .ToListAsync();
+
+        var changed = false;
+        foreach (var room in rooms)
+        {
+            var shouldBeOccupied = checkedInRoomIds.Contains(room.Id);
+
+            if (shouldBeOccupied && room.Status != RoomStatus.Occupied)
+            {
+                room.Status = RoomStatus.Occupied;
+                changed = true;
+            }
+            else if (!shouldBeOccupied && room.Status == RoomStatus.Occupied)
+            {
+                room.Status = RoomStatus.Available;
+                changed = true;
+            }
+        }
+
+        if (changed)
+        {
+            await _db.SaveChangesAsync();
+        }
     }
 }

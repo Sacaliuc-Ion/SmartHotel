@@ -47,16 +47,16 @@ export const CheckInOutModal = ({ booking, type, onClose, onSuccess }: CheckInOu
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="grid grid-cols-2 gap-4">
-            <div><p className="text-sm text-gray-500">{t('guestName')}</p><p className="font-semibold">{booking.guestName}</p></div>
-            <div><p className="text-sm text-gray-500">{t('room')}</p><p className="font-semibold">{t('room')} {booking.roomNumber}</p></div>
-            <div><p className="text-sm text-gray-500">{t('checkIn')}</p><p className="font-semibold">{booking.checkIn}</p></div>
-            <div><p className="text-sm text-gray-500">{t('checkOut')}</p><p className="font-semibold">{booking.checkOut}</p></div>
-            <div><p className="text-sm text-gray-500">{t('guests')}</p><p className="font-semibold">{booking.guests ?? 1}</p></div>
-            <div><p className="text-sm text-gray-500">{t('totalAmount')}</p><p className="font-semibold">{formatCurrency(booking.totalAmount)}</p></div>
-            <div><p className="text-sm text-gray-500">{t('payment')}</p><p className="font-semibold capitalize">{t(`status.${booking.paymentStatus}`, { defaultValue: booking.paymentStatus })}</p></div>
+            <div><p className="text-sm text-gray-500 dark:text-slate-400">{t('guestName')}</p><p className="font-semibold text-gray-900 dark:text-slate-100">{booking.guestName}</p></div>
+            <div><p className="text-sm text-gray-500 dark:text-slate-400">{t('room')}</p><p className="font-semibold text-gray-900 dark:text-slate-100">{t('room')} {booking.roomNumber}</p></div>
+            <div><p className="text-sm text-gray-500 dark:text-slate-400">{t('checkIn')}</p><p className="font-semibold text-gray-900 dark:text-slate-100">{booking.checkIn}</p></div>
+            <div><p className="text-sm text-gray-500 dark:text-slate-400">{t('checkOut')}</p><p className="font-semibold text-gray-900 dark:text-slate-100">{booking.checkOut}</p></div>
+            <div><p className="text-sm text-gray-500 dark:text-slate-400">{t('guests')}</p><p className="font-semibold text-gray-900 dark:text-slate-100">{booking.guests ?? 1}</p></div>
+            <div><p className="text-sm text-gray-500 dark:text-slate-400">{t('totalAmount')}</p><p className="font-semibold text-gray-900 dark:text-slate-100">{formatCurrency(booking.totalAmount)}</p></div>
+            <div><p className="text-sm text-gray-500 dark:text-slate-400">{t('payment')}</p><p className="font-semibold capitalize text-gray-900 dark:text-slate-100">{t(`status.${booking.paymentStatus}`, { defaultValue: booking.paymentStatus })}</p></div>
           </div>
           <div>
-            <label className="text-sm text-gray-500 block mb-1">{t('notes')}</label>
+            <label className="mb-1 block text-sm text-gray-500 dark:text-slate-400">{t('notes')}</label>
             <Input placeholder={t('optionalNotes')} value={notes} onChange={(e) => setNotes(e.target.value)} />
           </div>
         </div>

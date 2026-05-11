@@ -1,117 +1,345 @@
 import { useState } from 'react';
 import { useHotel } from '../context/HotelContext';
 import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
+const DAY_IN_MS = 24 * 60 * 60 * 1000;
+
+const toDateKey = (date: Date) => {
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, '0');
+  const day = `${date.getDate()}`.padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const fromDateKey = (value: string) => {
+  const [year, month, day] = value.split('-').map(Number);
+  return new Date(year, month - 1, day, 12, 0, 0, 0);
+};
+
+const addDays = (date: Date, days: number) => {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+};
+
+const diffDays = (start: Date, end: Date) => Math.floor((end.getTime() - start.getTime()) / DAY_IN_MS);
+
 export const RoomBoardPage = () => {
   const [startDate, setStartDate] = useState(new Date());
+  const [visibleDays, setVisibleDays] = useState(14);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [roomTypeFilter, setRoomTypeFilter] = useState('all');
+  const [floorFilter, setFloorFilter] = useState('all');
   const { rooms, bookings } = useHotel();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
-  const days = Array.from({ length: 14 }, (_, i) => {
-    const d = new Date(startDate);
-    d.setDate(d.getDate() + i);
-    return d;
+  const normalizedSearch = searchTerm.trim().toLowerCase();
+  const days = Array.from({ length: visibleDays }, (_, index) => addDays(startDate, index));
+  const rangeEnd = addDays(startDate, visibleDays);
+  const todayKey = toDateKey(new Date());
+  const roomTypes = Array.from(new Set(rooms.map((room) => room.type))).sort();
+  const floors = Array.from(new Set(rooms.map((room) => room.floor))).sort((left, right) => left - right);
+
+  const visibleRooms = rooms.filter((room) => {
+    const matchesSearch = !normalizedSearch
+      || room.number.toLowerCase().includes(normalizedSearch)
+      || t(`roomType.${room.type}`).toLowerCase().includes(normalizedSearch);
+
+    const matchesType = roomTypeFilter === 'all' || room.type === roomTypeFilter;
+    const matchesFloor = floorFilter === 'all' || String(room.floor) === floorFilter;
+
+    return matchesSearch && matchesType && matchesFloor;
   });
 
-  const navigate = (dir: 'prev' | 'next') => {
-    const nd = new Date(startDate);
-    nd.setDate(nd.getDate() + (dir === 'next' ? 7 : -7));
-    setStartDate(nd);
-  };
+  const visibleReservations = bookings.filter((booking) => {
+    if (booking.status === 'cancelled' || booking.status === 'no-show') return false;
 
-  const getBooking = (roomId: string | number, date: Date) => {
-    const ds = date.toISOString().split('T')[0];
-    const normalizedRoomId = String(roomId);
-    return bookings.find((b) =>
-      String(b.roomId) === normalizedRoomId &&
-      b.status !== 'cancelled' &&
-      b.status !== 'checked-out' &&
-      ds >= b.checkIn && ds < b.checkOut
-    );
-  };
-
-  const fmtHeader = (date: Date) => ({
-    day: date.getDate(),
-    month: date.toLocaleDateString('en-US', { month: 'short' }),
-    weekday: date.toLocaleDateString('en-US', { weekday: 'short' }),
+    const bookingStart = fromDateKey(booking.checkIn);
+    const bookingEnd = fromDateKey(booking.checkOut);
+    return bookingStart < rangeEnd && bookingEnd > startDate;
   });
+
+  const arrivalsInRange = bookings.filter((booking) => booking.status === 'confirmed' && booking.checkIn >= toDateKey(startDate) && booking.checkIn < toDateKey(rangeEnd)).length;
+  const departuresInRange = bookings.filter((booking) => booking.status === 'checked-in' && booking.checkOut >= toDateKey(startDate) && booking.checkOut < toDateKey(rangeEnd)).length;
+  const readyRooms = visibleRooms.filter((room) => room.status === 'ready' || room.status === 'available').length;
+
+  const navigate = (direction: 'prev' | 'next') => {
+    setStartDate((current) => addDays(current, direction === 'next' ? 7 : -7));
+  };
+
+  const getSegment = (booking: typeof bookings[number]) => {
+    if (booking.status === 'cancelled' || booking.status === 'no-show') return null;
+
+    const bookingStart = fromDateKey(booking.checkIn);
+    const bookingEnd = fromDateKey(booking.checkOut);
+
+    if (bookingStart >= rangeEnd || bookingEnd <= startDate) return null;
+
+    const visibleStart = bookingStart > startDate ? bookingStart : startDate;
+    const visibleEnd = bookingEnd < rangeEnd ? bookingEnd : rangeEnd;
+    const startIndex = diffDays(startDate, visibleStart);
+    const span = Math.max(1, diffDays(visibleStart, visibleEnd));
+
+    return { startIndex, span };
+  };
 
   return (
     <div className="min-h-full bg-background p-4">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-800 dark:text-slate-100 mb-2">{t('roomBoardTitle')}</h1>
-          <p className="text-gray-600 dark:text-slate-300">{t('roomBoardSubtitle')}</p>
+      <div className="mb-6">
+        <h1 className="mb-2 text-3xl font-bold text-gray-800 dark:text-slate-100">{t('roomBoardTitle')}</h1>
+        <p className="text-gray-600 dark:text-slate-300">{t('roomBoardSubtitle')}</p>
+      </div>
+
+      <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="rounded-lg border bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
+          <p className="text-sm text-gray-600 dark:text-slate-300">{t('visibleReservations')}</p>
+          <p className="text-3xl font-bold text-gray-800 dark:text-slate-100">{visibleReservations.length}</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => navigate('prev')}><ChevronLeft className="h-4 w-4" /></Button>
-          <Button variant="outline" onClick={() => setStartDate(new Date())}>{t('today')}</Button>
-          <Button variant="outline" onClick={() => navigate('next')}><ChevronRight className="h-4 w-4" /></Button>
+        <div className="rounded-lg border bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
+          <p className="text-sm text-gray-600 dark:text-slate-300">{t('arrivalsInRange')}</p>
+          <p className="text-3xl font-bold text-emerald-600">{arrivalsInRange}</p>
+        </div>
+        <div className="rounded-lg border bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
+          <p className="text-sm text-gray-600 dark:text-slate-300">{t('departuresInRange')}</p>
+          <p className="text-3xl font-bold text-orange-600">{departuresInRange}</p>
+        </div>
+        <div className="rounded-lg border bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
+          <p className="text-sm text-gray-600 dark:text-slate-300">{t('readyRooms')}</p>
+          <p className="text-3xl font-bold text-amber-600">{readyRooms}</p>
         </div>
       </div>
 
-      <div className="mb-4 flex gap-6 text-sm text-gray-700 dark:text-slate-300">
-        <div className="flex items-center gap-2"><div className="w-4 h-4 bg-amber-500 rounded" /><span>{t('occupied')}</span></div>
-        <div className="flex items-center gap-2"><div className="w-4 h-4 bg-green-500 rounded" /><span>{t('confirmed')}</span></div>
-        <div className="flex items-center gap-2"><div className="w-4 h-4 bg-red-500 rounded" /><span>{t('outOfOrder')}</span></div>
-        <div className="flex items-center gap-2"><div className="w-4 h-4 bg-gray-200 dark:bg-slate-800 border border-gray-300 dark:border-slate-600 rounded" /><span>{t('available')}</span></div>
-      </div>
-
-      <div className="bg-white dark:bg-slate-950 rounded-lg border dark:border-slate-700 overflow-x-auto">
-        <div className="min-w-max">
-          <div className="flex border-b dark:border-slate-700 bg-gray-50 dark:bg-slate-900">
-            <div className="w-32 p-3 font-semibold text-gray-700 dark:text-slate-200 border-r dark:border-slate-700">{t('room')}</div>
-            {days.map((date, i) => {
-              const { day, month, weekday } = fmtHeader(date);
-              const isToday = date.toISOString().split('T')[0] === new Date().toISOString().split('T')[0];
-              return (
-                <div key={i} className={`w-24 p-2 text-center border-r dark:border-slate-700 ${isToday ? 'bg-amber-50 dark:bg-amber-950/30' : ''}`}>
-                  <div className="text-xs text-gray-500 dark:text-slate-400">{weekday}</div>
-                  <div className={`font-semibold ${isToday ? 'text-amber-600 dark:text-amber-400' : 'text-gray-700 dark:text-slate-200'}`}>{day}</div>
-                  <div className="text-xs text-gray-500 dark:text-slate-400">{month}</div>
-                </div>
-              );
-            })}
+      <div className="mb-6 rounded-xl border bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
+        <div className="grid gap-4 xl:grid-cols-[1.2fr_180px_180px_160px_260px]">
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-slate-200">{t('search')}</label>
+            <Input
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              placeholder={t('searchRoomsBoardPlaceholder')}
+            />
           </div>
-          {rooms.map((room) => (
-            <div key={room.id} className="flex border-b dark:border-slate-800 hover:bg-gray-50 dark:hover:bg-slate-900/70">
-              <div className="w-32 p-3 border-r dark:border-slate-800">
-                <div className="font-semibold text-gray-800 dark:text-slate-100">{t('room')} {room.number}</div>
-                <div className="text-xs text-gray-500 dark:text-slate-400 capitalize">{t(`roomType.${room.type}`)}</div>
-                <div className="text-xs text-gray-500 dark:text-slate-400">{t('floor')} {room.floor}</div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-slate-200">{t('roomType')}</label>
+            <Select value={roomTypeFilter} onValueChange={setRoomTypeFilter}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('allTypes')}</SelectItem>
+                {roomTypes.map((type) => (
+                  <SelectItem key={type} value={type}>{t(`roomType.${type}`)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-slate-200">{t('floor')}</label>
+            <Select value={floorFilter} onValueChange={setFloorFilter}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('allFloors')}</SelectItem>
+                {floors.map((floor) => (
+                  <SelectItem key={floor} value={String(floor)}>{t('floorNumber', { floor })}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-slate-200">{t('calendarStart')}</label>
+            <Input
+              type="date"
+              value={toDateKey(startDate)}
+              onChange={(event) => setStartDate(fromDateKey(event.target.value))}
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-slate-200">{t('calendarWindow')}</label>
+            <div className="flex gap-2">
+              <Button variant={visibleDays === 14 ? 'default' : 'outline'} className="flex-1" onClick={() => setVisibleDays(14)}>
+                {t('roomBoardView14')}
+              </Button>
+              <Button variant={visibleDays === 30 ? 'default' : 'outline'} className="flex-1" onClick={() => setVisibleDays(30)}>
+                {t('roomBoardView30')}
+              </Button>
+            </div>
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-slate-200">{t('today')}</label>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => navigate('prev')}><ChevronLeft className="h-4 w-4" /></Button>
+              <Button variant="outline" className="flex-1" onClick={() => setStartDate(new Date())}>{t('today')}</Button>
+              <Button variant="outline" onClick={() => navigate('next')}><ChevronRight className="h-4 w-4" /></Button>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-gray-700 dark:text-slate-300">
+          <div className="flex items-center gap-2"><div className="h-3.5 w-3.5 rounded bg-amber-500" /><span>{t('calendarLegendCheckedIn')}</span></div>
+          <div className="flex items-center gap-2"><div className="h-3.5 w-3.5 rounded bg-emerald-500" /><span>{t('calendarLegendConfirmed')}</span></div>
+          <div className="flex items-center gap-2"><div className="h-3.5 w-3.5 rounded bg-slate-500" /><span>{t('calendarLegendHistorical')}</span></div>
+          <div className="flex items-center gap-2"><div className="h-3.5 w-3.5 rounded bg-red-500" /><span>{t('outOfOrder')}</span></div>
+          <div className="ml-auto text-xs uppercase tracking-[0.16em] text-gray-400 dark:text-slate-500">
+            {t('showingRoomsCount', { count: visibleRooms.length })}
+          </div>
+        </div>
+      </div>
+
+      <div className="overflow-x-auto rounded-xl border bg-white dark:border-slate-700 dark:bg-slate-950">
+        <div className="min-w-[1480px]">
+          <div className="sticky top-0 z-20 flex border-b bg-gray-50/95 backdrop-blur dark:border-slate-700 dark:bg-slate-900/95">
+            <div className="sticky left-0 z-30 w-60 border-r bg-gray-50/95 p-4 dark:border-slate-700 dark:bg-slate-900/95">
+              <p className="text-sm font-semibold text-gray-700 dark:text-slate-200">{t('room')}</p>
+              <p className="mt-1 text-xs text-gray-500 dark:text-slate-400">{t('roomBoardCalendarDescription')}</p>
+            </div>
+            <div className="flex-1">
+              <div className="grid gap-px" style={{ gridTemplateColumns: `repeat(${visibleDays}, minmax(72px, 1fr))` }}>
+                {days.map((date) => {
+                  const dateKey = toDateKey(date);
+                  const isTodayCell = dateKey === todayKey;
+                  const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+
+                  return (
+                    <div
+                      key={dateKey}
+                      className={`px-2 py-3 text-center ${isTodayCell ? 'bg-amber-50 dark:bg-amber-950/30' : isWeekend ? 'bg-slate-50 dark:bg-slate-900/80' : 'bg-transparent'}`}
+                    >
+                      <p className="text-[11px] uppercase tracking-[0.14em] text-gray-500 dark:text-slate-400">
+                        {date.toLocaleDateString(i18n.language, { weekday: 'short' })}
+                      </p>
+                      <p className={`mt-1 text-sm font-semibold ${isTodayCell ? 'text-amber-600 dark:text-amber-300' : 'text-gray-700 dark:text-slate-200'}`}>
+                        {date.toLocaleDateString(i18n.language, { day: '2-digit', month: 'short' })}
+                      </p>
+                    </div>
+                  );
+                })}
               </div>
-              {days.map((date, i) => {
-                const booking = getBooking(room.id, date);
-                const isOOO = room.status === 'out-of-order' || room.status === 'out-of-service';
-                const isToday = date.toISOString().split('T')[0] === new Date().toISOString().split('T')[0];
-                return (
-                  <div key={i} className={`w-24 p-1 border-r dark:border-slate-800 ${isToday ? 'bg-amber-50/50 dark:bg-amber-950/20' : ''}`}>
-                    {isOOO ? (
-                      <div className="h-12 bg-red-500 rounded text-white text-xs flex items-center justify-center">{t('outOfOrderShort')}</div>
-                    ) : booking ? (
-                      <div className={`h-12 rounded text-white text-xs flex flex-col items-center justify-center p-1 ${booking.status === 'checked-in' ? 'bg-amber-500' : 'bg-green-500'}`}>
-                        <span className="font-semibold truncate w-full text-center">{booking.guestName.split(' ')[0]}</span>
-                        <span className="text-[10px] opacity-90">{booking.status === 'checked-in' ? 'In' : 'Rez'}</span>
+            </div>
+          </div>
+
+          {visibleRooms.map((room) => {
+            const roomReservations = bookings
+              .filter((booking) => String(booking.roomId) === String(room.id))
+              .map((booking) => ({ booking, segment: getSegment(booking) }))
+              .filter((item) => item.segment !== null);
+
+            const rowHeight = Math.max(88, roomReservations.length * 54 + 18);
+            const isOutOfOrder = room.status === 'out-of-order' || room.status === 'out-of-service';
+
+            return (
+              <div key={room.id} className="flex border-b last:border-b-0 dark:border-slate-800">
+                <div className="sticky left-0 z-10 w-60 border-r bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-base font-semibold text-gray-900 dark:text-slate-100">{t('room')} {room.number}</p>
+                      <p className="text-xs text-gray-500 dark:text-slate-400">{t(`roomType.${room.type}`)} • {t('floor')} {room.floor}</p>
+                    </div>
+                    <span className="rounded-full bg-slate-100 px-2 py-1 text-[11px] font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                      {t(`status.${String(room.status).toLowerCase()}`, { defaultValue: room.status })}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex-1 p-2">
+                  <div className="relative" style={{ minHeight: rowHeight }}>
+                    <div
+                      className="grid gap-1"
+                      style={{ gridTemplateColumns: `repeat(${visibleDays}, minmax(72px, 1fr))`, minHeight: rowHeight }}
+                    >
+                      {days.map((date) => {
+                        const dateKey = toDateKey(date);
+                        const isTodayCell = dateKey === todayKey;
+                        const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+
+                        return (
+                          <div
+                            key={dateKey}
+                            className={`rounded-md border ${isTodayCell
+                              ? 'border-amber-200 bg-amber-50 dark:border-amber-900/50 dark:bg-amber-950/20'
+                              : isWeekend
+                                ? 'border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900/50'
+                                : 'border-slate-200/70 bg-white dark:border-slate-800 dark:bg-slate-950'
+                              }`}
+                          />
+                        );
+                      })}
+                    </div>
+
+                    {isOutOfOrder ? (
+                      <div className="pointer-events-none absolute inset-0 grid place-items-center rounded-lg bg-red-500/12">
+                        <div className="rounded-full bg-red-600 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white">
+                          {t('outOfOrder')}
+                        </div>
                       </div>
                     ) : (
-                      <div className="h-12 bg-gray-100 dark:bg-slate-900 rounded border border-gray-200 dark:border-slate-700" />
+                      <div
+                        className="pointer-events-none absolute inset-0 grid gap-2 p-2.5"
+                        style={{
+                          gridTemplateColumns: `repeat(${visibleDays}, minmax(72px, 1fr))`,
+                          gridTemplateRows: `repeat(${Math.max(roomReservations.length, 1)}, 42px)`,
+                        }}
+                      >
+                      {roomReservations.map(({ booking, segment }, index) => {
+                          const isCompactSegment = segment!.span === 1;
+                          const tone = booking.status === 'checked-in'
+                            ? 'bg-amber-500 text-white'
+                            : booking.status === 'checked-out'
+                              ? 'bg-slate-500 text-white'
+                              : 'bg-emerald-500 text-white';
+
+                          return (
+                            <div
+                              key={`${booking.id}-${index}`}
+                              className="min-w-0"
+                              style={{
+                                gridColumn: `${segment!.startIndex + 1} / span ${segment!.span}`,
+                                gridRow: `${index + 1}`,
+                              }}
+                            >
+                              <div className={`flex h-full min-w-0 items-start justify-between gap-2 overflow-hidden rounded-md shadow-sm ${tone} ${isCompactSegment ? 'mr-1 ml-0 my-0.5 px-2 py-1.5' : 'mr-1 ml-0 my-0.5 px-2.5 py-2'}`}>
+                                <div className="min-w-0 w-full">
+                                  <div className={`truncate ${isCompactSegment ? 'text-[9px]' : 'text-[10px]'} font-semibold leading-tight`}>
+                                    {booking.guestName}
+                                  </div>
+                                  <div className={`mt-1 truncate ${isCompactSegment ? 'text-[7px]' : 'text-[8px]'} font-medium uppercase tracking-[0.06em] text-white/85`}>
+                                    {t(`status.${booking.status}`, { defaultValue: booking.status })}
+                                  </div>
+                                </div>
+                                {segment!.span > 2 && (
+                                  <div className="shrink-0 rounded-full bg-black/15 px-2 py-1 text-[8px] font-medium uppercase tracking-[0.06em] text-white/95">
+                                    #{booking.id}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
                     )}
                   </div>
-                );
-              })}
-            </div>
-          ))}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
-      <div className="mt-6 grid md:grid-cols-4 gap-4">
-        <div className="p-4 bg-white dark:bg-slate-900 rounded-lg border dark:border-slate-700"><p className="text-sm text-gray-600 dark:text-slate-300">{t('totalRooms')}</p><p className="text-2xl font-bold text-gray-800 dark:text-slate-100">{rooms.length}</p></div>
-        <div className="p-4 bg-white dark:bg-slate-900 rounded-lg border dark:border-slate-700"><p className="text-sm text-gray-600 dark:text-slate-300">{t('occupied')}</p><p className="text-2xl font-bold text-amber-600">{bookings.filter(b => b.status === 'checked-in').length}</p></div>
-        <div className="p-4 bg-white dark:bg-slate-900 rounded-lg border dark:border-slate-700"><p className="text-sm text-gray-600 dark:text-slate-300">{t('confirmed')}</p><p className="text-2xl font-bold text-green-600">{bookings.filter(b => b.status === 'confirmed').length}</p></div>
-        <div className="p-4 bg-white dark:bg-slate-900 rounded-lg border dark:border-slate-700"><p className="text-sm text-gray-600 dark:text-slate-300">{t('outOfOrder')}</p><p className="text-2xl font-bold text-red-600">{rooms.filter(r => r.status === 'out-of-order' || r.status === 'out-of-service').length}</p></div>
-      </div>
+      {visibleRooms.length === 0 && (
+        <div className="py-12 text-center">
+          <p className="text-gray-500 dark:text-slate-400">{t('noRoomsMatch')}</p>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,37 +1,44 @@
 import { useEffect, useState } from 'react';
 import { api } from '../services/api';
-import { useHotel } from '../context/HotelContext'; // Only for total rooms count fallback if needed
+import { Booking, useHotel } from '../context/HotelContext';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { CheckInOutModal } from '../components/reception/CheckInOutModal';
-import { ArrowDownToLine, ArrowUpFromLine, Bed, Coins } from 'lucide-react';
+import { ReservationEditModal } from '../components/reception/ReservationEditModal';
+import { Input } from '../components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
+import { ArrowDownToLine, ArrowUpFromLine, Bed, PencilLine, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatCurrency } from '../utils/hotelFormatting';
 import { useTranslation } from 'react-i18next';
 
 export const FrontDeskPage = () => {
-  const { refreshData } = useHotel(); // Refresh global stat later
+  const { refreshData, bookings, updateBooking } = useHotel();
   const { t } = useTranslation();
-  const [arrivals, setArrivals] = useState<any[]>([]);
-  const [departures, setDepartures] = useState<any[]>([]);
+  const [arrivals, setArrivals] = useState<Booking[]>([]);
+  const [departures, setDepartures] = useState<Booking[]>([]);
   const [dashboardSummary, setDashboardSummary] = useState<any>({});
-  
-  const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
   const [modalType, setModalType] = useState<'checkin' | 'checkout' | null>(null);
+  const todayKey = `${new Date().getFullYear()}-${`${new Date().getMonth() + 1}`.padStart(2, '0')}-${`${new Date().getDate()}`.padStart(2, '0')}`;
 
   const fetchDeskData = async () => {
     try {
       const [arr, dep, dash] = await Promise.all([
-        api.get<any[]>('/reception/arrivals-today'),
-        api.get<any[]>('/reception/departures-today'),
-        api.get<any>('/dashboard')
+        api.get<Booking[]>('/reception/arrivals-today'),
+        api.get<Booking[]>('/reception/departures-today'),
+        api.get<any>('/dashboard'),
+        refreshData(),
       ]);
+
       setArrivals(arr || []);
       setDepartures(dep || []);
       setDashboardSummary(dash || {});
-      // Refresh global context asynchronously
-      refreshData();
     } catch (e: any) {
       toast.error(e.message || t('frontDeskFetchError'));
     }
@@ -41,12 +48,12 @@ export const FrontDeskPage = () => {
     fetchDeskData();
   }, []);
 
-  const handleCheckIn = (booking: any) => {
+  const handleCheckIn = (booking: Booking) => {
     setSelectedBooking(booking);
     setModalType('checkin');
   };
 
-  const handleCheckOut = (booking: any) => {
+  const handleCheckOut = (booking: Booking) => {
     setSelectedBooking(booking);
     setModalType('checkout');
   };
@@ -55,15 +62,41 @@ export const FrontDeskPage = () => {
     fetchDeskData();
   };
 
+  const handleRemoveFromFrontDesk = async (booking: Booking) => {
+    await updateBooking(booking.id, {
+      roomId: Number(booking.roomId),
+      checkIn: booking.checkIn,
+      checkOut: booking.checkOut,
+      guests: booking.guests,
+      status: 'cancelled',
+      notes: booking.notes ?? null,
+    });
+
+    await fetchDeskData();
+  };
+
+  const normalizedSearch = searchTerm.trim().toLowerCase();
+  const operationalBookings = bookings
+    .filter((booking) => booking.status !== 'checked-out' && booking.status !== 'cancelled')
+    .filter((booking) => statusFilter === 'all' || booking.status === statusFilter)
+    .filter((booking) => {
+      if (!normalizedSearch) return true;
+      return (
+        booking.guestName.toLowerCase().includes(normalizedSearch) ||
+        booking.roomNumber.toLowerCase().includes(normalizedSearch) ||
+        String(booking.id).includes(normalizedSearch)
+      );
+    })
+    .sort((left, right) => `${left.checkIn}-${left.roomNumber}`.localeCompare(`${right.checkIn}-${right.roomNumber}`));
+
   return (
     <div className="pb-8">
       <div className="mb-6 px-4 py-2">
-        <h1 className="text-3xl font-bold text-gray-800 dark:text-slate-100 mb-2">{t('frontDeskTitle')}</h1>
+        <h1 className="mb-2 text-3xl font-bold text-gray-800 dark:text-slate-100">{t('frontDeskTitle')}</h1>
         <p className="text-gray-600 dark:text-slate-300">{t('frontDeskSubtitle')}</p>
       </div>
 
-      {/* KPIs */}
-      <div className="grid mx-4 md:grid-cols-3 gap-6 mb-8">
+      <div className="mx-4 mb-8 grid gap-6 md:grid-cols-3">
         <Card>
           <CardHeader className="pb-3"><CardDescription>{t('occupancyRate')}</CardDescription></CardHeader>
           <CardContent>
@@ -104,73 +137,130 @@ export const FrontDeskPage = () => {
         </Card>
       </div>
 
-      <div className="grid mx-4 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ArrowDownToLine className="h-5 w-5 text-green-600" /> {t('arrivalsToday')}
-            </CardTitle>
-            <CardDescription>{t('guestsCheckingIn')}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {arrivals.length === 0 ? <p className="text-gray-500 dark:text-slate-400 text-center py-6">{t('noArrivalsToday')}</p> : (
-              <div className="space-y-3">
-                {arrivals.map((booking) => (
-                  <div key={booking.id} className="p-4 border rounded-lg hover:border-green-400 transition-colors">
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <h4 className="font-semibold text-gray-800 dark:text-slate-100">{booking.guestName}</h4>
-                        <p className="text-sm text-gray-600 dark:text-slate-300">{t('room')} {booking.roomNumber} • {booking.guests} {booking.guests > 1 ? t('guests') : t('guest')}</p>
-                      </div>
-                      <Badge variant={booking.paymentStatus === 'paid' ? 'default' : 'secondary'}>{t(`status.${booking.paymentStatus}`, { defaultValue: booking.paymentStatus })}</Badge>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm text-gray-500 dark:text-slate-400">{t('stayUntil', { date: booking.checkOut })}</p>
-                      <Button size="sm" onClick={() => handleCheckIn(booking)}>{t('checkInAction')}</Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      <Card className="mx-4 mt-6">
+        <CardHeader>
+          <CardTitle>{t('reservationManagementTitle')}</CardTitle>
+          <CardDescription>{t('reservationManagementDescription')}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="mb-5 grid gap-4 lg:grid-cols-[1.4fr_220px]">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <Input
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                className="pl-9"
+                placeholder={t('searchReservationPlaceholder')}
+              />
+            </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('allReservationStatuses')}</SelectItem>
+                <SelectItem value="confirmed">{t('status.confirmed')}</SelectItem>
+                <SelectItem value="checked-in">{t('status.checked-in')}</SelectItem>
+                <SelectItem value="no-show">{t('status.no-show')}</SelectItem>
+                <SelectItem value="cancelled">{t('status.cancelled')}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ArrowUpFromLine className="h-5 w-5 text-orange-600" /> {t('departuresToday')}
-            </CardTitle>
-            <CardDescription>{t('guestsCheckingOut')}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {departures.length === 0 ? <p className="text-gray-500 dark:text-slate-400 text-center py-6">{t('noDeparturesToday')}</p> : (
-              <div className="space-y-3">
-                {departures.map((booking) => (
-                  <div key={booking.id} className="p-4 border rounded-lg hover:border-orange-400 transition-colors">
-                    <div className="flex items-start justify-between mb-2">
+          {operationalBookings.length === 0 ? (
+            <p className="rounded-lg border border-dashed p-6 text-center text-gray-500 dark:border-slate-700 dark:text-slate-400">
+              {t('reservationManagementEmpty')}
+            </p>
+          ) : (
+            <div className="grid gap-4 lg:grid-cols-2">
+              {operationalBookings.map((booking) => {
+                const isTodayReservation = booking.checkIn === todayKey || booking.checkOut === todayKey;
+                const canEdit = booking.status !== 'cancelled';
+                const canCheckIn = booking.status === 'confirmed';
+                const canCheckOut = booking.status === 'checked-in';
+                const canRemove = booking.status !== 'checked-in' && !isTodayReservation;
+
+                return (
+                  <div key={booking.id} className="rounded-xl border p-4 dark:border-slate-700 dark:bg-slate-950/40">
+                    <div className="flex items-start justify-between gap-3">
                       <div>
-                        <h4 className="font-semibold text-gray-800 dark:text-slate-100">{booking.guestName}</h4>
-                        <p className="text-sm text-gray-600 dark:text-slate-300">{t('room')} {booking.roomNumber} • {booking.guests} {t('guests')}</p>
+                        <p className="text-xs uppercase tracking-[0.14em] text-amber-600 dark:text-amber-300">
+                          {t('reservationNumber', { id: booking.id })}
+                        </p>
+                        <h3 className="mt-1 text-lg font-semibold text-gray-900 dark:text-slate-100">{booking.guestName}</h3>
+                        <p className="text-sm text-gray-500 dark:text-slate-400">
+                          {t('room')} {booking.roomNumber} • {booking.checkIn} - {booking.checkOut}
+                        </p>
                       </div>
-                      <div className="flex items-center gap-1 text-gray-700 dark:text-slate-200">
-                        <Coins className="h-4 w-4 text-amber-600" />
-                        <span className="font-semibold">{formatCurrency(booking.totalAmount)}</span>
+                      <Badge>{t(`status.${booking.status}`, { defaultValue: booking.status })}</Badge>
+                    </div>
+
+                    <div className="mt-4 grid gap-3 text-sm text-gray-600 dark:text-slate-300 md:grid-cols-3">
+                      <div>
+                        <span className="block text-xs uppercase text-gray-400 dark:text-slate-500">{t('guests')}</span>
+                        {booking.guests}
+                      </div>
+                      <div>
+                        <span className="block text-xs uppercase text-gray-400 dark:text-slate-500">{t('payment')}</span>
+                        {t(`status.${booking.paymentStatus}`, { defaultValue: booking.paymentStatus })}
+                      </div>
+                      <div>
+                        <span className="block text-xs uppercase text-gray-400 dark:text-slate-500">{t('totalAmount')}</span>
+                        {formatCurrency(booking.totalAmount)}
                       </div>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <Badge variant={booking.paymentStatus === 'paid' ? 'default' : 'destructive'}>{t(`status.${booking.paymentStatus}`, { defaultValue: booking.paymentStatus })}</Badge>
-                      <Button size="sm" variant="outline" onClick={() => handleCheckOut(booking)}>{t('checkOutAction')}</Button>
+
+                    {booking.notes && (
+                      <div className="mt-4 rounded-lg border bg-slate-50 p-3 text-sm text-gray-600 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300">
+                        <span className="mb-1 block text-xs uppercase tracking-[0.12em] text-gray-400 dark:text-slate-500">{t('notes')}</span>
+                        {booking.notes}
+                      </div>
+                    )}
+
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {canRemove && (
+                        <Button size="sm" variant="destructive" onClick={() => handleRemoveFromFrontDesk(booking)}>
+                          {t('cancel')}
+                        </Button>
+                      )}
+                      {canEdit && (
+                        <Button size="sm" variant="outline" onClick={() => setEditingBooking(booking)}>
+                          <PencilLine className="mr-1 h-4 w-4" /> {t('editReservation')}
+                        </Button>
+                      )}
+                      {canCheckIn && (
+                        <Button size="sm" onClick={() => handleCheckIn(booking)}>{t('checkInAction')}</Button>
+                      )}
+                      {canCheckOut && (
+                        <Button size="sm" variant="outline" onClick={() => handleCheckOut(booking)}>{t('checkOutAction')}</Button>
+                      )}
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {selectedBooking && modalType && (
-        <CheckInOutModal booking={selectedBooking} type={modalType} onClose={() => { setSelectedBooking(null); setModalType(null); }} onSuccess={handleModalSuccess} />
+        <CheckInOutModal
+          booking={selectedBooking}
+          type={modalType}
+          onClose={() => {
+            setSelectedBooking(null);
+            setModalType(null);
+          }}
+          onSuccess={handleModalSuccess}
+        />
+      )}
+
+      {editingBooking && (
+        <ReservationEditModal
+          booking={editingBooking}
+          onClose={() => setEditingBooking(null)}
+          onSuccess={handleModalSuccess}
+        />
       )}
     </div>
   );

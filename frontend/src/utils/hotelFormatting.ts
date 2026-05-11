@@ -17,6 +17,20 @@ export const normalizeBookingStatus = (status: string) => toKebabCase(status);
 
 export const normalizePaymentStatus = (status: string) => toKebabCase(status);
 
+export const getRoomAvailabilityState = (room: { status: string; nextAvailableDate?: string | null }) => {
+  const normalizedStatus = normalizeRoomStatus(room.status);
+
+  if (normalizedStatus === 'out-of-order' || normalizedStatus === 'out-of-service') {
+    return 'unavailable';
+  }
+
+  if (room.nextAvailableDate) {
+    return 'available-soon';
+  }
+
+  return 'available';
+};
+
 export const formatStatusLabel = (value: string) =>
   toKebabCase(value)
     .split('-')

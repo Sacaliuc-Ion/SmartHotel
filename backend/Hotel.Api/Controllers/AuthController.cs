@@ -93,6 +93,15 @@ public class AuthController : ControllerBase
           return Ok();
      }
 
+     [HttpPatch("notifications/read-all")]
+     [Authorize]
+     public async Task<IActionResult> MarkAllNotificationsRead()
+     {
+          var result = await _authService.MarkAllNotificationsReadAsync(GetUserId());
+          if (!result.Success) return BadRequest(new { message = result.Message });
+          return Ok();
+     }
+
      [HttpDelete("account")]
      [Authorize]
      public async Task<IActionResult> DeleteAccount()

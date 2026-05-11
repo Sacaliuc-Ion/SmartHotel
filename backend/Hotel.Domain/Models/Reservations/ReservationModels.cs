@@ -14,6 +14,7 @@ public class ReservationDto
     public string PaymentStatus { get; set; } = string.Empty;
     public decimal TotalAmount { get; set; }
     public int Guests { get; set; }
+    public string? Notes { get; set; }
     public RoomReviewDto? Review { get; set; }
 }
 
@@ -23,6 +24,16 @@ public class CreateReservationRequest
     public string CheckIn { get; set; } = string.Empty;
     public string CheckOut { get; set; } = string.Empty;
     public int Guests { get; set; }
+}
+
+public class UpdateReservationRequest
+{
+    public int RoomId { get; set; }
+    public string CheckIn { get; set; } = string.Empty;
+    public string CheckOut { get; set; } = string.Empty;
+    public int Guests { get; set; }
+    public string Status { get; set; } = string.Empty;
+    public string? Notes { get; set; }
 }
 
 public class RoomReviewDto

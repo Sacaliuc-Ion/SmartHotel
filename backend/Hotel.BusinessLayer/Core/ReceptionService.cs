@@ -47,7 +47,13 @@ public class ReceptionService : IReceptionService
           var res = await _db.Context.Reservations.Include(r => r.Room).FirstOrDefaultAsync(r => r.Id == reservationId);
           if (res == null) return ServiceResult.Fail("Reservation not found");
 
-          if (res.Status != ReservationStatus.Confirmed) return ServiceResult.Fail("Only confirmed reservations can be checked in");
+          if (res.Status != ReservationStatus.Confirmed) return ServiceResult.Fail("Only confirmed reservations can be checked in.");
+
+          var today = DateOnly.FromDateTime(DateTime.UtcNow);
+          if (res.CheckInDate > today) return ServiceResult.Fail("This reservation cannot be checked in before its scheduled arrival date.");
+
+          if (res.Room.Status is RoomStatus.OutOfOrder or RoomStatus.OutOfService)
+               return ServiceResult.Fail("The assigned room is currently unavailable for check-in.");
 
           res.Status = ReservationStatus.CheckedIn;
           res.Room.Status = RoomStatus.Occupied;
@@ -76,7 +82,7 @@ public class ReceptionService : IReceptionService
           var res = await _db.Context.Reservations.Include(r => r.Room).FirstOrDefaultAsync(r => r.Id == reservationId);
           if (res == null) return ServiceResult.Fail("Reservation not found");
 
-          if (res.Status != ReservationStatus.CheckedIn) return ServiceResult.Fail("Reservation is not checked in");
+          if (res.Status != ReservationStatus.CheckedIn) return ServiceResult.Fail("Reservation is not currently checked in.");
 
           res.Status = ReservationStatus.CheckedOut;
           res.Room.Status = RoomStatus.Dirty;
@@ -105,6 +111,7 @@ public class ReceptionService : IReceptionService
           Status = ClientValueFormatter.ToClientValue(r.Status),
           PaymentStatus = ClientValueFormatter.ToClientValue(r.PaymentStatus),
           TotalAmount = r.TotalPrice,
-          Guests = r.Guests
+          Guests = r.Guests,
+          Notes = r.Notes
      };
 }

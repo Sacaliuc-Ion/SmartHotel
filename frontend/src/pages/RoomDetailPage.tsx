@@ -11,7 +11,7 @@ import Single from '../assets/rooms/Single.jpg';
 import Double from '../assets/rooms/Double.jpg';
 import Suite from '../assets/rooms/Suite.jpg';
 import Deluxe from '../assets/rooms/Deluxe.jpg';
-import { formatCurrency } from '../utils/hotelFormatting';
+import { formatCurrency, getRoomAvailabilityState } from '../utils/hotelFormatting';
 import { useTranslation } from 'react-i18next';
 import { getRoomDescriptionLines } from '../utils/roomDescriptions';
 
@@ -44,7 +44,8 @@ export const RoomDetailPage = () => {
   const [checkOut, setCheckOut] = useState(tomorrow);
   const [guests, setGuests] = useState('1');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const canBookRoom = room ? !['out-of-order', 'out-of-service'].includes(room.status.toLowerCase()) : false;
+  const availabilityState = room ? getRoomAvailabilityState(room) : 'unavailable';
+  const canBookRoom = availabilityState !== 'unavailable';
   const firstBookableDate = room?.nextAvailableDate || today;
   const isFutureOnlyBooking = Boolean(room?.nextAvailableDate);
 
@@ -131,8 +132,12 @@ export const RoomDetailPage = () => {
           </div>
         </div>
         <div className="flex flex-col gap-3">
-          <Badge variant={room.status === 'available' ? 'default' : 'secondary'} className="w-fit">
-            {room.status === 'available' ? t('available') : t('notAvailable')}
+          <Badge variant={availabilityState === 'available' ? 'default' : 'secondary'} className="w-fit">
+            {availabilityState === 'available-soon'
+              ? t('availableFromLabel')
+              : availabilityState === 'available'
+                ? t('available')
+                : t('notAvailable')}
           </Badge>
           <div>
             <h1 className="mb-1 text-2xl font-bold text-gray-800 dark:text-slate-100 lg:text-3xl">{t('room')} {room.number}</h1>
