@@ -88,10 +88,6 @@ public static class HotelDbInitializer
                 Description = "Default currency",
             });
         }
-        else if (currencySetting.Value != HotelSeedCatalog.DefaultCurrency)
-        {
-            currencySetting.Value = HotelSeedCatalog.DefaultCurrency;
-        }
 
         var checkedInRoomIds = await context.Reservations
             .Where(reservation => reservation.Status == ReservationStatus.CheckedIn)
