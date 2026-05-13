@@ -503,10 +503,40 @@ body,
   border-right: 1px solid var(--hp-border);
 }
 
+.lb-sidebar-open {
+  pointer-events: auto;
+}
+
+.lb-sidebar-closed {
+  pointer-events: none;
+}
+
 .dark .lb-sidebar {
   background:
     linear-gradient(180deg, rgba(13, 20, 35, 0.96) 0%, rgba(16, 26, 43, 0.93) 100%);
   backdrop-filter: blur(22px);
+}
+
+.lb-sidebar-item {
+  opacity: 0;
+  transform: translateX(-18px);
+  transition:
+    opacity 0.24s ease,
+    transform 0.32s cubic-bezier(.22, 1, .36, 1),
+    background-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
+  will-change: transform, opacity;
+}
+
+.lb-sidebar-open .lb-sidebar-item {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.lb-sidebar-closed .lb-sidebar-item {
+  opacity: 0;
+  transform: translateX(-18px);
 }
 
 /* Nav links — default */
@@ -552,6 +582,13 @@ body,
 .dark .lb-nav-inactive:hover,
 .dark .lb-topbar-logout-btn:hover {
   background: rgba(255, 255, 255, 0.08);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lb-sidebar-item {
+    transition: none;
+    transform: none;
+  }
 }
 
 .booking-date-input::-webkit-calendar-picker-indicator {

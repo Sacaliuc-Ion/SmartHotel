@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:5130/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:5130/api';
 
 class ApiError extends Error {
   status: number;
@@ -46,10 +46,30 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   // Handle empty responses
   const text = await response.text();
   if (!text) {
+    dispatchNotificationsRefresh(endpoint, options.method);
     return {} as T;
   }
 
-  return JSON.parse(text);
+  const payload = JSON.parse(text);
+  dispatchNotificationsRefresh(endpoint, options.method);
+  return payload;
+}
+
+function dispatchNotificationsRefresh(endpoint: string, method?: string) {
+  const normalizedMethod = (method || 'GET').toUpperCase();
+  if (normalizedMethod === 'GET' || normalizedMethod === 'HEAD') {
+    return;
+  }
+
+  if (endpoint.startsWith('/auth/notifications')) {
+    return;
+  }
+
+  if (!localStorage.getItem('smarthotel_token')) {
+    return;
+  }
+
+  window.dispatchEvent(new CustomEvent('notifications:refresh'));
 }
 
 export const api = {
