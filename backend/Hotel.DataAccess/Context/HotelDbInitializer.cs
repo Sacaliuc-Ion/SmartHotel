@@ -24,7 +24,7 @@ public static class HotelDbInitializer
         {
             if (!roomsByNumber.TryGetValue(roomSpec.Number, out var room))
             {
-                room = new Room
+                room = new RoomData
                 {
                     Number = roomSpec.Number,
                     Floor = roomSpec.Floor,
@@ -67,7 +67,7 @@ public static class HotelDbInitializer
             {
                 if (roomAmenityPairs.Add((room.Id, amenityId)))
                 {
-                    context.RoomAmenities.Add(new RoomAmenity
+                    context.RoomAmenities.Add(new RoomAmenityData
                     {
                         RoomId = room.Id,
                         AmenityId = amenityId,
@@ -81,7 +81,7 @@ public static class HotelDbInitializer
 
         if (currencySetting == null)
         {
-            context.HotelSettings.Add(new HotelSetting
+            context.HotelSettings.Add(new HotelSettingData
             {
                 Key = "Currency",
                 Value = HotelSeedCatalog.DefaultCurrency,

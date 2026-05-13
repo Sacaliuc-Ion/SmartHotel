@@ -119,7 +119,7 @@ public class RoomService : IRoomService
         );
     }
 
-    private static DateOnly? GetNextAvailableDate(List<Domain.Entities.Reservation> reservations, DateOnly today)
+    private static DateOnly? GetNextAvailableDate(List<Domain.Entities.ReservationData> reservations, DateOnly today)
     {
         if (reservations.Count == 0)
             return null;
@@ -142,7 +142,7 @@ public class RoomService : IRoomService
         return blocked ? cursor : null;
     }
 
-    private static RoomDto MapToDto(Domain.Entities.Room room, DateOnly? nextAvailableDate)
+    private static RoomDto MapToDto(Domain.Entities.RoomData room, DateOnly? nextAvailableDate)
     {
         return new RoomDto
         {
@@ -190,7 +190,7 @@ public class RoomService : IRoomService
             if (exists)
                 continue;
 
-            _db.Context.UserNotifications.Add(new UserNotification
+            _db.Context.UserNotifications.Add(new UserNotificationData
             {
                 UserId = recipient.Id,
                 ReservationId = arrival.Id,

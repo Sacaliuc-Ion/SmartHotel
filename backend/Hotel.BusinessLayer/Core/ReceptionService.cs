@@ -58,14 +58,14 @@ public class ReceptionService : IReceptionService
           res.Status = ReservationStatus.CheckedIn;
           res.Room.Status = RoomStatus.Occupied;
 
-          _db.Context.CheckInRecords.Add(new CheckInRecord
+          _db.Context.CheckInRecords.Add(new CheckInRecordData
           {
                ReservationId = reservationId,
                ProcessedByUserId = processedByUserId,
                Notes = request.Notes
           });
 
-          _db.Context.UserNotifications.Add(new UserNotification
+          _db.Context.UserNotifications.Add(new UserNotificationData
           {
                UserId = res.UserId,
                ReservationId = res.Id,
@@ -87,7 +87,7 @@ public class ReceptionService : IReceptionService
           res.Status = ReservationStatus.CheckedOut;
           res.Room.Status = RoomStatus.Dirty;
 
-          _db.Context.CheckOutRecords.Add(new CheckOutRecord
+          _db.Context.CheckOutRecords.Add(new CheckOutRecordData
           {
                ReservationId = reservationId,
                ProcessedByUserId = processedByUserId,
@@ -100,7 +100,7 @@ public class ReceptionService : IReceptionService
           return ServiceResult.Ok();
      }
 
-     private static ReservationDto MapToDto(Reservation r) => new()
+     private static ReservationDto MapToDto(ReservationData r) => new()
      {
           Id = r.Id,
           GuestName = $"{r.User.FirstName} {r.User.LastName}",

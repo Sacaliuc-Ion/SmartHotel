@@ -67,7 +67,7 @@ public class MaintenanceService : IMaintenanceService
 
           if (!wasResolved)
           {
-               _db.Context.UserNotifications.Add(new UserNotification
+               _db.Context.UserNotifications.Add(new UserNotificationData
                {
                     UserId = t.ReportedByUserId,
                     Title = "Ticket rezolvat",
@@ -96,7 +96,7 @@ public class MaintenanceService : IMaintenanceService
           if (reservation.Status is ReservationStatus.CheckedOut or ReservationStatus.Cancelled or ReservationStatus.NoShow)
                return ServiceResult<TicketDto>.Fail("Tickets can be created only before checkout.");
 
-          var t = new MaintenanceTicket
+          var t = new MaintenanceTicketData
           {
                RoomId = request.RoomId,
                ReportedByUserId = reportedByUserId,
@@ -129,7 +129,7 @@ public class MaintenanceService : IMaintenanceService
                     ? $"Ticket urgent pentru camera {roomNumber ?? request.RoomId.ToString()}: {request.Issue}. Este necesara interventie rapida."
                     : $"A fost creat un ticket nou pentru camera {roomNumber ?? request.RoomId.ToString()}: {request.Issue}";
 
-               var notifications = recipients.Select(user => new UserNotification
+               var notifications = recipients.Select(user => new UserNotificationData
                {
                     UserId = user.Id,
                     Title = title,

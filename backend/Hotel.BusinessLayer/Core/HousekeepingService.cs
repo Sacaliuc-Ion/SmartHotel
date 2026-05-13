@@ -90,7 +90,7 @@ public class HousekeepingService : IHousekeepingService
               .Select(user => $"{user.FirstName} {user.LastName}")
               .FirstOrDefaultAsync();
 
-          var task = new HousekeepingTask
+          var task = new HousekeepingTaskData
           {
                RoomId = request.RoomId,
                Status = HousekeepingTaskStatus.Pending,
@@ -122,7 +122,7 @@ public class HousekeepingService : IHousekeepingService
                     ? $"Solicitare urgenta pentru camera {roomNumber ?? request.RoomId.ToString()}: {request.Issue}. Este necesara pregatirea imediata."
                     : $"A fost creata o solicitare noua pentru camera {roomNumber ?? request.RoomId.ToString()}: {request.Issue}";
 
-               var notifications = recipients.Select(user => new UserNotification
+               var notifications = recipients.Select(user => new UserNotificationData
                {
                     UserId = user.Id,
                     Title = title,

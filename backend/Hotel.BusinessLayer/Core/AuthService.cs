@@ -41,7 +41,7 @@ public class AuthService : IAuthService
                return ServiceResult<AuthResponse>.Fail("Invalid credentials.");
 
           user.LastLoginAt = DateTime.UtcNow;
-          _db.Context.UserLoginAudits.Add(new UserLoginAudit
+          _db.Context.UserLoginAudits.Add(new UserLoginAuditData
           {
                UserId = user.Id,
                Email = user.Email,
@@ -71,7 +71,7 @@ public class AuthService : IAuthService
                if (await _db.Context.Users.AnyAsync(u => u.Email == normalizedEmail))
                     return ServiceResult<AuthResponse>.Fail("Email already in use.");
 
-               var user = new User
+               var user = new UserData
                {
                     FirstName = request.FirstName.Trim(),
                     LastName = request.LastName.Trim(),
@@ -253,7 +253,7 @@ public class AuthService : IAuthService
           return ServiceResult.Ok();
      }
 
-     private string GenerateJwt(User user)
+     private string GenerateJwt(UserData user)
      {
           var securityKey = new SymmetricSecurityKey(
               Encoding.UTF8.GetBytes(_config["JwtSettings:SecretKey"]!)
@@ -286,7 +286,7 @@ public class AuthService : IAuthService
           return new JwtSecurityTokenHandler().WriteToken(token);
      }
 
-     private static UserDto MapToUserDto(User user) => new()
+     private static UserDto MapToUserDto(UserData user) => new()
      {
           Id = user.Id,
           Name = $"{user.FirstName} {user.LastName}",
@@ -296,7 +296,7 @@ public class AuthService : IAuthService
           AvatarUrl = user.AvatarUrl
      };
 
-     private static UserProfileDto MapToProfileDto(User user) => new()
+     private static UserProfileDto MapToProfileDto(UserData user) => new()
      {
           Id = user.Id,
           FirstName = user.FirstName,
@@ -441,7 +441,7 @@ public class AuthService : IAuthService
           if (exists)
                return;
 
-          _db.Context.UserNotifications.Add(new UserNotification
+          _db.Context.UserNotifications.Add(new UserNotificationData
           {
                UserId = userId,
                ReservationId = reservationId,
@@ -450,7 +450,7 @@ public class AuthService : IAuthService
           });
      }
 
-     private static UserNotificationDto MapToNotificationDto(UserNotification notification)
+     private static UserNotificationDto MapToNotificationDto(UserNotificationData notification)
      {
           var (category, targetPath) = ResolveNotificationMetadata(notification.Title, notification.Message, notification.ReservationId);
 
