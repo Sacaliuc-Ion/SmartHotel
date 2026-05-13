@@ -19,7 +19,7 @@ import {
 
 import Herro from '../assets/home/HeroIMG.jpg';
 import Lobby from '../assets/home/LobbyIMG.jpg';
-import Pool from '../assets//home/PoolIMG.jpg';
+import Pool from '../assets/home/PoolIMG.jpg';
 import { useTranslation } from 'react-i18next';
 
 /* ─── tiny intersection-observer hook for scroll-in animations ─── */
@@ -296,11 +296,15 @@ export const HomePage = () => {
                 <img
                   src={Lobby}
                   alt="Hotel lobby"
+                  loading="lazy"
+                  decoding="async"
                   className="rounded-2xl object-cover h-48 w-full shadow-md hp-img"
                 />
                 <img
                   src={Pool}
                   alt="Hotel pool"
+                  loading="lazy"
+                  decoding="async"
                   className="rounded-2xl object-cover h-48 w-full shadow-md mt-6 hp-img"
                 />
               </div>

@@ -1,26 +1,38 @@
+import { lazy, Suspense } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router';
 import { Layout } from './components/layout/Layout';
-import { HomePage } from './pages/HomePage';
-import { RoomsPage } from './pages/RoomsPage';
-import { RoomDetailPage } from './pages/RoomDetailPage';
-import { LoginPage } from './pages/LoginPage';
-import { FrontDeskPage } from './pages/FrontDeskPage';
-import { RoomBoardPage } from './pages/RoomBoardPage';
-import { HousekeepingPage } from './pages/HousekeepingPage';
-import { MaintenancePage } from './pages/MaintenancePage';
-import { DashboardPage } from './pages/DashboardPage';
-import { AdminPage } from './pages/AdminPage';
-import { ProfilePage } from './pages/ProfilePage';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 
+const HomePage = lazy(() => import('./pages/HomePage').then((module) => ({ default: module.HomePage })));
+const RoomsPage = lazy(() => import('./pages/RoomsPage').then((module) => ({ default: module.RoomsPage })));
+const RoomDetailPage = lazy(() => import('./pages/RoomDetailPage').then((module) => ({ default: module.RoomDetailPage })));
+const LoginPage = lazy(() => import('./pages/LoginPage').then((module) => ({ default: module.LoginPage })));
+const FrontDeskPage = lazy(() => import('./pages/FrontDeskPage').then((module) => ({ default: module.FrontDeskPage })));
+const RoomBoardPage = lazy(() => import('./pages/RoomBoardPage').then((module) => ({ default: module.RoomBoardPage })));
+const HousekeepingPage = lazy(() => import('./pages/HousekeepingPage').then((module) => ({ default: module.HousekeepingPage })));
+const MaintenancePage = lazy(() => import('./pages/MaintenancePage').then((module) => ({ default: module.MaintenancePage })));
+const DashboardPage = lazy(() => import('./pages/DashboardPage').then((module) => ({ default: module.DashboardPage })));
+const AdminPage = lazy(() => import('./pages/AdminPage').then((module) => ({ default: module.AdminPage })));
+const ProfilePage = lazy(() => import('./pages/ProfilePage').then((module) => ({ default: module.ProfilePage })));
+
+const RouteFallback = () => (
+  <div className="p-6 text-sm text-gray-500 dark:text-slate-400">Loading...</div>
+);
+
+const withSuspense = (element: JSX.Element) => (
+  <Suspense fallback={<RouteFallback />}>
+    {element}
+  </Suspense>
+);
+
 export const router = createBrowserRouter([
-  { path: '/login', element: <LoginPage /> },
-  { path: '/', element: <Layout><HomePage /></Layout> },
-  { path: '/rooms', element: <Layout><RoomsPage /></Layout> },
-  { path: '/rooms/:id', element: <Layout><RoomDetailPage /></Layout> },
+  { path: '/login', element: withSuspense(<LoginPage />) },
+  { path: '/', element: withSuspense(<Layout><HomePage /></Layout>) },
+  { path: '/rooms', element: withSuspense(<Layout><RoomsPage /></Layout>) },
+  { path: '/rooms/:id', element: withSuspense(<Layout><RoomDetailPage /></Layout>) },
   {
     path: '/front-desk',
-    element: (
+    element: withSuspense(
       <ProtectedRoute allowedRoles={['reception', 'admin', 'manager']}>
         <Layout><FrontDeskPage /></Layout>
       </ProtectedRoute>
@@ -28,7 +40,7 @@ export const router = createBrowserRouter([
   },
   {
     path: '/room-board',
-    element: (
+    element: withSuspense(
       <ProtectedRoute allowedRoles={['reception', 'admin', 'manager']}>
         <Layout><RoomBoardPage /></Layout>
       </ProtectedRoute>
@@ -36,7 +48,7 @@ export const router = createBrowserRouter([
   },
   {
     path: '/housekeeping',
-    element: (
+    element: withSuspense(
       <ProtectedRoute allowedRoles={['housekeeping', 'admin', 'manager']}>
         <Layout><HousekeepingPage /></Layout>
       </ProtectedRoute>
@@ -44,7 +56,7 @@ export const router = createBrowserRouter([
   },
   {
     path: '/maintenance',
-    element: (
+    element: withSuspense(
       <ProtectedRoute allowedRoles={['maintenance', 'admin', 'manager']}>
         <Layout><MaintenancePage /></Layout>
       </ProtectedRoute>
@@ -52,7 +64,7 @@ export const router = createBrowserRouter([
   },
   {
     path: '/dashboard',
-    element: (
+    element: withSuspense(
       <ProtectedRoute allowedRoles={['admin', 'manager']}>
         <Layout><DashboardPage /></Layout>
       </ProtectedRoute>
@@ -60,7 +72,7 @@ export const router = createBrowserRouter([
   },
   {
     path: '/admin',
-    element: (
+    element: withSuspense(
       <ProtectedRoute allowedRoles={['admin', 'manager']}>
         <Layout><AdminPage /></Layout>
       </ProtectedRoute>
@@ -68,7 +80,7 @@ export const router = createBrowserRouter([
   },
   {
     path: '/profile',
-    element: (
+    element: withSuspense(
       <ProtectedRoute>
         <Layout><ProfilePage /></Layout>
       </ProtectedRoute>

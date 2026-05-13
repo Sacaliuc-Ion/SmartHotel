@@ -119,7 +119,13 @@ export const RoomDetailPage = () => {
       <div className="grid gap-3 lg:grid-cols-[0.95fr_1.05fr]">
         <div className="flex flex-col gap-3">
           <div className="relative h-56 rounded-lg overflow-hidden border border-gray-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900 lg:h-64">
-            <img src={roomImages[room.type]} alt={`Room ${room.number}`} className="w-full h-full object-cover" />
+            <img
+              src={roomImages[room.type]}
+              alt={`Room ${room.number}`}
+              loading="lazy"
+              decoding="async"
+              className="w-full h-full object-cover"
+            />
           </div>
           <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
             <div className="space-y-1.5 text-left">
