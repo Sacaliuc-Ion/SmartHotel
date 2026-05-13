@@ -56,7 +56,7 @@ public class ReservationService : IReservationService
         if (!validation.Success)
             return ServiceResult<ReservationDto>.Fail(validation.Message);
 
-        var reservation = new Reservation
+        var reservation = new ReservationData
         {
             UserId = userId,
             RoomId = request.RoomId,
@@ -71,7 +71,7 @@ public class ReservationService : IReservationService
         _db.Context.Reservations.Add(reservation);
         await _db.SaveChangesAsync();
 
-        _db.Context.UserNotifications.Add(new UserNotification
+        _db.Context.UserNotifications.Add(new UserNotificationData
         {
             UserId = userId,
             ReservationId = reservation.Id,
@@ -193,7 +193,7 @@ public class ReservationService : IReservationService
         await _db.SaveChangesAsync();
         await RoomStatusSyncHelper.SyncAsync(_db.Context, res.RoomId);
 
-        _db.Context.UserNotifications.Add(new UserNotification
+        _db.Context.UserNotifications.Add(new UserNotificationData
         {
             UserId = res.UserId,
             ReservationId = res.Id,
@@ -227,7 +227,7 @@ public class ReservationService : IReservationService
         if (reservation.Review != null)
             return ServiceResult<RoomReviewDto>.Fail("A review already exists for this reservation.");
 
-        var review = new RoomReview
+        var review = new RoomReviewData
         {
             ReservationId = reservation.Id,
             RoomId = reservation.RoomId,
@@ -254,7 +254,7 @@ public class ReservationService : IReservationService
         });
     }
 
-    private static ReservationDto MapToDto(Reservation r) => new()
+    private static ReservationDto MapToDto(ReservationData r) => new()
     {
         Id = r.Id,
         GuestName = $"{r.User.FirstName} {r.User.LastName}",
@@ -270,7 +270,7 @@ public class ReservationService : IReservationService
         Review = r.Review == null ? null : MapToReviewDto(r.Review)
     };
 
-    private static RoomReviewDto MapToReviewDto(RoomReview review) => new()
+    private static RoomReviewDto MapToReviewDto(RoomReviewData review) => new()
     {
         Id = review.Id,
         Rating = review.Rating,
@@ -352,7 +352,7 @@ public class ReservationService : IReservationService
     }
 
     private async Task AddReservationUpdateNotificationAsync(
-        Reservation reservation,
+        ReservationData reservation,
         string newRoomNumber,
         string previousRoomNumber,
         ReservationStatus previousStatus,
@@ -375,7 +375,7 @@ public class ReservationService : IReservationService
                 $"Rezervarea pentru camera {newRoomNumber} a fost actualizata pentru perioada {reservation.CheckInDate:yyyy-MM-dd} - {reservation.CheckOutDate:yyyy-MM-dd}."
         };
 
-        _db.Context.UserNotifications.Add(new UserNotification
+        _db.Context.UserNotifications.Add(new UserNotificationData
         {
             UserId = reservation.UserId,
             ReservationId = reservation.Id,
@@ -391,7 +391,7 @@ public class ReservationService : IReservationService
                     user.IsActive &&
                     user.Id != actorUserId &&
                     StaffRoles.Contains(user.Role.Name))
-                .Select(user => new UserNotification
+                .Select(user => new UserNotificationData
                 {
                     UserId = user.Id,
                     ReservationId = reservation.Id,
@@ -416,12 +416,12 @@ public class ReservationService : IReservationService
     {
         public bool Success { get; private init; }
         public string Message { get; private init; } = string.Empty;
-        public Room Room { get; private init; } = null!;
+        public RoomData Room { get; private init; } = null!;
         public DateOnly CheckInDate { get; private init; }
         public DateOnly CheckOutDate { get; private init; }
         public int Nights { get; private init; }
 
-        public static ReservationValidationResult Ok(Room room, DateOnly checkInDate, DateOnly checkOutDate, int nights) => new()
+        public static ReservationValidationResult Ok(RoomData room, DateOnly checkInDate, DateOnly checkOutDate, int nights) => new()
         {
             Success = true,
             Room = room,
