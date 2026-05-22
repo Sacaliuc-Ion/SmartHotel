@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { useHotel } from '../context/HotelContext';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Input } from '../components/ui/input';
-import { ArrowLeft, Users, Wifi, Tv, Wind, Coffee, Bath, Armchair, MapPin } from 'lucide-react';
+import { ArrowLeft, CalendarDays, ChevronLeft, ChevronRight, Users, Wifi, Tv, Wind, Coffee, Bath, Armchair, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
 import Single from '../assets/rooms/Single.jpg';
 import Double from '../assets/rooms/Double.jpg';
@@ -26,10 +26,176 @@ const amenityIcons: Record<string, React.ElementType> = {
   'WiFi': Wifi, 'TV': Tv, 'AC': Wind, 'Mini Bar': Coffee, 'Jacuzzi': Bath, 'Balcony': Armchair,
 };
 
+const DAY_IN_MS = 24 * 60 * 60 * 1000;
+const MAX_CHECKOUT_SEARCH_DAYS = 365;
+
+const toDateKey = (date: Date) => {
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, '0');
+  const day = `${date.getDate()}`.padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const fromDateKey = (value: string) => {
+  const [year, month, day] = value.split('-').map(Number);
+  return new Date(year, month - 1, day, 12, 0, 0, 0);
+};
+
+const addDays = (date: Date, days: number) => {
+  const next = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12, 0, 0, 0);
+  next.setDate(next.getDate() + days);
+  return next;
+};
+
+const startOfMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth(), 1, 12, 0, 0, 0);
+
+const isSameDay = (left: Date, right: Date) => toDateKey(left) === toDateKey(right);
+
+const buildCalendarDays = (month: Date) => {
+  const first = startOfMonth(month);
+  const start = addDays(first, -((first.getDay() + 6) % 7));
+  return Array.from({ length: 42 }, (_, index) => addDays(start, index));
+};
+
+type BookingCalendarProps = {
+  label: string;
+  value: string;
+  onSelect: (value: string) => void;
+  month: Date;
+  onMonthChange: (month: Date) => void;
+  minDate: string;
+  isDateDisabled: (dateKey: string) => boolean;
+  isDateReserved: (dateKey: string) => boolean;
+  formatDisplayDate: (value: string) => string;
+  locale: string;
+  isOpen: boolean;
+  onToggle: () => void;
+  onClose: () => void;
+  highlightedDateKey?: string | null;
+};
+
+const BookingCalendar = ({
+  label,
+  value,
+  onSelect,
+  month,
+  onMonthChange,
+  minDate,
+  isDateDisabled,
+  isDateReserved,
+  formatDisplayDate,
+  locale,
+  isOpen,
+  onToggle,
+  onClose,
+  highlightedDateKey,
+}: BookingCalendarProps) => {
+  const calendarRef = useRef<HTMLDivElement | null>(null);
+  const monthDays = buildCalendarDays(month);
+  const selectedDate = fromDateKey(value);
+  const minDateValue = fromDateKey(minDate);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!calendarRef.current?.contains(event.target as Node)) {
+        onClose();
+      }
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    return () => document.removeEventListener('mousedown', handlePointerDown);
+  }, [isOpen, onClose]);
+
+  return (
+    <div ref={calendarRef} className="relative">
+      <div>
+        <div>
+          <label className="mb-1 block text-xs text-gray-600 dark:text-slate-300">{label}</label>
+          <button
+            type="button"
+            onClick={onToggle}
+            className="flex w-full items-center justify-between gap-2 rounded-md border bg-white px-3 py-2 text-sm font-medium text-gray-800 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+          >
+            <span className="flex items-center gap-2">
+            <CalendarDays className="h-4 w-4 text-amber-600" />
+            <span>{formatDisplayDate(value)}</span>
+            </span>
+            <CalendarDays className="h-4 w-4 text-gray-400" />
+          </button>
+        </div>
+      </div>
+
+      {isOpen && (
+        <div className="absolute left-0 top-[calc(100%+0.5rem)] z-20 w-full rounded-lg border border-slate-200 bg-slate-50 p-3 shadow-lg dark:border-slate-700 dark:bg-slate-950">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div className="text-sm font-semibold text-gray-800 dark:text-slate-100">
+              {month.toLocaleDateString(locale, { month: 'long', year: 'numeric' })}
+            </div>
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" size="icon" onClick={() => onMonthChange(addDays(startOfMonth(month), -1))}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button type="button" variant="outline" size="icon" onClick={() => onMonthChange(addDays(startOfMonth(month), 32))}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-7 gap-1 text-center text-[11px] uppercase tracking-[0.12em] text-gray-500 dark:text-slate-400">
+            {Array.from({ length: 7 }, (_, index) => {
+              const day = addDays(new Date(2026, 0, 5, 12, 0, 0, 0), index);
+              return <div key={index} className="py-1">{day.toLocaleDateString(locale, { weekday: 'short' })}</div>;
+            })}
+          </div>
+
+          <div className="grid grid-cols-7 gap-1">
+            {monthDays.map((day) => {
+              const dayKey = toDateKey(day);
+              const outsideMonth = day.getMonth() !== month.getMonth();
+              const isReserved = isDateReserved(dayKey);
+              const disabled = day < minDateValue || isDateDisabled(dayKey);
+              const selected = isSameDay(day, selectedDate);
+              const isHighlighted = highlightedDateKey === dayKey;
+
+              return (
+                <button
+                  key={dayKey}
+                  type="button"
+                  onClick={() => {
+                    if (!disabled) {
+                      onSelect(dayKey);
+                      onClose();
+                    }
+                  }}
+                  disabled={disabled}
+                  className={`h-10 rounded-md border text-sm transition ${
+                    selected
+                      ? 'border-amber-500 bg-amber-500 text-white'
+                      : isReserved
+                        ? 'border-red-200 bg-red-100 text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200'
+                        : isHighlighted
+                          ? 'border-amber-400 bg-amber-100 text-amber-800 dark:border-amber-600 dark:bg-amber-950/40 dark:text-amber-200'
+                        : outsideMonth
+                          ? 'border-transparent bg-transparent text-gray-400 dark:text-slate-600'
+                          : 'border-slate-200 bg-white text-gray-700 hover:border-amber-300 hover:bg-amber-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-amber-700 dark:hover:bg-amber-950/30'
+                  } ${disabled && !selected ? 'cursor-not-allowed opacity-50' : ''}`}
+                >
+                  {day.getDate()}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 export const RoomDetailPage = () => {
   const { id } = useParams<{ id: string }>();
-  const { rooms, addBooking } = useHotel();
+  const { rooms, bookings, addBooking } = useHotel();
   const { isAuthenticated } = useAuth();
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
@@ -44,10 +210,72 @@ export const RoomDetailPage = () => {
   const [checkOut, setCheckOut] = useState(tomorrow);
   const [guests, setGuests] = useState('1');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [checkInMonth, setCheckInMonth] = useState(() => fromDateKey(today));
+  const [checkOutMonth, setCheckOutMonth] = useState(() => fromDateKey(tomorrow));
+  const [openCalendar, setOpenCalendar] = useState<'checkIn' | 'checkOut' | null>(null);
   const availabilityState = room ? getRoomAvailabilityState(room) : 'unavailable';
+  const roomReservations = useMemo(
+    () => bookings
+      .filter((booking) =>
+        String(booking.roomId) === String(room?.id)
+        && !['cancelled', 'checked-out', 'no-show'].includes(booking.status)
+      )
+      .sort((left, right) => left.checkIn.localeCompare(right.checkIn)),
+    [bookings, room?.id]
+  );
   const canBookRoom = availabilityState !== 'unavailable';
   const firstBookableDate = room?.nextAvailableDate || today;
   const isFutureOnlyBooking = Boolean(room?.nextAvailableDate);
+  const selectedOverlap = useMemo(
+    () => roomReservations.find((booking) => booking.checkIn < checkOut && checkIn < booking.checkOut),
+    [roomReservations, checkIn, checkOut]
+  );
+  const canBookSelection = !selectedOverlap;
+  const formatBookingDate = (value: string) => new Intl.DateTimeFormat(i18n.language, { dateStyle: 'medium' }).format(new Date(value));
+  const reservedDateKeys = useMemo(() => {
+    const keys = new Set<string>();
+    roomReservations.forEach((booking) => {
+      const start = fromDateKey(booking.checkIn);
+      const end = fromDateKey(booking.checkOut);
+
+      for (let cursor = start; cursor < end; cursor = addDays(cursor, 1)) {
+        keys.add(toDateKey(cursor));
+      }
+    });
+
+    return keys;
+  }, [roomReservations]);
+
+  const isCheckInDisabled = (dateKey: string) => reservedDateKeys.has(dateKey);
+  const isReservedDate = (dateKey: string) => reservedDateKeys.has(dateKey);
+  const isCheckOutReservedForCheckIn = (dateKey: string, checkInDate: string) =>
+    roomReservations.some((booking) => booking.checkIn < dateKey && checkInDate < booking.checkOut);
+  const isCheckOutReserved = (dateKey: string) => isCheckOutReservedForCheckIn(dateKey, checkIn);
+  const nextReservationStart = useMemo(
+    () => roomReservations.find((booking) => booking.checkIn > checkIn)?.checkIn ?? null,
+    [roomReservations, checkIn]
+  );
+  const isCheckOutDisabled = (dateKey: string) => {
+    if (dateKey <= checkIn) {
+      return true;
+    }
+
+    return isCheckOutReserved(dateKey);
+  };
+  const getNextValidCheckOut = (checkInDate: string) => {
+    let candidate = addDays(fromDateKey(checkInDate), 1);
+
+    for (let index = 0; index < MAX_CHECKOUT_SEARCH_DAYS; index += 1) {
+      const candidateKey = toDateKey(candidate);
+      if (!isCheckOutReservedForCheckIn(candidateKey, checkInDate)) {
+        return candidateKey;
+      }
+
+      candidate = addDays(candidate, 1);
+    }
+
+    return null;
+  };
 
   useEffect(() => {
     if (!room?.nextAvailableDate) return;
@@ -58,6 +286,8 @@ export const RoomDetailPage = () => {
 
     setCheckIn(nextAvailable);
     setCheckOut(defaultCheckOut.toISOString().split('T')[0]);
+    setCheckInMonth(fromDateKey(nextAvailable));
+    setCheckOutMonth(fromDateKey(defaultCheckOut.toISOString().split('T')[0]));
   }, [room?.id, room?.nextAvailableDate]);
 
   const handleBookNow = async () => {
@@ -76,6 +306,11 @@ export const RoomDetailPage = () => {
 
     if (checkOut <= checkIn) {
       toast.error(t('bookingInvalidDates'));
+      return;
+    }
+
+    if (selectedOverlap) {
+      toast.error(t('bookingDatesOccupied'));
       return;
     }
 
@@ -167,27 +402,72 @@ export const RoomDetailPage = () => {
           <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
             <h3 className="mb-2 text-base font-semibold text-gray-800 dark:text-slate-100">{t('reserveRoom')}</h3>
             <div className="grid gap-2 sm:grid-cols-2">
-              <div>
-                <label className="mb-1 block text-xs text-gray-600 dark:text-slate-300">{t('checkIn')}</label>
-                <Input
-                  type="date"
-                  value={checkIn}
-                  min={firstBookableDate}
-                  onChange={(e) => setCheckIn(e.target.value)}
-                  className={`booking-date-input cursor-pointer ${isFutureOnlyBooking ? 'booking-date-input-occupied' : ''}`}
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs text-gray-600 dark:text-slate-300">{t('checkOut')}</label>
-                <Input
-                  type="date"
-                  value={checkOut}
-                  min={checkIn || firstBookableDate}
-                  onChange={(e) => setCheckOut(e.target.value)}
-                  className={`booking-date-input cursor-pointer ${isFutureOnlyBooking ? 'booking-date-input-occupied' : ''}`}
-                />
-              </div>
+              <BookingCalendar
+                label={t('checkIn')}
+                value={checkIn}
+                onSelect={(value) => {
+                  setCheckIn(value);
+                  setCheckInMonth(fromDateKey(value));
+                  const nextValidCheckOut = getNextValidCheckOut(value);
+                  if (nextValidCheckOut && (checkOut <= value || isCheckOutReservedForCheckIn(checkOut, value))) {
+                    const safeCheckOut = nextValidCheckOut;
+                    setCheckOut(safeCheckOut);
+                    setCheckOutMonth(fromDateKey(safeCheckOut));
+                  }
+                }}
+                month={checkInMonth}
+                onMonthChange={setCheckInMonth}
+                minDate={firstBookableDate}
+                isDateDisabled={isCheckInDisabled}
+                isDateReserved={isReservedDate}
+                formatDisplayDate={formatBookingDate}
+                locale={i18n.language}
+                isOpen={openCalendar === 'checkIn'}
+                onToggle={() => setOpenCalendar((current) => current === 'checkIn' ? null : 'checkIn')}
+                onClose={() => setOpenCalendar(null)}
+              />
+              <BookingCalendar
+                label={t('checkOut')}
+                value={checkOut}
+                onSelect={(value) => {
+                  setCheckOut(value);
+                  setCheckOutMonth(fromDateKey(value));
+                }}
+                month={checkOutMonth}
+                onMonthChange={setCheckOutMonth}
+                minDate={checkIn}
+                isDateDisabled={isCheckOutDisabled}
+                isDateReserved={isCheckOutReserved}
+                formatDisplayDate={formatBookingDate}
+                locale={i18n.language}
+                isOpen={openCalendar === 'checkOut'}
+                onToggle={() => setOpenCalendar((current) => current === 'checkOut' ? null : 'checkOut')}
+                onClose={() => setOpenCalendar(null)}
+                highlightedDateKey={nextReservationStart}
+              />
             </div>
+            {roomReservations.length > 0 && (
+              <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-950/70">
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-gray-500 dark:text-slate-400">
+                  {t('reservedPeriods')}
+                </p>
+                <div className="mt-2 space-y-1 text-xs text-gray-600 dark:text-slate-300">
+                  {roomReservations.map((booking) => (
+                    <p key={booking.id}>
+                      {formatBookingDate(booking.checkIn)} - {formatBookingDate(booking.checkOut)} · {booking.guestName}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            )}
+            {selectedOverlap && (
+              <p className="mt-2 text-xs font-medium text-red-700 dark:text-red-300">
+                {t('bookingDatesOccupiedRange', {
+                  checkIn: formatBookingDate(selectedOverlap.checkIn),
+                  checkOut: formatBookingDate(selectedOverlap.checkOut),
+                })}
+              </p>
+            )}
             {isFutureOnlyBooking && (
               <p className="mt-2 text-xs font-medium text-amber-700 dark:text-amber-300">
                 {t('bookingStartsFromText', {
@@ -209,11 +489,13 @@ export const RoomDetailPage = () => {
             <Button
               size="lg"
               className="mt-3 w-full"
-              disabled={!canBookRoom || isSubmitting}
+              disabled={!canBookRoom || !canBookSelection || isSubmitting}
               onClick={handleBookNow}
             >
               {!canBookRoom
                 ? t('currentlyUnavailable')
+                : !canBookSelection
+                  ? t('bookingDatesOccupiedShort')
                 : isSubmitting
                   ? t('booking')
                   : t('bookNow')}

@@ -36,6 +36,19 @@ const statusFlow: Record<string, string | null> = {
   'available': null,'occupied': null,'out-of-order': null, 'outoforder': null
 };
 
+const housekeepingStatusOrder: Record<string, number> = {
+  'dirty': 0,
+  'cleaning': 1,
+  'clean': 2,
+  'ready': 3,
+  'inspected': 4,
+  'available': 5,
+  'occupied': 6,
+  'out-of-order': 7,
+  'outoforder': 7,
+  'out-of-service': 8,
+};
+
 export const HousekeepingPage = () => {
   const { rooms, updateRoomStatus, bookings } = useHotel();
   const { t } = useTranslation();
@@ -46,7 +59,20 @@ export const HousekeepingPage = () => {
 
   const today = new Date().toISOString().split('T')[0];
   const todaysArrivals = bookings.filter((b) => b.checkIn === today && b.status === 'confirmed');
-  const filteredRooms = rooms.filter((r) => filterStatus === 'all' || r.status.toLowerCase() === filterStatus.toLowerCase());
+  const filteredRooms = rooms
+    .filter((r) => filterStatus === 'all' || r.status.toLowerCase() === filterStatus.toLowerCase())
+    .sort((left, right) => {
+      const leftStatus = left.status.toLowerCase();
+      const rightStatus = right.status.toLowerCase();
+      const leftOrder = housekeepingStatusOrder[leftStatus] ?? 99;
+      const rightOrder = housekeepingStatusOrder[rightStatus] ?? 99;
+
+      if (leftOrder !== rightOrder) {
+        return leftOrder - rightOrder;
+      }
+
+      return left.number.localeCompare(right.number, undefined, { numeric: true });
+    });
 
   const handleStatusChange = (roomId: string | number, current: string) => {
     const next = statusFlow[current.toLowerCase()];

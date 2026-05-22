@@ -1,13 +1,146 @@
 import { useAuth } from '../../context/AuthContext';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '../../services/api';
 import { Bell, LogOut, Hotel, Menu, X } from 'lucide-react';
-import { useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 import { Link } from 'react-router-dom';
 import { PreferencesControls } from './PreferencesControls';
 import { useTranslation } from 'react-i18next';
+import { useHotel } from '../../context/HotelContext';
 
 interface TopbarProps { onToggleSidebar?: () => void; sidebarOpen?: boolean; }
+
+interface OperationalAlertItem {
+  id: string;
+  title: string;
+  message: string;
+  targetPath: string;
+  isRead: false;
+}
+
+const extractRoomNumber = (value: string) =>
+  value.match(/(?:camera|room)\s+([A-Za-z0-9-]+)/i)?.[1];
+
+const extractDateRange = (value: string) =>
+  value.match(/(\d{4}-\d{2}-\d{2})\s*-\s*(\d{4}-\d{2}-\d{2})/);
+
+const extractTrailingDate = (value: string) =>
+  value.match(/(\d{4}-\d{2}-\d{2})/g)?.at(-1);
+
+const extractAfterLastColon = (value: string) => value.split(':').pop()?.trim();
+
+const localizeStoredNotification = (notification: any, t: any) => {
+  const title = notification.title || '';
+  const message = notification.message || '';
+  const room = extractRoomNumber(message) || extractRoomNumber(title) || '';
+  const dateRange = extractDateRange(message);
+  const singleDate = extractTrailingDate(message) || '';
+  const trailingText = message.match(/pentru\s+(.+?)\.$/i)?.[1]
+    || message.match(/oaspetelui\s+(.+?)\.$/i)?.[1]
+    || '';
+  const issue = extractAfterLastColon(message) || title;
+
+  switch (title) {
+    case 'Check-in confirmat':
+      return {
+        ...notification,
+        title: t('notification.checkInConfirmedTitle'),
+        message: t('notification.checkInConfirmedMessage', { room }),
+      };
+    case 'Rezervare confirmata':
+      return {
+        ...notification,
+        title: t('notification.reservationConfirmedTitle'),
+        message: t('notification.reservationConfirmedMessage', {
+          room,
+          checkIn: dateRange?.[1] || '',
+          checkOut: dateRange?.[2] || '',
+        }),
+      };
+    case 'Rezervare anulata':
+      return {
+        ...notification,
+        title: t('notification.reservationCancelledTitle'),
+        message: message.includes('echipa hotelului')
+          ? t('notification.reservationCancelledByHotelMessage', { room })
+          : t('notification.reservationCancelledMessage', { room }),
+      };
+    case 'Rezervare actualizata':
+      return {
+        ...notification,
+        title: t('notification.reservationUpdatedTitle'),
+        message: t('notification.reservationUpdatedMessage', {
+          room,
+          checkIn: dateRange?.[1] || '',
+          checkOut: dateRange?.[2] || '',
+        }),
+      };
+    case 'Rezervare marcata ca neprezentare':
+      return {
+        ...notification,
+        title: t('notification.noShowTitle'),
+        message: t('notification.noShowMessage', { room }),
+      };
+    case 'Ticket rezolvat':
+      return {
+        ...notification,
+        title: t('notification.ticketResolvedTitle'),
+        message: t('notification.ticketResolvedMessage', { room, issue }),
+      };
+    case 'Maintenance ticket nou':
+      return {
+        ...notification,
+        title: t('notification.maintenanceNewTitle'),
+        message: t('notification.maintenanceNewMessage', { room, issue }),
+      };
+    case 'Urgent maintenance ticket':
+      return {
+        ...notification,
+        title: t('notification.maintenanceUrgentTitle'),
+        message: t('notification.maintenanceUrgentMessage', { room, issue }),
+      };
+    case 'Housekeeping ticket nou':
+      return {
+        ...notification,
+        title: t('notification.housekeepingNewTitle'),
+        message: t('notification.housekeepingNewMessage', { room, issue }),
+      };
+    case 'Urgent housekeeping request':
+      return {
+        ...notification,
+        title: t('notification.housekeepingUrgentTitle'),
+        message: t('notification.housekeepingUrgentMessage', { room, issue }),
+      };
+    case 'Reminder check-in':
+      return {
+        ...notification,
+        title: t('notification.checkInReminderTitle'),
+        message: message.toLowerCase().includes('maine')
+          ? t('notification.checkInReminderTomorrowMessage', { room })
+          : t('notification.checkInReminderTodayMessage', { room }),
+      };
+    case 'Review pending':
+      return {
+        ...notification,
+        title: t('notification.reviewPendingTitle'),
+        message: t('notification.reviewPendingMessage', { room }),
+      };
+    case 'Checkout today':
+      return {
+        ...notification,
+        title: t('notification.checkoutTodayTitle'),
+        message: t('notification.checkoutTodayMessage', { room, guest: trailingText }),
+      };
+    case 'Room ready for check-in':
+      return {
+        ...notification,
+        title: t('notification.roomReadyTitle'),
+        message: t('notification.roomReadyMessage', { room, guest: trailingText }),
+      };
+    default:
+      return notification;
+  }
+};
 
 const getNotificationTarget = (notification: any) => {
   if (notification.targetPath) return notification.targetPath;
@@ -25,13 +158,61 @@ const getNotificationTarget = (notification: any) => {
 
 export const Topbar = ({ onToggleSidebar, sidebarOpen }: TopbarProps) => {
   const { user, logout } = useAuth();
+  const { bookings } = useHotel();
   const { t } = useTranslation();
+  const location = useLocation();
   const navigate = useNavigate();
   const handleLogout = () => { logout(); navigate('/'); };
+  const scrollMainContentToTop = () => {
+    const mainContent = document.querySelector('main');
+    if (mainContent instanceof HTMLElement) {
+      mainContent.scrollTo({ top: 0, behavior: 'smooth' });
+      return true;
+    }
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return false;
+  };
+  const handleHomeClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+
+    if (location.pathname === '/') {
+      scrollMainContentToTop();
+      return;
+    }
+
+    navigate('/', { state: { scrollToTop: true } });
+  };
   const [notifications, setNotifications] = useState<any[]>([]);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const notificationsRef = useRef<HTMLDivElement | null>(null);
   const unreadCount = notifications.filter((item) => !item.isRead).length;
+  const today = new Date();
+  const todayKey = `${today.getFullYear()}-${`${today.getMonth() + 1}`.padStart(2, '0')}-${`${today.getDate()}`.padStart(2, '0')}`;
+  const overdueCheckOuts = bookings.filter((booking) => booking.status === 'checked-in' && booking.checkOut < todayKey);
+  const overdueCheckIns = bookings.filter((booking) => booking.status === 'confirmed' && booking.checkIn < todayKey);
+  const operationalAlerts: OperationalAlertItem[] = [
+    ...overdueCheckOuts.map((booking) => ({
+      id: `operational-checkout-${booking.id}`,
+      title: t('overdueCheckOutNotificationTitle'),
+      message: t('overdueCheckOutNotificationMessage', { guest: booking.guestName, room: booking.roomNumber, date: booking.checkOut }),
+      targetPath: '/front-desk',
+      isRead: false as const,
+    })),
+    ...overdueCheckIns.map((booking) => ({
+      id: `operational-checkin-${booking.id}`,
+      title: t('overdueCheckInNotificationTitle'),
+      message: t('overdueCheckInNotificationMessage', { guest: booking.guestName, room: booking.roomNumber, date: booking.checkIn }),
+      targetPath: '/front-desk',
+      isRead: false as const,
+    })),
+  ];
+  const bellCount = unreadCount + operationalAlerts.length;
+  const localizedNotifications = useMemo(
+    () => notifications.map((notification) => localizeStoredNotification(notification, t)),
+    [notifications, t]
+  );
+  const combinedNotifications = [...operationalAlerts, ...localizedNotifications];
 
   const loadNotifications = async () => {
     if (!user) {
@@ -75,6 +256,12 @@ export const Topbar = ({ onToggleSidebar, sidebarOpen }: TopbarProps) => {
   }, [notificationsOpen]);
 
   const markRead = async (notification: any) => {
+    if (typeof notification.id === 'string' && notification.id.startsWith('operational-')) {
+      setNotificationsOpen(false);
+      navigate(notification.targetPath || '/front-desk');
+      return;
+    }
+
     if (!notification.isRead) {
       await api.patch(`/auth/notifications/${notification.id}/read`);
       setNotifications((prev) => {
@@ -118,7 +305,7 @@ export const Topbar = ({ onToggleSidebar, sidebarOpen }: TopbarProps) => {
           <div className="lb-logo-icon p-1.5 rounded-lg">
             <Hotel className="h-5 w-5 text-white" />
           </div>
-          <Link to="/">
+          <Link to="/" onClick={handleHomeClick}>
             <h1 className="text-xl font-semibold lb-topbar-title">Smart Hotel</h1>
           </Link>
         </div>
@@ -144,9 +331,9 @@ export const Topbar = ({ onToggleSidebar, sidebarOpen }: TopbarProps) => {
               aria-label={t('notifications')}
             >
               <Bell className="h-5 w-5" />
-              {unreadCount > 0 && (
+              {bellCount > 0 && (
                 <span className="absolute -right-1 -top-1 min-w-5 rounded-full bg-red-600 px-1.5 text-xs font-semibold text-white">
-                  {unreadCount}
+                  {bellCount}
                 </span>
               )}
             </button>
@@ -162,11 +349,11 @@ export const Topbar = ({ onToggleSidebar, sidebarOpen }: TopbarProps) => {
                     {t('markAllAsSeen')}
                   </button>
                 </div>
-                {notifications.length === 0 ? (
+                {combinedNotifications.length === 0 ? (
                   <p className="px-3 py-4 text-sm text-gray-500 dark:text-slate-400">{t('noNewNotifications')}</p>
                 ) : (
                   <div className="max-h-80 overflow-y-auto">
-                    {notifications.map((notification) => (
+                    {combinedNotifications.map((notification) => (
                       <button
                         key={notification.id}
                         onClick={() => markRead(notification)}

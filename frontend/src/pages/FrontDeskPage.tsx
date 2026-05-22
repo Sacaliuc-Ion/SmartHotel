@@ -8,7 +8,7 @@ import { CheckInOutModal } from '../components/reception/CheckInOutModal';
 import { ReservationEditModal } from '../components/reception/ReservationEditModal';
 import { Input } from '../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { ArrowDownToLine, ArrowUpFromLine, Bed, PencilLine, Search } from 'lucide-react';
+import { AlertTriangle, ArrowDownToLine, ArrowUpFromLine, Bed, PencilLine, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatCurrency } from '../utils/hotelFormatting';
 import { useTranslation } from 'react-i18next';
@@ -76,6 +76,12 @@ export const FrontDeskPage = () => {
   };
 
   const normalizedSearch = searchTerm.trim().toLowerCase();
+  const overdueCheckIns = bookings.filter(
+    (booking) => booking.status === 'confirmed' && booking.checkIn < todayKey
+  );
+  const overdueCheckouts = bookings.filter(
+    (booking) => booking.status === 'checked-in' && booking.checkOut < todayKey
+  );
   const operationalBookings = bookings
     .filter((booking) => booking.status !== 'checked-out' && booking.status !== 'cancelled')
     .filter((booking) => statusFilter === 'all' || booking.status === statusFilter)
@@ -87,7 +93,22 @@ export const FrontDeskPage = () => {
         String(booking.id).includes(normalizedSearch)
       );
     })
-    .sort((left, right) => `${left.checkIn}-${left.roomNumber}`.localeCompare(`${right.checkIn}-${right.roomNumber}`));
+    .sort((left, right) => {
+      const getPriority = (booking: Booking) => {
+        if (booking.status === 'checked-in' && booking.checkOut < todayKey) return 0;
+        if (booking.status === 'confirmed' && booking.checkIn < todayKey) return 1;
+        if (booking.status === 'confirmed') return 2;
+        if (booking.status === 'checked-in') return 3;
+        return 4;
+      };
+
+      const priorityDiff = getPriority(left) - getPriority(right);
+      if (priorityDiff !== 0) {
+        return priorityDiff;
+      }
+
+      return `${left.checkIn}-${left.roomNumber}`.localeCompare(`${right.checkIn}-${right.roomNumber}`);
+    });
 
   return (
     <div className="pb-8">
@@ -137,6 +158,30 @@ export const FrontDeskPage = () => {
         </Card>
       </div>
 
+      {overdueCheckouts.length > 0 && (
+        <div className="mx-4 mb-6 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-950/30">
+          <AlertTriangle className="mt-0.5 h-5 w-5 text-red-600 dark:text-red-300" />
+          <div>
+            <h2 className="font-semibold text-red-900 dark:text-red-200">{t('overdueCheckOutTitle')}</h2>
+            <p className="text-sm text-red-800 dark:text-red-300">
+              {t('overdueCheckOutDescription', { count: overdueCheckouts.length })}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {overdueCheckIns.length > 0 && (
+        <div className="mx-4 mb-6 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-950/30">
+          <AlertTriangle className="mt-0.5 h-5 w-5 text-amber-600 dark:text-amber-300" />
+          <div>
+            <h2 className="font-semibold text-amber-900 dark:text-amber-200">{t('overdueCheckInTitle')}</h2>
+            <p className="text-sm text-amber-800 dark:text-amber-300">
+              {t('overdueCheckInDescription', { count: overdueCheckIns.length })}
+            </p>
+          </div>
+        </div>
+      )}
+
       <Card className="mx-4 mt-6">
         <CardHeader>
           <CardTitle>{t('reservationManagementTitle')}</CardTitle>
@@ -175,13 +220,18 @@ export const FrontDeskPage = () => {
             <div className="grid gap-4 lg:grid-cols-2">
               {operationalBookings.map((booking) => {
                 const isTodayReservation = booking.checkIn === todayKey || booking.checkOut === todayKey;
+                const isOverdueCheckIn = booking.status === 'confirmed' && booking.checkIn < todayKey;
+                const isOverdueCheckOut = booking.status === 'checked-in' && booking.checkOut < todayKey;
                 const canEdit = booking.status !== 'cancelled';
                 const canCheckIn = booking.status === 'confirmed';
                 const canCheckOut = booking.status === 'checked-in';
                 const canRemove = booking.status !== 'checked-in' && !isTodayReservation;
 
                 return (
-                  <div key={booking.id} className="rounded-xl border p-4 dark:border-slate-700 dark:bg-slate-950/40">
+                  <div
+                    key={booking.id}
+                    className={`rounded-xl border p-4 dark:bg-slate-950/40 ${isOverdueCheckOut ? 'border-red-300 bg-red-50/60 dark:border-red-800 dark:bg-red-950/20' : isOverdueCheckIn ? 'border-amber-300 bg-amber-50/60 dark:border-amber-800 dark:bg-amber-950/20' : 'dark:border-slate-700'}`}
+                  >
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="text-xs uppercase tracking-[0.14em] text-amber-600 dark:text-amber-300">
@@ -194,6 +244,18 @@ export const FrontDeskPage = () => {
                       </div>
                       <Badge>{t(`status.${booking.status}`, { defaultValue: booking.status })}</Badge>
                     </div>
+
+                    {isOverdueCheckOut && (
+                      <div className="mt-4 rounded-lg border border-red-200 bg-red-100/80 p-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
+                        {t('overdueCheckOutCard', { date: booking.checkOut })}
+                      </div>
+                    )}
+
+                    {isOverdueCheckIn && (
+                      <div className="mt-4 rounded-lg border border-amber-200 bg-amber-100/80 p-3 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+                        {t('overdueCheckInCard', { date: booking.checkIn })}
+                      </div>
+                    )}
 
                     <div className="mt-4 grid gap-3 text-sm text-gray-600 dark:text-slate-300 md:grid-cols-3">
                       <div>

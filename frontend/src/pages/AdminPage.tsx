@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useHotel } from '../context/HotelContext';
 import { api } from '../services/api';
 import { toast } from 'sonner';
@@ -30,8 +30,10 @@ export const AdminPage = () => {
   const [settings, setSettings] = useState<any[]>([]);
   const [settingDrafts, setSettingDrafts] = useState<Record<string, string>>({});
   const [priceDrafts, setPriceDrafts] = useState<Record<string, string>>({});
+  const [dirtyRoomTypeDrafts, setDirtyRoomTypeDrafts] = useState<Record<string, boolean>>({});
   const [savingSetting, setSavingSetting] = useState<string | null>(null);
   const [savingRoomType, setSavingRoomType] = useState<string | null>(null);
+  const [savingAllRoomTypes, setSavingAllRoomTypes] = useState(false);
   const [savingUserRoleId, setSavingUserRoleId] = useState<number | null>(null);
 
   useEffect(() => {
@@ -53,17 +55,31 @@ export const AdminPage = () => {
     }
   }, [activeTab, t]);
 
-  useEffect(() => {
-    const typePrices = Object.fromEntries(
+  const roomTypeBasePrices = useMemo(
+    () => Object.fromEntries(
       Object.entries(
         rooms.reduce((acc, room) => {
           if (!acc[room.type]) acc[room.type] = room.pricePerNight;
           return acc;
         }, {} as Record<string, number>)
       ).map(([type, price]) => [type, String(price)])
-    );
-    setPriceDrafts(typePrices);
-  }, [rooms]);
+    ),
+    [rooms]
+  );
+
+  useEffect(() => {
+    setPriceDrafts((prev) => {
+      const nextDrafts = { ...roomTypeBasePrices };
+
+      Object.entries(prev).forEach(([type, draft]) => {
+        if (dirtyRoomTypeDrafts[type]) {
+          nextDrafts[type] = draft;
+        }
+      });
+
+      return nextDrafts;
+    });
+  }, [roomTypeBasePrices, dirtyRoomTypeDrafts]);
 
   const toggleUserActive = async (userId: number) => {
     try {
@@ -180,12 +196,65 @@ export const AdminPage = () => {
     try {
       setSavingRoomType(roomType);
       await api.patch(`/rooms/types/${roomType}/price`, { pricePerNight });
+      setDirtyRoomTypeDrafts((prev) => ({ ...prev, [roomType]: false }));
+      setPriceDrafts((prev) => ({ ...prev, [roomType]: String(pricePerNight) }));
       toast.success(t('roomPriceUpdated'));
       await refreshData();
     } catch (e: any) {
       toast.error(e.message || t('roomPriceUpdateError'));
     } finally {
       setSavingRoomType(null);
+    }
+  };
+
+  const saveAllRoomTypePrices = async () => {
+    const changedRoomTypes = Object.keys(roomTypeStats).filter((type) => {
+      const draft = priceDrafts[type] ?? roomTypeBasePrices[type];
+      return dirtyRoomTypeDrafts[type] && String(draft) !== String(roomTypeBasePrices[type]);
+    });
+
+    if (changedRoomTypes.length === 0) {
+      return;
+    }
+
+    for (const roomType of changedRoomTypes) {
+      const pricePerNight = Number(priceDrafts[roomType]);
+      if (!Number.isFinite(pricePerNight) || pricePerNight <= 0) {
+        toast.error(t('roomPriceInvalid'));
+        return;
+      }
+    }
+
+    try {
+      setSavingAllRoomTypes(true);
+      await Promise.all(
+        changedRoomTypes.map((roomType) =>
+          api.patch(`/rooms/types/${roomType}/price`, { pricePerNight: Number(priceDrafts[roomType]) })
+        )
+      );
+
+      setDirtyRoomTypeDrafts((prev) => {
+        const next = { ...prev };
+        changedRoomTypes.forEach((roomType) => {
+          next[roomType] = false;
+        });
+        return next;
+      });
+
+      setPriceDrafts((prev) => {
+        const next = { ...prev };
+        changedRoomTypes.forEach((roomType) => {
+          next[roomType] = String(Number(prev[roomType]));
+        });
+        return next;
+      });
+
+      toast.success(t('roomPricesUpdatedAll'));
+      await refreshData();
+    } catch (e: any) {
+      toast.error(e.message || t('roomPriceUpdateError'));
+    } finally {
+      setSavingAllRoomTypes(false);
     }
   };
 
@@ -354,11 +423,28 @@ export const AdminPage = () => {
             <Card>
               <CardHeader><CardTitle>{t('roomTypeRates')}</CardTitle><CardDescription>{t('roomTypeRatesDescription')}</CardDescription></CardHeader>
               <CardContent className="space-y-4">
+                <div className="flex justify-end">
+                  <Button
+                    variant="default"
+                    onClick={saveAllRoomTypePrices}
+                    disabled={
+                      savingAllRoomTypes ||
+                      Object.keys(roomTypeStats).every((type) => {
+                        const draft = priceDrafts[type] ?? roomTypeBasePrices[type];
+                        return !dirtyRoomTypeDrafts[type] || String(draft) === String(roomTypeBasePrices[type]);
+                      })
+                    }
+                  >
+                    {savingAllRoomTypes ? t('saving') : t('saveAll')}
+                  </Button>
+                </div>
                 {Object.entries(roomTypeStats).map(([type]) => {
                   const prices = rooms.filter((room) => room.type === type).map((room) => room.pricePerNight);
                   const min = Math.min(...prices);
                   const max = Math.max(...prices);
+                  const basePrice = roomTypeBasePrices[type] ?? String(min);
                   const currentPrice = min === max ? min : Number(priceDrafts[type] || min);
+                  const draftValue = priceDrafts[type] ?? basePrice;
                   return (
                   <div key={type} className="grid gap-3 rounded-lg border p-3 md:grid-cols-[1fr_220px_auto] md:items-center">
                     <div>
@@ -371,17 +457,21 @@ export const AdminPage = () => {
                           type="number"
                           min="1"
                           step="1"
-                          value={priceDrafts[type] ?? currentPrice}
-                          onChange={(event) => setPriceDrafts((prev) => ({ ...prev, [type]: event.target.value }))}
+                          value={draftValue}
+                          onChange={(event) => {
+                            const value = event.target.value;
+                            setPriceDrafts((prev) => ({ ...prev, [type]: value }));
+                            setDirtyRoomTypeDrafts((prev) => ({ ...prev, [type]: value !== String(basePrice) }));
+                          }}
                         />
                         <span className="text-xs text-muted-foreground">{currency}</span>
                       </div>
-                      <p className="mt-1 text-xs text-muted-foreground">{formatCurrency(Number(priceDrafts[type] || currentPrice), currency)}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">{formatCurrency(Number(draftValue || currentPrice), currency)}</p>
                     </div>
                     <Button
                       variant="outline"
                       onClick={() => saveRoomTypePrice(type)}
-                      disabled={savingRoomType === type || String(priceDrafts[type] ?? currentPrice) === String(currentPrice)}
+                      disabled={savingAllRoomTypes || savingRoomType === type || String(draftValue) === String(basePrice)}
                     >
                       {savingRoomType === type ? t('saving') : t('save')}
                     </Button>

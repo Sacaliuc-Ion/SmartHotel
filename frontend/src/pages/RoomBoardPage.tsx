@@ -8,6 +8,8 @@ import { useTranslation } from 'react-i18next';
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 
+const toCalendarDate = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12, 0, 0, 0);
+
 const toDateKey = (date: Date) => {
   const year = date.getFullYear();
   const month = `${date.getMonth() + 1}`.padStart(2, '0');
@@ -21,15 +23,15 @@ const fromDateKey = (value: string) => {
 };
 
 const addDays = (date: Date, days: number) => {
-  const next = new Date(date);
+  const next = toCalendarDate(date);
   next.setDate(next.getDate() + days);
-  return next;
+  return toCalendarDate(next);
 };
 
 const diffDays = (start: Date, end: Date) => Math.floor((end.getTime() - start.getTime()) / DAY_IN_MS);
 
 export const RoomBoardPage = () => {
-  const [startDate, setStartDate] = useState(new Date());
+  const [startDate, setStartDate] = useState(() => toCalendarDate(new Date()));
   const [visibleDays, setVisibleDays] = useState(14);
   const [searchTerm, setSearchTerm] = useState('');
   const [roomTypeFilter, setRoomTypeFilter] = useState('all');
@@ -40,7 +42,8 @@ export const RoomBoardPage = () => {
   const normalizedSearch = searchTerm.trim().toLowerCase();
   const days = Array.from({ length: visibleDays }, (_, index) => addDays(startDate, index));
   const rangeEnd = addDays(startDate, visibleDays);
-  const todayKey = toDateKey(new Date());
+  const today = toCalendarDate(new Date());
+  const todayKey = toDateKey(today);
   const roomTypes = Array.from(new Set(rooms.map((room) => room.type))).sort();
   const floors = Array.from(new Set(rooms.map((room) => room.floor))).sort((left, right) => left - right);
 
@@ -159,7 +162,7 @@ export const RoomBoardPage = () => {
             <Input
               type="date"
               value={toDateKey(startDate)}
-              onChange={(event) => setStartDate(fromDateKey(event.target.value))}
+              onChange={(event) => setStartDate(toCalendarDate(fromDateKey(event.target.value)))}
             />
           </div>
 
@@ -179,7 +182,7 @@ export const RoomBoardPage = () => {
             <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-slate-200">{t('today')}</label>
             <div className="flex gap-2">
               <Button variant="outline" onClick={() => navigate('prev')}><ChevronLeft className="h-4 w-4" /></Button>
-              <Button variant="outline" className="flex-1" onClick={() => setStartDate(new Date())}>{t('today')}</Button>
+              <Button variant="outline" className="flex-1" onClick={() => setStartDate(today)}>{t('today')}</Button>
               <Button variant="outline" onClick={() => navigate('next')}><ChevronRight className="h-4 w-4" /></Button>
             </div>
           </div>
@@ -232,7 +235,14 @@ export const RoomBoardPage = () => {
             const roomReservations = bookings
               .filter((booking) => String(booking.roomId) === String(room.id))
               .map((booking) => ({ booking, segment: getSegment(booking) }))
-              .filter((item) => item.segment !== null);
+              .filter((item) => item.segment !== null)
+              .sort((left, right) => {
+                if (left.segment!.startIndex !== right.segment!.startIndex) {
+                  return left.segment!.startIndex - right.segment!.startIndex;
+                }
+
+                return right.segment!.span - left.segment!.span;
+              });
 
             const rowHeight = Math.max(88, roomReservations.length * 54 + 18);
             const isOutOfOrder = room.status === 'out-of-order' || room.status === 'out-of-service';
@@ -284,10 +294,11 @@ export const RoomBoardPage = () => {
                       </div>
                     ) : (
                       <div
-                        className="pointer-events-none absolute inset-0 grid gap-2 p-2.5"
+                        className="pointer-events-none absolute inset-0 grid gap-1"
                         style={{
                           gridTemplateColumns: `repeat(${visibleDays}, minmax(72px, 1fr))`,
-                          gridTemplateRows: `repeat(${Math.max(roomReservations.length, 1)}, 42px)`,
+                          gridTemplateRows: `repeat(${Math.max(roomReservations.length, 1)}, minmax(0, 1fr))`,
+                          height: rowHeight,
                         }}
                       >
                       {roomReservations.map(({ booking, segment }, index) => {
@@ -301,23 +312,21 @@ export const RoomBoardPage = () => {
                           return (
                             <div
                               key={`${booking.id}-${index}`}
-                              className="min-w-0"
+                              className={`flex min-w-0 h-full items-center overflow-hidden ${tone} ${isCompactSegment ? 'rounded-sm px-2 py-1.5' : 'rounded-md px-2.5 py-2'}`}
                               style={{
                                 gridColumn: `${segment!.startIndex + 1} / span ${segment!.span}`,
                                 gridRow: `${index + 1}`,
                               }}
                             >
-                              <div className={`flex h-full min-w-0 items-start justify-between gap-2 overflow-hidden rounded-md shadow-sm ${tone} ${isCompactSegment ? 'mr-1 ml-0 my-0.5 px-2 py-1.5' : 'mr-1 ml-0 my-0.5 px-2.5 py-2'}`}>
-                                <div className="min-w-0 w-full">
-                                  <div className={`truncate ${isCompactSegment ? 'text-[9px]' : 'text-[10px]'} font-semibold leading-tight`}>
-                                    {booking.guestName}
-                                  </div>
-                                  <div className={`mt-1 truncate ${isCompactSegment ? 'text-[7px]' : 'text-[8px]'} font-medium uppercase tracking-[0.06em] text-white/85`}>
-                                    {t(`status.${booking.status}`, { defaultValue: booking.status })}
-                                  </div>
+                              <div className="min-w-0 w-full text-center">
+                                <div className={`truncate ${isCompactSegment ? 'text-[9px]' : 'text-[10px]'} font-semibold leading-tight`}>
+                                  {booking.guestName}
+                                </div>
+                                <div className={`mt-1 truncate ${isCompactSegment ? 'text-[7px]' : 'text-[8px]'} font-medium uppercase tracking-[0.06em] text-white/85`}>
+                                  {t(`status.${booking.status}`, { defaultValue: booking.status })}
                                 </div>
                                 {segment!.span > 2 && (
-                                  <div className="shrink-0 rounded-full bg-black/15 px-2 py-1 text-[8px] font-medium uppercase tracking-[0.06em] text-white/95">
+                                  <div className="mt-1 truncate text-[8px] font-medium uppercase tracking-[0.06em] text-white/85">
                                     #{booking.id}
                                   </div>
                                 )}

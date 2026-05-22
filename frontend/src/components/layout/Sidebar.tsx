@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { Home, DoorOpen, Calendar, Sparkles, Wrench, Settings, BarChart3, Building, UserCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useNotifications } from '../../context/NotificationsContext';
+import { useHotel } from '../../context/HotelContext';
 
 interface NavItem { labelKey: string; path: string; icon: React.ElementType; roles: string[]; }
 
@@ -22,6 +23,7 @@ const navItems: NavItem[] = [
 export const Sidebar = ({ isOpen = true }: { isOpen?: boolean }) => {
   const { user } = useAuth();
   const { notifications } = useNotifications();
+  const { bookings } = useHotel();
   const { t } = useTranslation();
   const filtered = navItems.filter((item) =>
     user ? item.roles.includes(user.role) : item.roles.includes('client')
@@ -29,13 +31,19 @@ export const Sidebar = ({ isOpen = true }: { isOpen?: boolean }) => {
 
   const notificationCounts = useMemo(() => {
     const unread = notifications.filter((item) => !item.isRead);
+    const today = new Date();
+    const todayKey = `${today.getFullYear()}-${`${today.getMonth() + 1}`.padStart(2, '0')}-${`${today.getDate()}`.padStart(2, '0')}`;
+    const overdueFrontDeskActions = bookings.filter((booking) =>
+      (booking.status === 'checked-in' && booking.checkOut < todayKey)
+      || (booking.status === 'confirmed' && booking.checkIn < todayKey)
+    ).length;
 
     return {
-      frontDesk: unread.filter((item) => item.category === 'front-desk').length,
+      frontDesk: unread.filter((item) => item.category === 'front-desk').length + overdueFrontDeskActions,
       maintenance: unread.filter((item) => item.category === 'maintenance').length,
       housekeeping: unread.filter((item) => item.category === 'housekeeping').length,
     };
-  }, [notifications]);
+  }, [notifications, bookings]);
 
   return (
     <div
