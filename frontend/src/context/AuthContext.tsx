@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { UserRole } from '../data/mockData';
+import type { UserRole } from '../types/auth';
 
 export interface User { id: number; name: string; email: string; role: UserRole; isActive?: boolean; avatarUrl?: string | null; }
 
