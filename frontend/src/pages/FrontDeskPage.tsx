@@ -87,7 +87,20 @@ export const FrontDeskPage = () => {
         String(booking.id).includes(normalizedSearch)
       );
     })
-    .sort((left, right) => `${left.checkIn}-${left.roomNumber}`.localeCompare(`${right.checkIn}-${right.roomNumber}`));
+    .sort((left, right) => {
+      const getPriority = (booking: Booking) => {
+        if (booking.status === 'confirmed') return 0;
+        if (booking.status === 'checked-in') return 1;
+        return 2;
+      };
+
+      const priorityDiff = getPriority(left) - getPriority(right);
+      if (priorityDiff !== 0) {
+        return priorityDiff;
+      }
+
+      return `${left.checkIn}-${left.roomNumber}`.localeCompare(`${right.checkIn}-${right.roomNumber}`);
+    });
 
   return (
     <div className="pb-8">
