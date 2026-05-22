@@ -278,7 +278,7 @@
   "markResolved": "Marcheaza rezolvata",
   "noRoomsMatch": "Nicio camera nu corespunde filtrului selectat",
   "dashboardTitle": "Dashboard",
-  "dashboardSubtitle": "Privire generala asupra operatiunilor si indicatorilor hotelului prin API",
+  "dashboardSubtitle": "Privire generala asupra operatiunilor, ocuparii si performantei hotelului.",
   "occupancyRate": "Grad de ocupare",
   "totalRevenue": "Venit total",
   "thisPeriod": "Aceasta perioada",

@@ -278,7 +278,7 @@
   "markResolved": "Отметить как решено",
   "noRoomsMatch": "Нет номеров для выбранного фильтра",
   "dashboardTitle": "Дашборд",
-  "dashboardSubtitle": "Обзор операций и метрик отеля через API",
+  "dashboardSubtitle": "Обзор операций, заполняемости и эффективности отеля.",
   "occupancyRate": "Загрузка",
   "totalRevenue": "Общий доход",
   "thisPeriod": "Этот период",

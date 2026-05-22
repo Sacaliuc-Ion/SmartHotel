@@ -2,7 +2,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '../../services/api';
 import { Bell, LogOut, Hotel, Menu, X } from 'lucide-react';
-import { useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 import { Link } from 'react-router-dom';
 import { PreferencesControls } from './PreferencesControls';
 import { useTranslation } from 'react-i18next';
@@ -160,8 +160,29 @@ export const Topbar = ({ onToggleSidebar, sidebarOpen }: TopbarProps) => {
   const { user, logout } = useAuth();
   const { bookings } = useHotel();
   const { t } = useTranslation();
+  const location = useLocation();
   const navigate = useNavigate();
   const handleLogout = () => { logout(); navigate('/'); };
+  const scrollMainContentToTop = () => {
+    const mainContent = document.querySelector('main');
+    if (mainContent instanceof HTMLElement) {
+      mainContent.scrollTo({ top: 0, behavior: 'smooth' });
+      return true;
+    }
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return false;
+  };
+  const handleHomeClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+
+    if (location.pathname === '/') {
+      scrollMainContentToTop();
+      return;
+    }
+
+    navigate('/', { state: { scrollToTop: true } });
+  };
   const [notifications, setNotifications] = useState<any[]>([]);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const notificationsRef = useRef<HTMLDivElement | null>(null);
@@ -284,7 +305,7 @@ export const Topbar = ({ onToggleSidebar, sidebarOpen }: TopbarProps) => {
           <div className="lb-logo-icon p-1.5 rounded-lg">
             <Hotel className="h-5 w-5 text-white" />
           </div>
-          <Link to="/">
+          <Link to="/" onClick={handleHomeClick}>
             <h1 className="text-xl font-semibold lb-topbar-title">Smart Hotel</h1>
           </Link>
         </div>

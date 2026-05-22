@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 import { api } from '../services/api';
 import {
   DoorOpen,
@@ -54,6 +54,7 @@ function useReveal(isEnabled = true) {
 export const HomePage = () => {
   const { user } = useAuth();
   const { t } = useTranslation();
+  const location = useLocation();
   const navigate = useNavigate();
   const [reviewSummary, setReviewSummary] = useState({ averageRating: 0, totalReviews: 0 });
 
@@ -69,6 +70,18 @@ export const HomePage = () => {
 
     loadReviewSummary();
   }, []);
+
+  useEffect(() => {
+    if (location.state && (location.state as { scrollToTop?: boolean }).scrollToTop) {
+      const mainContent = document.querySelector('main');
+      if (mainContent instanceof HTMLElement) {
+        mainContent.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location.pathname, location.state, navigate]);
 
   const roleActions = {
     reception: [

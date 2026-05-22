@@ -278,7 +278,7 @@
   "markResolved": "Mark as resolved",
   "noRoomsMatch": "No rooms match the selected filter",
   "dashboardTitle": "Dashboard",
-  "dashboardSubtitle": "Overview of hotel operations and metrics via API",
+  "dashboardSubtitle": "Overview of hotel operations, occupancy, and performance.",
   "occupancyRate": "Occupancy rate",
   "totalRevenue": "Total revenue",
   "thisPeriod": "This period",
