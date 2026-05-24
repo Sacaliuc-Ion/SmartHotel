@@ -6,8 +6,17 @@ import { useNavigate } from 'react-router';
 import { Link } from 'react-router-dom';
 import { PreferencesControls } from './PreferencesControls';
 import { useTranslation } from 'react-i18next';
+import { useHotel } from '../../context/HotelContext';
 
 interface TopbarProps { onToggleSidebar?: () => void; sidebarOpen?: boolean; }
+
+interface OperationalAlertItem {
+  id: string;
+  title: string;
+  message: string;
+  targetPath: string;
+  isRead: false;
+}
 
 const getNotificationTarget = (notification: any) => {
   if (notification.targetPath) return notification.targetPath;
@@ -25,6 +34,7 @@ const getNotificationTarget = (notification: any) => {
 
 export const Topbar = ({ onToggleSidebar, sidebarOpen }: TopbarProps) => {
   const { user, logout } = useAuth();
+  const { bookings } = useHotel();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const handleLogout = () => { logout(); navigate('/'); };
@@ -32,6 +42,28 @@ export const Topbar = ({ onToggleSidebar, sidebarOpen }: TopbarProps) => {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const notificationsRef = useRef<HTMLDivElement | null>(null);
   const unreadCount = notifications.filter((item) => !item.isRead).length;
+  const today = new Date();
+  const todayKey = `${today.getFullYear()}-${`${today.getMonth() + 1}`.padStart(2, '0')}-${`${today.getDate()}`.padStart(2, '0')}`;
+  const overdueCheckOuts = bookings.filter((booking) => booking.status === 'checked-in' && booking.checkOut < todayKey);
+  const overdueCheckIns = bookings.filter((booking) => booking.status === 'confirmed' && booking.checkIn < todayKey);
+  const operationalAlerts: OperationalAlertItem[] = [
+    ...overdueCheckOuts.map((booking) => ({
+      id: `operational-checkout-${booking.id}`,
+      title: t('overdueCheckOutNotificationTitle'),
+      message: t('overdueCheckOutNotificationMessage', { guest: booking.guestName, room: booking.roomNumber, date: booking.checkOut }),
+      targetPath: '/front-desk',
+      isRead: false as const,
+    })),
+    ...overdueCheckIns.map((booking) => ({
+      id: `operational-checkin-${booking.id}`,
+      title: t('overdueCheckInNotificationTitle'),
+      message: t('overdueCheckInNotificationMessage', { guest: booking.guestName, room: booking.roomNumber, date: booking.checkIn }),
+      targetPath: '/front-desk',
+      isRead: false as const,
+    })),
+  ];
+  const bellCount = unreadCount + operationalAlerts.length;
+  const combinedNotifications = [...operationalAlerts, ...notifications];
 
   const loadNotifications = async () => {
     if (!user) {
@@ -75,6 +107,12 @@ export const Topbar = ({ onToggleSidebar, sidebarOpen }: TopbarProps) => {
   }, [notificationsOpen]);
 
   const markRead = async (notification: any) => {
+    if (typeof notification.id === 'string' && notification.id.startsWith('operational-')) {
+      setNotificationsOpen(false);
+      navigate(notification.targetPath || '/front-desk');
+      return;
+    }
+
     if (!notification.isRead) {
       await api.patch(`/auth/notifications/${notification.id}/read`);
       setNotifications((prev) => {
@@ -144,9 +182,9 @@ export const Topbar = ({ onToggleSidebar, sidebarOpen }: TopbarProps) => {
               aria-label={t('notifications')}
             >
               <Bell className="h-5 w-5" />
-              {unreadCount > 0 && (
+              {bellCount > 0 && (
                 <span className="absolute -right-1 -top-1 min-w-5 rounded-full bg-red-600 px-1.5 text-xs font-semibold text-white">
-                  {unreadCount}
+                  {bellCount}
                 </span>
               )}
             </button>
@@ -162,11 +200,11 @@ export const Topbar = ({ onToggleSidebar, sidebarOpen }: TopbarProps) => {
                     {t('markAllAsSeen')}
                   </button>
                 </div>
-                {notifications.length === 0 ? (
+                {combinedNotifications.length === 0 ? (
                   <p className="px-3 py-4 text-sm text-gray-500 dark:text-slate-400">{t('noNewNotifications')}</p>
                 ) : (
                   <div className="max-h-80 overflow-y-auto">
-                    {notifications.map((notification) => (
+                    {combinedNotifications.map((notification) => (
                       <button
                         key={notification.id}
                         onClick={() => markRead(notification)}
