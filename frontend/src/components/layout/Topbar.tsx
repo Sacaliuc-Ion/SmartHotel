@@ -1,5 +1,5 @@
 import { useAuth } from '../../context/AuthContext';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '../../services/api';
 import { Bell, LogOut, Hotel, Menu, X } from 'lucide-react';
 import { useNavigate } from 'react-router';
@@ -17,6 +17,130 @@ interface OperationalAlertItem {
   targetPath: string;
   isRead: false;
 }
+
+const extractRoomNumber = (value: string) =>
+  value.match(/(?:camera|room)\s+([A-Za-z0-9-]+)/i)?.[1];
+
+const extractDateRange = (value: string) =>
+  value.match(/(\d{4}-\d{2}-\d{2})\s*-\s*(\d{4}-\d{2}-\d{2})/);
+
+const extractTrailingDate = (value: string) =>
+  value.match(/(\d{4}-\d{2}-\d{2})/g)?.at(-1);
+
+const extractAfterLastColon = (value: string) => value.split(':').pop()?.trim();
+
+const localizeStoredNotification = (notification: any, t: any) => {
+  const title = notification.title || '';
+  const message = notification.message || '';
+  const room = extractRoomNumber(message) || extractRoomNumber(title) || '';
+  const dateRange = extractDateRange(message);
+  const singleDate = extractTrailingDate(message) || '';
+  const trailingText = message.match(/pentru\s+(.+?)\.$/i)?.[1]
+    || message.match(/oaspetelui\s+(.+?)\.$/i)?.[1]
+    || '';
+  const issue = extractAfterLastColon(message) || title;
+
+  switch (title) {
+    case 'Check-in confirmat':
+      return {
+        ...notification,
+        title: t('notification.checkInConfirmedTitle'),
+        message: t('notification.checkInConfirmedMessage', { room }),
+      };
+    case 'Rezervare confirmata':
+      return {
+        ...notification,
+        title: t('notification.reservationConfirmedTitle'),
+        message: t('notification.reservationConfirmedMessage', {
+          room,
+          checkIn: dateRange?.[1] || '',
+          checkOut: dateRange?.[2] || '',
+        }),
+      };
+    case 'Rezervare anulata':
+      return {
+        ...notification,
+        title: t('notification.reservationCancelledTitle'),
+        message: message.includes('echipa hotelului')
+          ? t('notification.reservationCancelledByHotelMessage', { room })
+          : t('notification.reservationCancelledMessage', { room }),
+      };
+    case 'Rezervare actualizata':
+      return {
+        ...notification,
+        title: t('notification.reservationUpdatedTitle'),
+        message: t('notification.reservationUpdatedMessage', {
+          room,
+          checkIn: dateRange?.[1] || '',
+          checkOut: dateRange?.[2] || '',
+        }),
+      };
+    case 'Rezervare marcata ca neprezentare':
+      return {
+        ...notification,
+        title: t('notification.noShowTitle'),
+        message: t('notification.noShowMessage', { room }),
+      };
+    case 'Ticket rezolvat':
+      return {
+        ...notification,
+        title: t('notification.ticketResolvedTitle'),
+        message: t('notification.ticketResolvedMessage', { room, issue }),
+      };
+    case 'Maintenance ticket nou':
+      return {
+        ...notification,
+        title: t('notification.maintenanceNewTitle'),
+        message: t('notification.maintenanceNewMessage', { room, issue }),
+      };
+    case 'Urgent maintenance ticket':
+      return {
+        ...notification,
+        title: t('notification.maintenanceUrgentTitle'),
+        message: t('notification.maintenanceUrgentMessage', { room, issue }),
+      };
+    case 'Housekeeping ticket nou':
+      return {
+        ...notification,
+        title: t('notification.housekeepingNewTitle'),
+        message: t('notification.housekeepingNewMessage', { room, issue }),
+      };
+    case 'Urgent housekeeping request':
+      return {
+        ...notification,
+        title: t('notification.housekeepingUrgentTitle'),
+        message: t('notification.housekeepingUrgentMessage', { room, issue }),
+      };
+    case 'Reminder check-in':
+      return {
+        ...notification,
+        title: t('notification.checkInReminderTitle'),
+        message: message.toLowerCase().includes('maine')
+          ? t('notification.checkInReminderTomorrowMessage', { room })
+          : t('notification.checkInReminderTodayMessage', { room }),
+      };
+    case 'Review pending':
+      return {
+        ...notification,
+        title: t('notification.reviewPendingTitle'),
+        message: t('notification.reviewPendingMessage', { room }),
+      };
+    case 'Checkout today':
+      return {
+        ...notification,
+        title: t('notification.checkoutTodayTitle'),
+        message: t('notification.checkoutTodayMessage', { room, guest: trailingText }),
+      };
+    case 'Room ready for check-in':
+      return {
+        ...notification,
+        title: t('notification.roomReadyTitle'),
+        message: t('notification.roomReadyMessage', { room, guest: trailingText }),
+      };
+    default:
+      return notification;
+  }
+};
 
 const getNotificationTarget = (notification: any) => {
   if (notification.targetPath) return notification.targetPath;
@@ -63,7 +187,11 @@ export const Topbar = ({ onToggleSidebar, sidebarOpen }: TopbarProps) => {
     })),
   ];
   const bellCount = unreadCount + operationalAlerts.length;
-  const combinedNotifications = [...operationalAlerts, ...notifications];
+  const localizedNotifications = useMemo(
+    () => notifications.map((notification) => localizeStoredNotification(notification, t)),
+    [notifications, t]
+  );
+  const combinedNotifications = [...operationalAlerts, ...localizedNotifications];
 
   const loadNotifications = async () => {
     if (!user) {
