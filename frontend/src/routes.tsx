@@ -6,6 +6,7 @@ import { ProtectedRoute } from './components/auth/ProtectedRoute';
 const HomePage = lazy(() => import('./pages/HomePage').then((module) => ({ default: module.HomePage })));
 const RoomsPage = lazy(() => import('./pages/RoomsPage').then((module) => ({ default: module.RoomsPage })));
 const RoomDetailPage = lazy(() => import('./pages/RoomDetailPage').then((module) => ({ default: module.RoomDetailPage })));
+const SpaPage = lazy(() => import('./pages/SpaPage').then((module) => ({ default: module.SpaPage })));
 const LoginPage = lazy(() => import('./pages/LoginPage').then((module) => ({ default: module.LoginPage })));
 const FrontDeskPage = lazy(() => import('./pages/FrontDeskPage').then((module) => ({ default: module.FrontDeskPage })));
 const RoomBoardPage = lazy(() => import('./pages/RoomBoardPage').then((module) => ({ default: module.RoomBoardPage })));
@@ -30,6 +31,7 @@ export const router = createBrowserRouter([
   { path: '/', element: withSuspense(<Layout><HomePage /></Layout>) },
   { path: '/rooms', element: withSuspense(<Layout><RoomsPage /></Layout>) },
   { path: '/rooms/:id', element: withSuspense(<Layout><RoomDetailPage /></Layout>) },
+  { path: '/rooms/:id/spa', element: withSuspense(<Layout><SpaPage /></Layout>) },
   {
     path: '/front-desk',
     element: withSuspense(
