@@ -14,4 +14,5 @@ public interface IReservationService
     Task<ServiceResult<RoomReviewDto>> AddReviewAsync(int reservationId, int userId, CreateRoomReviewRequest request);
     Task<ServiceResult<ReviewSummaryDto>> GetReviewSummaryAsync();
     Task<ServiceResult<GymAccessDto>> GetGymAccessAsync(int? userId);
+    Task<ServiceResult<SpaAccessDto>> GetSpaAccessAsync(int? userId);
 }
