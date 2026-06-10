@@ -5,6 +5,13 @@ import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Input } from '../components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../components/ui/select';
 import { ArrowLeft, CalendarDays, ChevronLeft, ChevronRight, Users, Wifi, Tv, Wind, Coffee, Bath, Armchair, MapPin, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import Single from '../assets/rooms/Single.jpg';
