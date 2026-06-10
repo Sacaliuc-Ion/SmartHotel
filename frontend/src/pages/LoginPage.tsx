@@ -94,7 +94,7 @@ export const LoginPage = () => {
 
   return (
     <div
-      className="login-shell relative h-svh overflow-hidden px-4 py-1 sm:px-6 sm:py-1 lg:px-8 lg:py-2"
+      className="login-shell relative min-h-svh overflow-x-hidden px-4 py-3 sm:px-6 sm:py-4 lg:px-8 lg:py-5"
     >
       <div className="absolute right-4 top-4 z-20">
         <PreferencesControls />
@@ -114,10 +114,10 @@ export const LoginPage = () => {
         />
       </div>
 
-      <div className="relative mx-auto flex h-full max-w-6xl items-center justify-center">
-        <div className="grid h-[88svh] max-h-full w-full overflow-hidden rounded-[28px] border border-white/70 bg-white/55 shadow-[0_24px_70px_rgba(15,27,53,0.14)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/45 lg:grid-cols-[1.08fr_0.92fr]">
+      <div className="relative mx-auto flex min-h-[calc(100svh-1.5rem)] max-w-6xl items-center justify-center sm:min-h-[calc(100svh-2rem)] lg:min-h-[calc(100svh-2.5rem)]">
+        <div className="grid w-full overflow-hidden rounded-[28px] border border-white/70 bg-white/55 shadow-[0_24px_70px_rgba(15,27,53,0.14)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/45 lg:grid-cols-[1.08fr_0.92fr]">
           <section
-            className="relative hidden flex-col justify-between p-6 lg:flex"
+            className="relative hidden flex-col justify-between p-5 lg:flex"
             style={{
               background: 'linear-gradient(160deg, rgba(15, 27, 53, 0.98) 0%, rgba(26, 45, 82, 0.95) 56%, rgba(200, 151, 58, 0.88) 100%)',
             }}
@@ -129,23 +129,23 @@ export const LoginPage = () => {
             </div>
 
             <div className="relative z-10">
-              <div className="mb-6 inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm text-white/90 backdrop-blur-sm">
+              <div className="mb-5 inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm text-white/90 backdrop-blur-sm">
                 <div className="rounded-full bg-white/15 p-2">
                   <Hotel className="h-4 w-4" />
                 </div>
                 {t('loginBadge')}
               </div>
 
-              <h1 className="max-w-lg text-3xl font-semibold leading-tight text-white">
+              <h1 className="max-w-lg text-[2rem] font-semibold leading-tight text-white">
                 {t('loginHeroTitle')}
               </h1>
-              <p className="mt-4 max-w-xl text-sm leading-6 text-white/75">
+              <p className="mt-3 max-w-xl text-sm leading-6 text-white/75">
                 {t('loginHeroDescription')}
               </p>
             </div>
 
-            <div className="relative z-10 grid gap-3">
-              <div className="rounded-2xl border border-white/12 bg-white/10 p-4 backdrop-blur-sm">
+            <div className="relative z-10 grid gap-2.5">
+              <div className="rounded-2xl border border-white/12 bg-white/10 p-3.5 backdrop-blur-sm">
                 <div className="mb-2 flex items-center gap-3 text-white">
                   <KeyRound className="h-4 w-4" />
                   <p className="font-medium">{t('loginFeatureReservationsTitle')}</p>
@@ -155,7 +155,7 @@ export const LoginPage = () => {
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-white/12 bg-white/10 p-4 backdrop-blur-sm">
+              <div className="rounded-2xl border border-white/12 bg-white/10 p-3.5 backdrop-blur-sm">
                 <div className="mb-2 flex items-center gap-3 text-white">
                   <Sparkles className="h-4 w-4" />
                   <p className="font-medium">{t('loginFeatureOperationsTitle')}</p>
@@ -167,36 +167,36 @@ export const LoginPage = () => {
             </div>
           </section>
 
-          <section className="flex items-center px-3 py-1 sm:px-10 sm:py-2 lg:px-15 lg:py-3">
+          <section className="flex items-center px-3 py-3 sm:px-7 sm:py-5 lg:px-10 lg:py-6">
             <Card className="w-full border-white/70 bg-white/82 shadow-none dark:border-white/10 dark:bg-slate-900/85">
-              <CardHeader className="space-y-3 pb-4 text-center">
-                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-white/70 bg-white shadow-[0_12px_28px_rgba(200,151,58,0.16)]">
-                  <Hotel className="h-6 w-6" style={{ color: 'var(--hp-gold)' }} />
+              <CardHeader className="space-y-2.5 pb-3 text-center">
+                <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-2xl border border-white/70 bg-white shadow-[0_12px_28px_rgba(200,151,58,0.16)]">
+                  <Hotel className="h-5 w-5" style={{ color: 'var(--hp-gold)' }} />
                 </div>
                 <div className="space-y-1">
-                  <CardTitle className="text-2xl font-semibold" style={{ color: 'var(--hp-text)' }}>
+                  <CardTitle className="text-[1.9rem] font-semibold leading-tight" style={{ color: 'var(--hp-text)' }}>
                     {t('loginCardTitle')}
                   </CardTitle>
-                  <CardDescription className="mx-auto max-w-md text-xs leading-5" style={{ color: 'var(--hp-muted)' }}>
+                  <CardDescription className="mx-auto max-w-md text-xs leading-4.5" style={{ color: 'var(--hp-muted)' }}>
                     {t('loginCardDescription')}
                   </CardDescription>
                 </div>
               </CardHeader>
 
               <CardContent className="pt-0">
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="gap-3">
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="gap-2.5">
                   <TabsList className="grid h-auto w-full grid-cols-2 rounded-2xl p-1" style={{ backgroundColor: 'var(--hp-gold-pale)' }}>
-                    <TabsTrigger value="login" className="rounded-xl py-2 text-sm font-semibold data-[state=active]:shadow-none" style={{ color: 'var(--hp-text)' }}>
+                    <TabsTrigger value="login" className="rounded-xl py-1.5 text-sm font-semibold data-[state=active]:shadow-none" style={{ color: 'var(--hp-text)' }}>
                       {t('loginTab')}
                     </TabsTrigger>
-                    <TabsTrigger value="register" className="rounded-xl py-2 text-sm font-semibold data-[state=active]:shadow-none" style={{ color: 'var(--hp-text)' }}>
+                    <TabsTrigger value="register" className="rounded-xl py-1.5 text-sm font-semibold data-[state=active]:shadow-none" style={{ color: 'var(--hp-text)' }}>
                       {t('registerTab')}
                     </TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="login" className="mt-0">
-                    <form onSubmit={handleLogin} className="space-y-3">
-                      <div className="space-y-1.5">
+                    <form onSubmit={handleLogin} className="space-y-2.5">
+                      <div className="space-y-1">
                         <label className="block text-sm font-medium" style={{ color: 'var(--hp-text)' }}>{t('email')}</label>
                         <Input
                           type="email"
@@ -204,11 +204,11 @@ export const LoginPage = () => {
                           value={loginEmail}
                           onChange={(e) => setLoginEmail(e.target.value)}
                           autoComplete="email"
-                          className="h-10 border-[#ead7b6] bg-white/90 dark:border-white/10 dark:bg-slate-950/70"
+                          className="h-9 border-[#ead7b6] bg-white/90 dark:border-white/10 dark:bg-slate-950/70"
                         />
                       </div>
 
-                      <div className="space-y-1.5">
+                      <div className="space-y-1">
                         <label className="block text-sm font-medium" style={{ color: 'var(--hp-text)' }}>{t('password')}</label>
                         <Input
                           type="password"
@@ -216,14 +216,14 @@ export const LoginPage = () => {
                           value={loginPassword}
                           onChange={(e) => setLoginPassword(e.target.value)}
                           autoComplete="current-password"
-                          className="h-10 border-[#ead7b6] bg-white/90 dark:border-white/10 dark:bg-slate-950/70"
+                          className="h-9 border-[#ead7b6] bg-white/90 dark:border-white/10 dark:bg-slate-950/70"
                         />
                       </div>
 
                       <Button
                         type="submit"
                         disabled={isLoggingIn || isRegistering}
-                        className="h-10 w-full rounded-xl text-sm font-semibold"
+                        className="h-9 w-full rounded-xl text-sm font-semibold"
                         style={{ background: 'linear-gradient(135deg, var(--hp-gold) 0%, var(--hp-gold-light) 100%)', color: 'var(--hp-navy)' }}
                       >
                         {isLoggingIn ? t('loginLoading') : t('loginButton')}
@@ -232,31 +232,31 @@ export const LoginPage = () => {
                   </TabsContent>
 
                   <TabsContent value="register" className="mt-0">
-                    <form onSubmit={handleRegister} className="space-y-3">
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1.5">
+                    <form onSubmit={handleRegister} className="space-y-2.5">
+                      <div className="grid grid-cols-2 gap-2.5">
+                        <div className="space-y-1">
                           <label className="block text-sm font-medium" style={{ color: 'var(--hp-text)' }}>{t('firstName')}</label>
                           <Input
                             type="text"
                             placeholder={t('registerFirstNamePlaceholder')}
                             value={registerFirstName}
                             onChange={(e) => setRegisterFirstName(e.target.value)}
-                            className="h-10 border-[#ead7b6] bg-white/90 dark:border-white/10 dark:bg-slate-950/70"
+                            className="h-9 border-[#ead7b6] bg-white/90 dark:border-white/10 dark:bg-slate-950/70"
                           />
                         </div>
-                        <div className="space-y-1.5">
+                        <div className="space-y-1">
                           <label className="block text-sm font-medium" style={{ color: 'var(--hp-text)' }}>{t('lastName')}</label>
                           <Input
                             type="text"
                             placeholder={t('registerLastNamePlaceholder')}
                             value={registerLastName}
                             onChange={(e) => setRegisterLastName(e.target.value)}
-                            className="h-10 border-[#ead7b6] bg-white/90 dark:border-white/10 dark:bg-slate-950/70"
+                            className="h-9 border-[#ead7b6] bg-white/90 dark:border-white/10 dark:bg-slate-950/70"
                           />
                         </div>
                       </div>
 
-                      <div className="space-y-1.5">
+                      <div className="space-y-1">
                         <label className="block text-sm font-medium" style={{ color: 'var(--hp-text)' }}>{t('email')}</label>
                         <Input
                           type="email"
@@ -264,11 +264,11 @@ export const LoginPage = () => {
                           value={registerEmail}
                           onChange={(e) => setRegisterEmail(e.target.value)}
                           autoComplete="email"
-                          className="h-10 border-[#ead7b6] bg-white/90 dark:border-white/10 dark:bg-slate-950/70"
+                          className="h-9 border-[#ead7b6] bg-white/90 dark:border-white/10 dark:bg-slate-950/70"
                         />
                       </div>
 
-                      <div className="space-y-1.5">
+                      <div className="space-y-1">
                         <label className="block text-sm font-medium" style={{ color: 'var(--hp-text)' }}>{t('password')}</label>
                         <Input
                           type="password"
@@ -276,11 +276,11 @@ export const LoginPage = () => {
                           value={registerPassword}
                           onChange={(e) => setRegisterPassword(e.target.value)}
                           autoComplete="new-password"
-                          className="h-10 border-[#ead7b6] bg-white/90 dark:border-white/10 dark:bg-slate-950/70"
+                          className="h-9 border-[#ead7b6] bg-white/90 dark:border-white/10 dark:bg-slate-950/70"
                         />
                       </div>
 
-                      <div className="space-y-1.5">
+                      <div className="space-y-1">
                         <label className="block text-sm font-medium" style={{ color: 'var(--hp-text)' }}>{t('confirmPassword')}</label>
                         <Input
                           type="password"
@@ -288,14 +288,14 @@ export const LoginPage = () => {
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
                           autoComplete="new-password"
-                          className="h-10 border-[#ead7b6] bg-white/90 dark:border-white/10 dark:bg-slate-950/70"
+                          className="h-9 border-[#ead7b6] bg-white/90 dark:border-white/10 dark:bg-slate-950/70"
                         />
                       </div>
 
                       <Button
                         type="submit"
                         disabled={isRegistering || isLoggingIn}
-                        className="h-10 w-full rounded-xl text-sm font-semibold"
+                        className="h-9 w-full rounded-xl text-sm font-semibold"
                         style={{ background: 'linear-gradient(135deg, var(--hp-gold) 0%, var(--hp-gold-light) 100%)', color: 'var(--hp-navy)' }}
                       >
                         {isRegistering ? t('registerLoading') : t('registerButton')}
@@ -306,7 +306,7 @@ export const LoginPage = () => {
                 <button
                   type="button"
                   onClick={() => navigate('/')}
-                  className="mt-4 w-full text-center text-sm font-medium transition-opacity hover:opacity-80"
+                  className="mt-3 w-full text-center text-sm font-medium transition-opacity hover:opacity-80"
                   style={{ color: 'var(--hp-muted)' }}
                 >
                   {t('backHome')}
