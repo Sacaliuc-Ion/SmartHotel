@@ -39,19 +39,16 @@ export const Sidebar = ({ isOpen = true }: { isOpen?: boolean }) => {
       (booking.status === 'checked-in' || booking.status === 'confirmed')
       && isOperationallyOverdue(booking, roomsById)
     ).length;
-    const dirtyTurnovers = rooms.filter((room) =>
-      String(room.status).toLowerCase() === 'dirty'
-    ).length;
     const housekeepingOperationalItems = rooms.filter((room) =>
       ['dirty', 'cleaning', 'clean'].includes(String(room.status).toLowerCase())
     ).length;
-    const openMaintenanceTickets = tickets.filter((ticket) =>
-      !['resolved', 'closed'].includes(String(ticket.status).toLowerCase())
+    const newMaintenanceTickets = tickets.filter((ticket) =>
+      String(ticket.status).toLowerCase() === 'new'
     ).length;
 
     return {
       frontDesk: unread.filter((item) => item.category === 'front-desk').length + overdueFrontDeskActions,
-      maintenance: unread.filter((item) => item.category === 'maintenance').length + openMaintenanceTickets + dirtyTurnovers,
+      maintenance: unread.filter((item) => item.category === 'maintenance').length + newMaintenanceTickets,
       housekeeping: unread.filter((item) => item.category === 'housekeeping').length + housekeepingOperationalItems,
     };
   }, [notifications, bookings, rooms, tickets]);
