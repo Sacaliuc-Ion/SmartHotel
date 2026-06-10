@@ -19,6 +19,10 @@ export interface Room {
   amenities: string[];
   description?: string;
   nextAvailableDate?: string | null;
+  nextAvailableAt?: string | null;
+  standardCheckInTime?: string | null;
+  latestCheckInTime?: string | null;
+  standardCheckOutTime?: string | null;
 }
 
 export interface Booking {
@@ -28,6 +32,7 @@ export interface Booking {
   roomNumber: string;
   checkIn: string;
   checkOut: string;
+  checkInTime?: string;
   status: BookingStatus | string;
   paymentStatus?: string;
   guests: number;
@@ -53,6 +58,7 @@ interface HotelContextType {
   bookings: Booking[];
   tickets: MaintenanceTicket[];
   refreshData: () => Promise<void>;
+  syncBooking: (booking: Booking) => void;
   updateRoomStatus: (roomId: string | number, status: string) => Promise<void>;
   updateBookingStatus: (bookingId: string | number, status: string) => Promise<void>;
   addBooking: (booking: any) => Promise<void>;
@@ -69,6 +75,12 @@ export const HotelProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [rooms, setRooms] = useState<Room[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [tickets, setTickets] = useState<MaintenanceTicket[]>([]);
+
+  const normalizeBooking = (booking: Booking): Booking => ({
+    ...booking,
+    status: normalizeBookingStatus(booking.status),
+    paymentStatus: booking.paymentStatus ? normalizePaymentStatus(booking.paymentStatus) : undefined,
+  });
 
   const refreshData = async () => {
     try {
@@ -89,11 +101,7 @@ export const HotelProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         }))
       );
       setBookings(
-        (bookingsRes || []).map((booking) => ({
-          ...booking,
-          status: normalizeBookingStatus(booking.status),
-          paymentStatus: booking.paymentStatus ? normalizePaymentStatus(booking.paymentStatus) : undefined,
-        }))
+        (bookingsRes || []).map(normalizeBooking)
       );
       setTickets(ticketsRes || []);
 
@@ -126,6 +134,21 @@ export const HotelProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
   };
 
+  const syncBooking = (booking: Booking) => {
+    const normalizedBooking = normalizeBooking(booking);
+
+    setBookings((current) => {
+      const existingIndex = current.findIndex((item) => String(item.id) === String(normalizedBooking.id));
+      if (existingIndex === -1) {
+        return [normalizedBooking, ...current];
+      }
+
+      return current.map((item) =>
+        String(item.id) === String(normalizedBooking.id) ? { ...item, ...normalizedBooking } : item
+      );
+    });
+  };
+
   const updateBookingStatus = async (bookingId: string | number, status: string) => {
     try {
       // For check in / out, we usually go through the specialized endpoint in Reception
@@ -142,6 +165,7 @@ export const HotelProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         roomId: booking.roomId,
         checkIn: booking.checkIn,
         checkOut: booking.checkOut,
+        checkInTime: booking.checkInTime,
         guests: booking.guests || 1
       });
       await refreshData();
@@ -203,7 +227,7 @@ export const HotelProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   return (
     <HotelContext.Provider value={{ 
-      rooms, bookings, tickets, refreshData, 
+      rooms, bookings, tickets, refreshData, syncBooking,
       updateRoomStatus, updateBookingStatus, 
       addBooking, updateBooking, deleteBooking, 
       addTicket, updateTicket 

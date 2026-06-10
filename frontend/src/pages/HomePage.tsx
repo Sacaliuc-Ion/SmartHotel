@@ -10,6 +10,7 @@ import {
   BarChart3,
   Settings,
   Building,
+  Dumbbell,
   ArrowRight,
   Star,
   Wifi,
@@ -108,6 +109,7 @@ export const HomePage = () => {
     ],
     client: [
       { label: t('exploreRooms'), description: t('actionBrowseRoomsDesc'), path: '/rooms', icon: Building, color: 'from-amber-500 to-yellow-600' },
+      { label: t('navGym'), description: t('actionGymDesc'), path: '/gym', icon: Dumbbell, color: 'from-emerald-500 to-lime-600' },
     ],
   };
 
@@ -117,6 +119,7 @@ export const HomePage = () => {
     { icon: Wifi, label: t('amenityWifi') },
     { icon: Coffee, label: t('amenityBreakfast') },
     { icon: Car, label: t('amenityParking') },
+    { icon: Dumbbell, label: t('amenityGym') },
     { icon: Sparkles, label: t('amenitySpa') },
   ];
 

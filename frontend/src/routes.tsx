@@ -1,10 +1,11 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, type ReactElement } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router';
 import { Layout } from './components/layout/Layout';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 
 const HomePage = lazy(() => import('./pages/HomePage').then((module) => ({ default: module.HomePage })));
 const RoomsPage = lazy(() => import('./pages/RoomsPage').then((module) => ({ default: module.RoomsPage })));
+const GymPage = lazy(() => import('./pages/GymPage').then((module) => ({ default: module.GymPage })));
 const RoomDetailPage = lazy(() => import('./pages/RoomDetailPage').then((module) => ({ default: module.RoomDetailPage })));
 const SpaPage = lazy(() => import('./pages/SpaPage').then((module) => ({ default: module.SpaPage })));
 const LoginPage = lazy(() => import('./pages/LoginPage').then((module) => ({ default: module.LoginPage })));
@@ -20,7 +21,7 @@ const RouteFallback = () => (
   <div className="p-6 text-sm text-gray-500 dark:text-slate-400">Loading...</div>
 );
 
-const withSuspense = (element: JSX.Element) => (
+const withSuspense = (element: ReactElement) => (
   <Suspense fallback={<RouteFallback />}>
     {element}
   </Suspense>
@@ -30,6 +31,7 @@ export const router = createBrowserRouter([
   { path: '/login', element: withSuspense(<LoginPage />) },
   { path: '/', element: withSuspense(<Layout><HomePage /></Layout>) },
   { path: '/rooms', element: withSuspense(<Layout><RoomsPage /></Layout>) },
+  { path: '/gym', element: withSuspense(<Layout><GymPage /></Layout>) },
   { path: '/rooms/:id', element: withSuspense(<Layout><RoomDetailPage /></Layout>) },
   { path: '/rooms/:id/spa', element: withSuspense(<Layout><SpaPage /></Layout>) },
   {

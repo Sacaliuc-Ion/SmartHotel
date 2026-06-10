@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { api } from '../services/api';
 import { Booking, useHotel } from '../context/HotelContext';
 import { Button } from '../components/ui/button';
@@ -12,10 +12,11 @@ import { AlertTriangle, ArrowDownToLine, ArrowUpFromLine, Bed, PencilLine, Searc
 import { toast } from 'sonner';
 import { formatCurrency } from '../utils/hotelFormatting';
 import { useTranslation } from 'react-i18next';
+import { getCurrentDateKey, isOperationallyOverdue } from '../utils/dateHelpers';
 
 export const FrontDeskPage = () => {
-  const { refreshData, bookings, updateBooking } = useHotel();
-  const { t } = useTranslation();
+  const { refreshData, bookings, rooms, updateBooking } = useHotel();
+  const { t, i18n } = useTranslation();
   const [arrivals, setArrivals] = useState<Booking[]>([]);
   const [departures, setDepartures] = useState<Booking[]>([]);
   const [dashboardSummary, setDashboardSummary] = useState<any>({});
@@ -25,7 +26,29 @@ export const FrontDeskPage = () => {
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
   const [modalType, setModalType] = useState<'checkin' | 'checkout' | null>(null);
-  const todayKey = `${new Date().getFullYear()}-${`${new Date().getMonth() + 1}`.padStart(2, '0')}-${`${new Date().getDate()}`.padStart(2, '0')}`;
+  const todayKey = getCurrentDateKey();
+  const roomCheckOutTimes = useMemo(
+    () => new Map(rooms.map((room) => [String(room.id), room.standardCheckOutTime || ''])),
+    [rooms]
+  );
+  const roomsById = useMemo(
+    () => new Map(rooms.map((room) => [String(room.id), room])),
+    [rooms]
+  );
+
+  const formatClock = (value?: string | null) => {
+    if (!value) return '--';
+
+    const [hours, minutes] = value.split(':').map(Number);
+    if (Number.isNaN(hours) || Number.isNaN(minutes)) {
+      return value;
+    }
+
+    return new Intl.DateTimeFormat(i18n.language, {
+      hour: 'numeric',
+      minute: '2-digit',
+    }).format(new Date(2026, 0, 1, hours, minutes, 0, 0));
+  };
 
   const fetchDeskData = async () => {
     try {
@@ -77,10 +100,10 @@ export const FrontDeskPage = () => {
 
   const normalizedSearch = searchTerm.trim().toLowerCase();
   const overdueCheckIns = bookings.filter(
-    (booking) => booking.status === 'confirmed' && booking.checkIn < todayKey
+    (booking) => booking.status === 'confirmed' && isOperationallyOverdue(booking, roomsById)
   );
   const overdueCheckouts = bookings.filter(
-    (booking) => booking.status === 'checked-in' && booking.checkOut < todayKey
+    (booking) => booking.status === 'checked-in' && isOperationallyOverdue(booking, roomsById)
   );
   const operationalBookings = bookings
     .filter((booking) => booking.status !== 'checked-out' && booking.status !== 'cancelled')
@@ -95,8 +118,8 @@ export const FrontDeskPage = () => {
     })
     .sort((left, right) => {
       const getPriority = (booking: Booking) => {
-        if (booking.status === 'checked-in' && booking.checkOut < todayKey) return 0;
-        if (booking.status === 'confirmed' && booking.checkIn < todayKey) return 1;
+        if (booking.status === 'checked-in' && isOperationallyOverdue(booking, roomsById)) return 0;
+        if (booking.status === 'confirmed' && isOperationallyOverdue(booking, roomsById)) return 1;
         if (booking.status === 'confirmed') return 2;
         if (booking.status === 'checked-in') return 3;
         return 4;
@@ -220,12 +243,13 @@ export const FrontDeskPage = () => {
             <div className="grid gap-4 lg:grid-cols-2">
               {operationalBookings.map((booking) => {
                 const isTodayReservation = booking.checkIn === todayKey || booking.checkOut === todayKey;
-                const isOverdueCheckIn = booking.status === 'confirmed' && booking.checkIn < todayKey;
-                const isOverdueCheckOut = booking.status === 'checked-in' && booking.checkOut < todayKey;
+                const isOverdueCheckIn = booking.status === 'confirmed' && isOperationallyOverdue(booking, roomsById);
+                const isOverdueCheckOut = booking.status === 'checked-in' && isOperationallyOverdue(booking, roomsById);
                 const canEdit = booking.status !== 'cancelled';
                 const canCheckIn = booking.status === 'confirmed';
                 const canCheckOut = booking.status === 'checked-in';
                 const canRemove = booking.status !== 'checked-in' && !isTodayReservation;
+                const standardCheckOutTime = roomCheckOutTimes.get(String(booking.roomId));
 
                 return (
                   <div
@@ -240,6 +264,12 @@ export const FrontDeskPage = () => {
                         <h3 className="mt-1 text-lg font-semibold text-gray-900 dark:text-slate-100">{booking.guestName}</h3>
                         <p className="text-sm text-gray-500 dark:text-slate-400">
                           {t('room')} {booking.roomNumber} • {booking.checkIn} - {booking.checkOut}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-slate-400">
+                          {t('frontDeskReservationTimes', {
+                            checkInTime: formatClock(booking.checkInTime),
+                            checkOutTime: formatClock(standardCheckOutTime),
+                          })}
                         </p>
                       </div>
                       <Badge>{t(`status.${booking.status}`, { defaultValue: booking.status })}</Badge>

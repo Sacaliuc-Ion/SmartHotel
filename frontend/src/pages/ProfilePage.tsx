@@ -37,6 +37,7 @@ type Reservation = {
   roomNumber: string;
   checkIn: string;
   checkOut: string;
+  checkInTime?: string;
   status: string;
   paymentStatus: string;
   totalAmount: number;
@@ -86,6 +87,11 @@ export const ProfilePage = () => {
   const formatDateTime = (value?: string | null) => {
     if (!value) return t('notAvailableText');
     return new Intl.DateTimeFormat(i18n.language, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
+  };
+  const formatClock = (value?: string | null) => {
+    if (!value) return t('notAvailableText');
+    const [hours, minutes] = value.split(':').map(Number);
+    return new Intl.DateTimeFormat(i18n.language, { hour: 'numeric', minute: '2-digit' }).format(new Date(2026, 0, 1, hours, minutes, 0, 0));
   };
 
   useEffect(() => {
@@ -310,8 +316,18 @@ export const ProfilePage = () => {
                 <Badge>{t(`status.${reservation.status}`, { defaultValue: reservation.status })}</Badge>
               </div>
               <p className="mt-1 text-sm text-gray-600 dark:text-slate-300">
-                {t('profileReservationSummary', { room: reservation.roomNumber, checkIn: reservation.checkIn, checkOut: reservation.checkOut, guests: reservation.guests })}
+                {t('profileReservationSummary', {
+                  room: reservation.roomNumber,
+                  checkIn: reservation.checkIn,
+                  checkOut: reservation.checkOut,
+                  guests: reservation.guests,
+                })}
               </p>
+              {reservation.checkInTime && (
+                <p className="mt-1 text-xs text-gray-500 dark:text-slate-400">
+                  {t('reservationCheckInTimeValue', { time: formatClock(reservation.checkInTime) })}
+                </p>
+              )}
             </div>
             <Button variant="outline" size="sm" onClick={() => setExpandedReservation(expandedReservation === reservation.id ? null : reservation.id)}>
               {t('reservationDetails')}

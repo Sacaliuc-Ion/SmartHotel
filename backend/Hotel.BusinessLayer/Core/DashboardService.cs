@@ -78,7 +78,7 @@ public class DashboardService : IDashboardService
                ticket.Status != TicketStatus.Resolved &&
                ticket.Status != TicketStatus.Closed);
 
-          var today = DateOnly.FromDateTime(DateTime.UtcNow);
+          var today = DateOnly.FromDateTime(DateTime.Now);
           var occupancyTrend = Enumerable.Range(0, 7)
               .Select(offset =>
               {

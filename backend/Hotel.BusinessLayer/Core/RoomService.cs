@@ -12,6 +12,10 @@ public class RoomService : IRoomService
 {
     private readonly DbSession _db;
     private static readonly string[] FrontDeskRoles = ["Admin", "Reception", "Manager"];
+    private static readonly TimeSpan DefaultCheckInTime = new(14, 0, 0);
+    private static readonly TimeSpan DefaultCheckOutTime = new(11, 0, 0);
+    private static readonly TimeSpan CleaningBuffer = TimeSpan.FromHours(2);
+    private static readonly TimeSpan CheckInSelectionWindow = TimeSpan.FromHours(3);
 
     public RoomService(DbSession db)
     {
@@ -29,8 +33,9 @@ public class RoomService : IRoomService
             .Where(r => r.IsActive)
             .ToListAsync();
 
-        var nextAvailabilityByRoom = await GetNextAvailabilityByRoomAsync(rooms.Select(room => room.Id).ToList());
-        var dtos = rooms.Select(room => MapToDto(room, nextAvailabilityByRoom.GetValueOrDefault(room.Id))).ToList();
+        var timingSettings = await GetOperationalTimingSettingsAsync();
+        var nextAvailabilityByRoom = await GetNextAvailabilityByRoomAsync(rooms.Select(room => room.Id).ToList(), timingSettings);
+        var dtos = rooms.Select(room => MapToDto(room, nextAvailabilityByRoom.GetValueOrDefault(room.Id), timingSettings)).ToList();
         return ServiceResult<List<RoomDto>>.Ok(dtos);
     }
 
@@ -47,8 +52,9 @@ public class RoomService : IRoomService
         if (room == null)
             return ServiceResult<RoomDto>.Fail("Room not found.");
 
-        var nextAvailabilityByRoom = await GetNextAvailabilityByRoomAsync(new List<int> { room.Id });
-        return ServiceResult<RoomDto>.Ok(MapToDto(room, nextAvailabilityByRoom.GetValueOrDefault(room.Id)));
+        var timingSettings = await GetOperationalTimingSettingsAsync();
+        var nextAvailabilityByRoom = await GetNextAvailabilityByRoomAsync(new List<int> { room.Id }, timingSettings);
+        return ServiceResult<RoomDto>.Ok(MapToDto(room, nextAvailabilityByRoom.GetValueOrDefault(room.Id), timingSettings));
     }
 
     public async Task<ServiceResult> UpdateRoomStatusAsync(int roomId, UpdateRoomStatusRequest request)
@@ -95,9 +101,10 @@ public class RoomService : IRoomService
         return ServiceResult.Ok();
     }
 
-    private async Task<Dictionary<int, DateOnly?>> GetNextAvailabilityByRoomAsync(List<int> roomIds)
+    private async Task<Dictionary<int, AvailabilityInfo?>> GetNextAvailabilityByRoomAsync(List<int> roomIds, OperationalTimingSettings timingSettings)
     {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var now = DateTime.Now;
+        var today = DateOnly.FromDateTime(now);
 
         var reservations = await _db.Context.Reservations
             .Where(reservation =>
@@ -112,14 +119,20 @@ public class RoomService : IRoomService
 
         return roomIds.ToDictionary(
             roomId => roomId,
-            roomId => GetNextAvailableDate(
+            roomId => GetNextAvailability(
                 reservations.Where(reservation => reservation.RoomId == roomId).ToList(),
-                today
+                today,
+                now,
+                timingSettings
             )
         );
     }
 
-    private static DateOnly? GetNextAvailableDate(List<Domain.Entities.ReservationData> reservations, DateOnly today)
+    private static AvailabilityInfo? GetNextAvailability(
+        List<Domain.Entities.ReservationData> reservations,
+        DateOnly today,
+        DateTime now,
+        OperationalTimingSettings timingSettings)
     {
         if (reservations.Count == 0)
             return null;
@@ -129,8 +142,14 @@ public class RoomService : IRoomService
 
         foreach (var reservation in reservations)
         {
-            if (reservation.CheckOutDate <= cursor)
+            if (reservation.CheckOutDate < cursor)
                 continue;
+
+            if (reservation.CheckInDate < cursor && reservation.CheckOutDate == cursor)
+            {
+                blocked = true;
+                continue;
+            }
 
             if (reservation.CheckInDate <= cursor)
             {
@@ -139,10 +158,26 @@ public class RoomService : IRoomService
             }
         }
 
-        return blocked ? cursor : null;
+        if (!blocked)
+            return null;
+
+        var earliestCheckInTime = timingSettings.CheckInTime > timingSettings.CheckOutTime.Add(CleaningBuffer)
+            ? timingSettings.CheckInTime
+            : timingSettings.CheckOutTime.Add(CleaningBuffer);
+
+        var nextAvailableAt = cursor.ToDateTime(TimeOnly.FromTimeSpan(earliestCheckInTime));
+
+        if (nextAvailableAt <= now)
+            return null;
+
+        return new AvailabilityInfo
+        {
+            NextAvailableDate = cursor,
+            NextAvailableAt = nextAvailableAt
+        };
     }
 
-    private static RoomDto MapToDto(Domain.Entities.RoomData room, DateOnly? nextAvailableDate)
+    private static RoomDto MapToDto(Domain.Entities.RoomData room, AvailabilityInfo? availabilityInfo, OperationalTimingSettings timingSettings)
     {
         return new RoomDto
         {
@@ -155,13 +190,33 @@ public class RoomService : IRoomService
             Status = ClientValueFormatter.ToClientValue(room.Status),
             Description = room.Description,
             Amenities = room.RoomAmenities.Select(ra => ra.Amenity.Name).ToList(),
-            NextAvailableDate = nextAvailableDate?.ToString("yyyy-MM-dd")
+            NextAvailableDate = availabilityInfo?.NextAvailableDate.ToString("yyyy-MM-dd"),
+            NextAvailableAt = availabilityInfo?.NextAvailableAt.ToString("yyyy-MM-ddTHH:mm:ss"),
+            StandardCheckInTime = timingSettings.CheckInTime.ToString(@"hh\:mm"),
+            LatestCheckInTime = timingSettings.CheckInTime.Add(CheckInSelectionWindow).ToString(@"hh\:mm"),
+            StandardCheckOutTime = timingSettings.CheckOutTime.ToString(@"hh\:mm")
+        };
+    }
+
+    private async Task<OperationalTimingSettings> GetOperationalTimingSettingsAsync()
+    {
+        var settings = await _db.Context.HotelSettings
+            .Where(setting => setting.Key == "CheckInTime" || setting.Key == "CheckOutTime")
+            .ToListAsync();
+
+        var checkInValue = settings.FirstOrDefault(setting => setting.Key == "CheckInTime")?.Value;
+        var checkOutValue = settings.FirstOrDefault(setting => setting.Key == "CheckOutTime")?.Value;
+
+        return new OperationalTimingSettings
+        {
+            CheckInTime = TimeSpan.TryParse(checkInValue, out var parsedCheckIn) ? parsedCheckIn : DefaultCheckInTime,
+            CheckOutTime = TimeSpan.TryParse(checkOutValue, out var parsedCheckOut) ? parsedCheckOut : DefaultCheckOutTime,
         };
     }
 
     private async Task NotifyRoomReadyForCheckInAsync(int roomId, string roomNumber)
     {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = DateOnly.FromDateTime(DateTime.Now);
         var arrival = await _db.Context.Reservations
             .Include(reservation => reservation.User)
             .FirstOrDefaultAsync(reservation =>
@@ -236,5 +291,17 @@ public class RoomService : IRoomService
         {
             await _db.SaveChangesAsync();
         }
+    }
+
+    private sealed class AvailabilityInfo
+    {
+        public DateOnly NextAvailableDate { get; init; }
+        public DateTime NextAvailableAt { get; init; }
+    }
+
+    private sealed class OperationalTimingSettings
+    {
+        public TimeSpan CheckInTime { get; init; }
+        public TimeSpan CheckOutTime { get; init; }
     }
 }

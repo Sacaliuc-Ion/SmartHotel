@@ -14,6 +14,10 @@ public class RoomDto
     public List<string> Amenities { get; set; } = new();
     public string? Description { get; set; }
     public string? NextAvailableDate { get; set; }
+    public string? NextAvailableAt { get; set; }
+    public string? StandardCheckInTime { get; set; }
+    public string? LatestCheckInTime { get; set; }
+    public string? StandardCheckOutTime { get; set; }
 }
 
 public class UpdateRoomStatusRequest
