@@ -34,7 +34,6 @@ const amenityIcons: Record<string, React.ElementType> = {
   'WiFi': Wifi, 'TV': Tv, 'AC': Wind, 'Mini Bar': Coffee, 'Jacuzzi': Bath, 'Balcony': Armchair,
 };
 
-const DAY_IN_MS = 24 * 60 * 60 * 1000;
 const MAX_CHECKOUT_SEARCH_DAYS = 365;
 const CHECK_IN_OPTION_STEP_MINUTES = 30;
 
