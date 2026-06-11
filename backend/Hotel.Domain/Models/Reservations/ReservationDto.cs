@@ -76,3 +76,15 @@ public class GymAccessDto
     public string? CheckIn { get; set; }
     public string? CheckOut { get; set; }
 }
+
+public class SpaAccessDto
+{
+    public bool IsAuthenticated { get; set; }
+    public bool HasAccess { get; set; }
+    public bool HasUpcomingReservation { get; set; }
+    public string AccessMode { get; set; } = "included-with-stay";
+    public int? ReservationId { get; set; }
+    public string? RoomNumber { get; set; }
+    public string? CheckIn { get; set; }
+    public string? CheckOut { get; set; }
+}

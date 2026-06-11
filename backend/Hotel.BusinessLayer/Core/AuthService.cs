@@ -370,6 +370,8 @@ public class AuthService : IAuthService
                }
           }
 
+          await CleanupMaintenanceNotificationsAsync(userId, roleName);
+
           var upcomingReservations = await _db.Context.Reservations
               .Include(reservation => reservation.Room)
               .Where(reservation =>
@@ -431,6 +433,47 @@ public class AuthService : IAuthService
           await _db.SaveChangesAsync();
      }
 
+     private async Task CleanupMaintenanceNotificationsAsync(int userId, string roleName)
+     {
+          var maintenanceNotifications = await _db.Context.UserNotifications
+              .Where(notification =>
+                   notification.UserId == userId &&
+                   (notification.Title == "Maintenance ticket nou"
+                    || notification.Title == "Urgent maintenance ticket"
+                    || notification.Title == "Ticket rezolvat"))
+              .ToListAsync();
+
+          if (maintenanceNotifications.Count == 0)
+               return;
+
+          var activeNotificationKeys = new HashSet<string>(StringComparer.Ordinal);
+
+          if (roleName is "Maintenance" or "Admin" or "Manager")
+          {
+               var activeNewTickets = await _db.Context.MaintenanceTickets
+                   .Include(ticket => ticket.Room)
+                   .Where(ticket => ticket.Status == TicketStatus.New && ticket.ReportedByUserId != userId)
+                   .ToListAsync();
+
+               foreach (var ticket in activeNewTickets)
+               {
+                    var (title, message) = BuildMaintenanceNotification(ticket.Room.Number, ticket.Title, ticket.Priority);
+                    activeNotificationKeys.Add(BuildNotificationKey(title, message));
+               }
+          }
+
+          var notificationsToRemove = maintenanceNotifications
+              .Where(notification =>
+                   notification.Title == "Ticket rezolvat"
+                   || !activeNotificationKeys.Contains(BuildNotificationKey(notification.Title, notification.Message)))
+              .ToList();
+
+          if (notificationsToRemove.Count > 0)
+          {
+               _db.Context.UserNotifications.RemoveRange(notificationsToRemove);
+          }
+     }
+
      private async Task EnsureNotificationAsync(int userId, int? reservationId, string title, string message)
      {
           var exists = await _db.Context.UserNotifications.AnyAsync(notification =>
@@ -484,5 +527,20 @@ public class AuthService : IAuthService
                return ("profile", "/profile");
 
           return ("general", null);
+     }
+
+     private static string BuildNotificationKey(string title, string message) => $"{title}|{message}";
+
+     private static (string Title, string Message) BuildMaintenanceNotification(string roomLabel, string issue, TicketPriority priority)
+     {
+          return priority == TicketPriority.Urgent
+               ? (
+                    "Urgent maintenance ticket",
+                    $"Ticket urgent pentru camera {roomLabel}: {issue}. Este necesara interventie rapida."
+               )
+               : (
+                    "Maintenance ticket nou",
+                    $"A fost creat un ticket nou pentru camera {roomLabel}: {issue}"
+               );
      }
 }

@@ -1,7 +1,7 @@
 import { useAuth } from '../../context/AuthContext';
 import { NavLink } from 'react-router';
 import { useMemo } from 'react';
-import { Home, DoorOpen, Calendar, Sparkles, Wrench, Settings, BarChart3, Building, UserCircle, Dumbbell } from 'lucide-react';
+import { Home, DoorOpen, Calendar, Sparkles, Wrench, Settings, BarChart3, Building, UserCircle, Dumbbell, Waves } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useNotifications } from '../../context/NotificationsContext';
 import { useHotel } from '../../context/HotelContext';
@@ -13,6 +13,7 @@ const navItems: NavItem[] = [
   { labelKey: 'navHome',         path: '/',            icon: Home,       roles: ['client', 'reception', 'housekeeping', 'maintenance', 'admin', 'manager'] },
   { labelKey: 'navRooms',        path: '/rooms',       icon: Building,   roles: ['client', 'reception', 'housekeeping', 'maintenance', 'admin', 'manager'] },
   { labelKey: 'navGym',          path: '/gym',         icon: Dumbbell,   roles: ['client', 'reception', 'housekeeping', 'maintenance', 'admin', 'manager'] },
+  { labelKey: 'navSpa',          path: '/spa',         icon: Waves,      roles: ['client', 'reception', 'housekeeping', 'maintenance', 'admin', 'manager'] },
   { labelKey: 'navProfile',      path: '/profile',     icon: UserCircle, roles: ['client', 'reception', 'housekeeping', 'maintenance', 'admin', 'manager'] },
   { labelKey: 'navFrontDesk',    path: '/front-desk',  icon: DoorOpen,   roles: ['reception', 'admin', 'manager'] },
   { labelKey: 'navRoomBoard',    path: '/room-board',  icon: Calendar,   roles: ['reception', 'admin', 'manager'] },

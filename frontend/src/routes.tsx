@@ -33,7 +33,7 @@ export const router = createBrowserRouter([
   { path: '/rooms', element: withSuspense(<Layout><RoomsPage /></Layout>) },
   { path: '/gym', element: withSuspense(<Layout><GymPage /></Layout>) },
   { path: '/rooms/:id', element: withSuspense(<Layout><RoomDetailPage /></Layout>) },
-  { path: '/rooms/:id/spa', element: withSuspense(<Layout><SpaPage /></Layout>) },
+  { path: '/spa', element: withSuspense(<Layout><SpaPage /></Layout>) },
   {
     path: '/front-desk',
     element: withSuspense(

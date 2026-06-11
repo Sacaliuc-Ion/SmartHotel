@@ -11,6 +11,7 @@ import {
   Settings,
   Building,
   Dumbbell,
+  Waves,
   ArrowRight,
   Star,
   Wifi,
@@ -110,6 +111,7 @@ export const HomePage = () => {
     client: [
       { label: t('exploreRooms'), description: t('actionBrowseRoomsDesc'), path: '/rooms', icon: Building, color: 'from-amber-500 to-yellow-600' },
       { label: t('navGym'), description: t('actionGymDesc'), path: '/gym', icon: Dumbbell, color: 'from-emerald-500 to-lime-600' },
+      { label: t('navSpa'), description: t('actionSpaDesc'), path: '/spa', icon: Waves, color: 'from-cyan-500 to-teal-600' },
     ],
   };
 

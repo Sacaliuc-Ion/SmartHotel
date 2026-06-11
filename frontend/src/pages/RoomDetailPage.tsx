@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../components/ui/select';
-import { ArrowLeft, CalendarDays, ChevronLeft, ChevronRight, Users, Wifi, Tv, Wind, Coffee, Bath, Armchair, MapPin, Sparkles } from 'lucide-react';
+import { ArrowLeft, CalendarDays, ChevronLeft, ChevronRight, Users, Wifi, Tv, Wind, Coffee, Bath, Armchair, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
 import Single from '../assets/rooms/Single.jpg';
 import Double from '../assets/rooms/Double.jpg';
@@ -21,7 +21,6 @@ import Deluxe from '../assets/rooms/Deluxe.jpg';
 import { formatCurrency, getRoomAvailabilityState } from '../utils/hotelFormatting';
 import { useTranslation } from 'react-i18next';
 import { getRoomDescriptionLines } from '../utils/roomDescriptions';
-import { getSpaExperience } from '../utils/spaExperience';
 
 const roomImages: Record<string, string> = {
   single: Single,
@@ -277,7 +276,6 @@ export const RoomDetailPage = () => {
   const canBookRoom = availabilityState !== 'unavailable';
   const firstBookableDate = room?.nextAvailableDate || today;
   const isFutureOnlyBooking = Boolean(room?.nextAvailableDate);
-  const spaExperience = room ? getSpaExperience(room, t) : null;
   const selectedOverlap = useMemo(
     () => roomReservations.find((booking) => booking.checkIn < checkOut && checkIn < booking.checkOut),
     [roomReservations, checkIn, checkOut]
@@ -503,38 +501,6 @@ export const RoomDetailPage = () => {
               ))}
             </div>
           </div>
-          {spaExperience && (
-            <div className="overflow-hidden rounded-lg border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-stone-100 shadow-sm dark:border-amber-900/60 dark:from-slate-900 dark:via-slate-900 dark:to-amber-950/20">
-              <div className="grid gap-3 p-3 sm:grid-cols-[0.95fr_1.05fr] sm:items-center">
-                <div className="overflow-hidden rounded-md">
-                  <img
-                    src={spaExperience.image}
-                    alt={spaExperience.imageAlt}
-                    loading="lazy"
-                    decoding="async"
-                    className="h-40 w-full object-cover"
-                  />
-                </div>
-                <div>
-                  <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-amber-700 dark:bg-slate-900/90 dark:text-amber-300">
-                    <Sparkles className="h-3.5 w-3.5" />
-                    Spa inclus
-                  </div>
-                  <h3 className="text-base font-semibold text-gray-800 dark:text-slate-100">{spaExperience.packageName}</h3>
-                  <p className="mt-2 text-sm leading-6 text-gray-600 dark:text-slate-300">
-                    {spaExperience.tagline}
-                  </p>
-                  <Button
-                    variant="outline"
-                    className="mt-3"
-                    onClick={() => navigate(`/rooms/${room.id}/spa`)}
-                  >
-                    Vezi experienta SPA
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
         <div className="flex flex-col gap-3">
           <Badge variant={availabilityState === 'available' ? 'default' : 'secondary'} className="w-fit">

@@ -351,6 +351,64 @@ public class ReservationService : IReservationService
         });
     }
 
+    public async Task<ServiceResult<SpaAccessDto>> GetSpaAccessAsync(int? userId)
+    {
+        if (!userId.HasValue)
+        {
+            return ServiceResult<SpaAccessDto>.Ok(new SpaAccessDto
+            {
+                IsAuthenticated = false,
+                HasAccess = false,
+                HasUpcomingReservation = false
+            });
+        }
+
+        var today = DateOnly.FromDateTime(DateTime.Now);
+        var reservations = await _db.Context.Reservations
+            .Include(r => r.Room)
+            .Where(r =>
+                r.UserId == userId.Value &&
+                r.Status != ReservationStatus.Cancelled &&
+                r.Status != ReservationStatus.CheckedOut &&
+                r.Status != ReservationStatus.NoShow)
+            .OrderBy(r => r.CheckInDate)
+            .ToListAsync();
+
+        var activeReservation = reservations.FirstOrDefault(r =>
+            r.Status == ReservationStatus.CheckedIn &&
+            r.CheckInDate <= today &&
+            today < r.CheckOutDate);
+
+        if (activeReservation != null)
+        {
+            return ServiceResult<SpaAccessDto>.Ok(new SpaAccessDto
+            {
+                IsAuthenticated = true,
+                HasAccess = true,
+                HasUpcomingReservation = false,
+                ReservationId = activeReservation.Id,
+                RoomNumber = activeReservation.Room.Number,
+                CheckIn = activeReservation.CheckInDate.ToString("yyyy-MM-dd"),
+                CheckOut = activeReservation.CheckOutDate.ToString("yyyy-MM-dd")
+            });
+        }
+
+        var upcomingReservation = reservations.FirstOrDefault(r =>
+            r.Status == ReservationStatus.Confirmed &&
+            r.CheckOutDate > today);
+
+        return ServiceResult<SpaAccessDto>.Ok(new SpaAccessDto
+        {
+            IsAuthenticated = true,
+            HasAccess = false,
+            HasUpcomingReservation = upcomingReservation != null,
+            ReservationId = upcomingReservation?.Id,
+            RoomNumber = upcomingReservation?.Room.Number,
+            CheckIn = upcomingReservation?.CheckInDate.ToString("yyyy-MM-dd"),
+            CheckOut = upcomingReservation?.CheckOutDate.ToString("yyyy-MM-dd")
+        });
+    }
+
     private static ReservationDto MapToDto(ReservationData r) => new()
     {
         Id = r.Id,

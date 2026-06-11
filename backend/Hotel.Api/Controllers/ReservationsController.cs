@@ -52,6 +52,16 @@ public class ReservationsController : ControllerBase
           return Ok(result.Data);
      }
 
+     [HttpGet("spa-access")]
+     [AllowAnonymous]
+     public async Task<IActionResult> GetSpaAccess()
+     {
+          var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+          var userId = int.TryParse(userIdClaim, out var parsedUserId) ? parsedUserId : (int?)null;
+          var result = await _reservationService.GetSpaAccessAsync(userId);
+          return Ok(result.Data);
+     }
+
      [HttpPost]
      public async Task<IActionResult> Create([FromBody] CreateReservationRequest request)
      {

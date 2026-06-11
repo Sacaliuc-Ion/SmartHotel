@@ -44,11 +44,14 @@ public class MaintenanceService : IMaintenanceService
 
      public async Task<ServiceResult> AcceptTicketAsync(int ticketId, int assignedUserId)
      {
-          var t = await _db.Context.MaintenanceTickets.FindAsync(ticketId);
+          var t = await _db.Context.MaintenanceTickets
+              .Include(ticket => ticket.Room)
+              .FirstOrDefaultAsync(ticket => ticket.Id == ticketId);
           if (t == null) return ServiceResult.Fail("Ticket not found");
 
           t.AssignedToUserId = assignedUserId;
           t.Status = TicketStatus.InProgress;
+          await RemoveMaintenanceNotificationsForTicketAsync(t);
           await _db.SaveChangesAsync();
 
           return ServiceResult.Ok();
@@ -61,20 +64,9 @@ public class MaintenanceService : IMaintenanceService
               .FirstOrDefaultAsync(ticket => ticket.Id == ticketId);
           if (t == null) return ServiceResult.Fail("Ticket not found");
 
-          var wasResolved = t.Status == TicketStatus.Resolved;
           t.Status = TicketStatus.Resolved;
           t.ResolvedAt = DateTime.UtcNow;
-
-          if (!wasResolved)
-          {
-               _db.Context.UserNotifications.Add(new UserNotificationData
-               {
-                    UserId = t.ReportedByUserId,
-                    Title = "Ticket rezolvat",
-                    Message = $"Solicitarea de mentenanta pentru camera {t.Room.Number} a fost rezolvata: {t.Title}"
-               });
-          }
-
+          await RemoveMaintenanceNotificationsForTicketAsync(t);
           await _db.SaveChangesAsync();
 
           return ServiceResult.Ok();
@@ -122,12 +114,11 @@ public class MaintenanceService : IMaintenanceService
 
           if (recipients.Count > 0)
           {
-               var title = request.Priority == TicketPriority.Urgent
-                    ? "Urgent maintenance ticket"
-                    : "Maintenance ticket nou";
-               var message = request.Priority == TicketPriority.Urgent
-                    ? $"Ticket urgent pentru camera {roomNumber ?? request.RoomId.ToString()}: {request.Issue}. Este necesara interventie rapida."
-                    : $"A fost creat un ticket nou pentru camera {roomNumber ?? request.RoomId.ToString()}: {request.Issue}";
+               var (title, message) = BuildMaintenanceNotification(
+                    roomNumber ?? request.RoomId.ToString(),
+                    request.Issue,
+                    request.Priority
+               );
 
                var notifications = recipients.Select(user => new UserNotificationData
                {
@@ -149,4 +140,31 @@ public class MaintenanceService : IMaintenanceService
           TicketStatus.WaitingParts => "waiting-parts",
           _ => status.ToString().ToLower()
      };
+
+     private async Task RemoveMaintenanceNotificationsForTicketAsync(MaintenanceTicketData ticket)
+     {
+          var (title, message) = BuildMaintenanceNotification(ticket.Room.Number, ticket.Title, ticket.Priority);
+
+          var notifications = await _db.Context.UserNotifications
+              .Where(notification => notification.Title == title && notification.Message == message)
+              .ToListAsync();
+
+          if (notifications.Count > 0)
+          {
+               _db.Context.UserNotifications.RemoveRange(notifications);
+          }
+     }
+
+     private static (string Title, string Message) BuildMaintenanceNotification(string roomLabel, string issue, TicketPriority priority)
+     {
+          return priority == TicketPriority.Urgent
+               ? (
+                    "Urgent maintenance ticket",
+                    $"Ticket urgent pentru camera {roomLabel}: {issue}. Este necesara interventie rapida."
+               )
+               : (
+                    "Maintenance ticket nou",
+                    $"A fost creat un ticket nou pentru camera {roomLabel}: {issue}"
+               );
+     }
 }
