@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, type ReactElement } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router';
 import { Layout } from './components/layout/Layout';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
@@ -20,7 +20,7 @@ const RouteFallback = () => (
   <div className="p-6 text-sm text-gray-500 dark:text-slate-400">Loading...</div>
 );
 
-const withSuspense = (element: JSX.Element) => (
+const withSuspense = (element: ReactElement) => (
   <Suspense fallback={<RouteFallback />}>
     {element}
   </Suspense>
