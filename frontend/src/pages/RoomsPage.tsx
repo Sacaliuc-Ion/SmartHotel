@@ -29,6 +29,18 @@ const amenityIcons: Record<string, React.ElementType> = {
   'Balcony': Armchair,
 };
 
+const parseLocalDate = (value: string) => {
+  const [year, month, day] = value.split('-').map(Number);
+  return new Date(year, month - 1, day, 12, 0, 0, 0);
+};
+
+const parseLocalDateTime = (value: string) => {
+  const [datePart, timePart = '00:00:00'] = value.split('T');
+  const [year, month, day] = datePart.split('-').map(Number);
+  const [hours, minutes, seconds] = timePart.split(':').map(Number);
+  return new Date(year, month - 1, day, hours, minutes, seconds || 0, 0);
+};
+
 export const RoomsPage = () => {
   const { rooms } = useHotel();
   const { t, i18n } = useTranslation();
@@ -98,9 +110,24 @@ export const RoomsPage = () => {
       matchesAvailability;
   });
 
+  const formatAvailabilityMoment = (room: { nextAvailableAt?: string | null; nextAvailableDate?: string | null }) => {
+    if (room.nextAvailableAt) {
+      return new Intl.DateTimeFormat(i18n.language, {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      }).format(parseLocalDateTime(room.nextAvailableAt));
+    }
+
+    if (!room.nextAvailableDate) {
+      return null;
+    }
+
+    return new Intl.DateTimeFormat(i18n.language, { dateStyle: 'medium' }).format(parseLocalDate(room.nextAvailableDate));
+  };
+
   const formatAvailabilityDate = (value?: string | null) => {
     if (!value) return null;
-    return new Intl.DateTimeFormat(i18n.language, { dateStyle: 'medium' }).format(new Date(value));
+    return new Intl.DateTimeFormat(i18n.language, { dateStyle: 'medium' }).format(parseLocalDate(value));
   };
 
   return (
@@ -262,9 +289,11 @@ export const RoomsPage = () => {
                 <span className="text-sm">{room.capacity} {room.capacity > 1 ? t('guests') : t('guest')}</span>
               </div>
 
-              {room.nextAvailableDate && (
+              {(room.nextAvailableAt || room.nextAvailableDate) && (
                 <p className="mb-3 text-sm font-medium text-amber-700 dark:text-amber-300">
-                  {t('availableFromText', { date: formatAvailabilityDate(room.nextAvailableDate) })}
+                  {t('availableFromText', {
+                    date: formatAvailabilityMoment(room) ?? formatAvailabilityDate(room.nextAvailableDate),
+                  })}
                 </p>
               )}
 
