@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom';
 import { PreferencesControls } from './PreferencesControls';
 import { useTranslation } from 'react-i18next';
 import { useHotel } from '../../context/HotelContext';
+import { isOperationallyOverdue } from '../../utils/dateHelpers';
 
 interface TopbarProps { onToggleSidebar?: () => void; sidebarOpen?: boolean; }
 
@@ -158,7 +159,7 @@ const getNotificationTarget = (notification: any) => {
 
 export const Topbar = ({ onToggleSidebar, sidebarOpen }: TopbarProps) => {
   const { user, logout } = useAuth();
-  const { bookings } = useHotel();
+  const { bookings, rooms } = useHotel();
   const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
@@ -187,10 +188,9 @@ export const Topbar = ({ onToggleSidebar, sidebarOpen }: TopbarProps) => {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const notificationsRef = useRef<HTMLDivElement | null>(null);
   const unreadCount = notifications.filter((item) => !item.isRead).length;
-  const today = new Date();
-  const todayKey = `${today.getFullYear()}-${`${today.getMonth() + 1}`.padStart(2, '0')}-${`${today.getDate()}`.padStart(2, '0')}`;
-  const overdueCheckOuts = bookings.filter((booking) => booking.status === 'checked-in' && booking.checkOut < todayKey);
-  const overdueCheckIns = bookings.filter((booking) => booking.status === 'confirmed' && booking.checkIn < todayKey);
+  const roomsById = useMemo(() => new Map(rooms.map((room) => [String(room.id), room])), [rooms]);
+  const overdueCheckOuts = bookings.filter((booking) => booking.status === 'checked-in' && isOperationallyOverdue(booking, roomsById));
+  const overdueCheckIns = bookings.filter((booking) => booking.status === 'confirmed' && isOperationallyOverdue(booking, roomsById));
   const operationalAlerts: OperationalAlertItem[] = [
     ...overdueCheckOuts.map((booking) => ({
       id: `operational-checkout-${booking.id}`,

@@ -1,16 +1,18 @@
 import { useAuth } from '../../context/AuthContext';
 import { NavLink } from 'react-router';
 import { useMemo } from 'react';
-import { Home, DoorOpen, Calendar, Sparkles, Wrench, Settings, BarChart3, Building, UserCircle } from 'lucide-react';
+import { Home, DoorOpen, Calendar, Sparkles, Wrench, Settings, BarChart3, Building, UserCircle, Dumbbell } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useNotifications } from '../../context/NotificationsContext';
 import { useHotel } from '../../context/HotelContext';
+import { isOperationallyOverdue } from '../../utils/dateHelpers';
 
 interface NavItem { labelKey: string; path: string; icon: React.ElementType; roles: string[]; }
 
 const navItems: NavItem[] = [
   { labelKey: 'navHome',         path: '/',            icon: Home,       roles: ['client', 'reception', 'housekeeping', 'maintenance', 'admin', 'manager'] },
   { labelKey: 'navRooms',        path: '/rooms',       icon: Building,   roles: ['client', 'reception', 'housekeeping', 'maintenance', 'admin', 'manager'] },
+  { labelKey: 'navGym',          path: '/gym',         icon: Dumbbell,   roles: ['client', 'reception', 'housekeeping', 'maintenance', 'admin', 'manager'] },
   { labelKey: 'navProfile',      path: '/profile',     icon: UserCircle, roles: ['client', 'reception', 'housekeeping', 'maintenance', 'admin', 'manager'] },
   { labelKey: 'navFrontDesk',    path: '/front-desk',  icon: DoorOpen,   roles: ['reception', 'admin', 'manager'] },
   { labelKey: 'navRoomBoard',    path: '/room-board',  icon: Calendar,   roles: ['reception', 'admin', 'manager'] },
@@ -23,7 +25,7 @@ const navItems: NavItem[] = [
 export const Sidebar = ({ isOpen = true }: { isOpen?: boolean }) => {
   const { user } = useAuth();
   const { notifications } = useNotifications();
-  const { bookings } = useHotel();
+  const { bookings, rooms, tickets } = useHotel();
   const { t } = useTranslation();
   const filtered = navItems.filter((item) =>
     user ? item.roles.includes(user.role) : item.roles.includes('client')
@@ -31,19 +33,27 @@ export const Sidebar = ({ isOpen = true }: { isOpen?: boolean }) => {
 
   const notificationCounts = useMemo(() => {
     const unread = notifications.filter((item) => !item.isRead);
-    const today = new Date();
-    const todayKey = `${today.getFullYear()}-${`${today.getMonth() + 1}`.padStart(2, '0')}-${`${today.getDate()}`.padStart(2, '0')}`;
+    const roomsById = new Map(rooms.map((room) => [String(room.id), room]));
     const overdueFrontDeskActions = bookings.filter((booking) =>
-      (booking.status === 'checked-in' && booking.checkOut < todayKey)
-      || (booking.status === 'confirmed' && booking.checkIn < todayKey)
+      (booking.status === 'checked-in' || booking.status === 'confirmed')
+      && isOperationallyOverdue(booking, roomsById)
+    ).length;
+    const dirtyTurnovers = rooms.filter((room) =>
+      String(room.status).toLowerCase() === 'dirty'
+    ).length;
+    const housekeepingOperationalItems = rooms.filter((room) =>
+      ['dirty', 'cleaning', 'clean'].includes(String(room.status).toLowerCase())
+    ).length;
+    const openMaintenanceTickets = tickets.filter((ticket) =>
+      !['resolved', 'closed'].includes(String(ticket.status).toLowerCase())
     ).length;
 
     return {
       frontDesk: unread.filter((item) => item.category === 'front-desk').length + overdueFrontDeskActions,
-      maintenance: unread.filter((item) => item.category === 'maintenance').length,
-      housekeeping: unread.filter((item) => item.category === 'housekeeping').length,
+      maintenance: unread.filter((item) => item.category === 'maintenance').length + openMaintenanceTickets + dirtyTurnovers,
+      housekeeping: unread.filter((item) => item.category === 'housekeeping').length + housekeepingOperationalItems,
     };
-  }, [notifications, bookings]);
+  }, [notifications, bookings, rooms, tickets]);
 
   return (
     <div

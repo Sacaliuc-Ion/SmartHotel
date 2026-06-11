@@ -322,7 +322,7 @@ public class AuthService : IAuthService
 
      private async Task EnsureGeneratedNotificationsAsync(int userId, string roleName)
      {
-          var today = DateOnly.FromDateTime(DateTime.UtcNow);
+          var today = DateOnly.FromDateTime(DateTime.Now);
 
           var staleNotifications = await _db.Context.UserNotifications
               .Where(notification =>
