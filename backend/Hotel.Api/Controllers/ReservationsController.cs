@@ -42,6 +42,16 @@ public class ReservationsController : ControllerBase
           return Ok(result.Data);
      }
 
+     [HttpGet("gym-access")]
+     [AllowAnonymous]
+     public async Task<IActionResult> GetGymAccess()
+     {
+          var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+          var userId = int.TryParse(userIdClaim, out var parsedUserId) ? parsedUserId : (int?)null;
+          var result = await _reservationService.GetGymAccessAsync(userId);
+          return Ok(result.Data);
+     }
+
      [HttpPost]
      public async Task<IActionResult> Create([FromBody] CreateReservationRequest request)
      {
@@ -57,6 +67,16 @@ public class ReservationsController : ControllerBase
      {
           var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
           var result = await _reservationService.UpdateReservationAsync(id, request, userId);
+          if (!result.Success) return BadRequest(new { message = result.Message });
+          return Ok(result.Data);
+     }
+
+     [HttpPatch("{id}/payment-status")]
+     [Authorize(Roles = "admin,reception,manager")]
+     public async Task<IActionResult> UpdatePaymentStatus(int id, [FromBody] UpdateReservationPaymentStatusRequest request)
+     {
+          var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+          var result = await _reservationService.UpdateReservationPaymentStatusAsync(id, request.PaymentStatus, userId);
           if (!result.Success) return BadRequest(new { message = result.Message });
           return Ok(result.Data);
      }
