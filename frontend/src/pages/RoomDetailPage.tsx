@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Input } from '../components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { ArrowLeft, CalendarDays, ChevronLeft, ChevronRight, Users, Wifi, Tv, Wind, Coffee, Bath, Armchair, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
 import Single from '../assets/rooms/Single.jpg';
@@ -28,6 +29,7 @@ const amenityIcons: Record<string, React.ElementType> = {
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 const MAX_CHECKOUT_SEARCH_DAYS = 365;
+const CHECK_IN_OPTION_STEP_MINUTES = 30;
 
 const toDateKey = (date: Date) => {
   const year = date.getFullYear();
@@ -41,10 +43,53 @@ const fromDateKey = (value: string) => {
   return new Date(year, month - 1, day, 12, 0, 0, 0);
 };
 
+const fromDateTimeKey = (value: string) => {
+  const [datePart, timePart = '00:00:00'] = value.split('T');
+  const [year, month, day] = datePart.split('-').map(Number);
+  const [hours, minutes, seconds] = timePart.split(':').map(Number);
+  return new Date(year, month - 1, day, hours, minutes, seconds || 0, 0);
+};
+
 const addDays = (date: Date, days: number) => {
   const next = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12, 0, 0, 0);
   next.setDate(next.getDate() + days);
   return next;
+};
+
+const parseClockToMinutes = (value?: string | null) => {
+  if (!value) return null;
+  const [hours, minutes] = value.split(':').map(Number);
+  if (Number.isNaN(hours) || Number.isNaN(minutes)) {
+    return null;
+  }
+
+  return hours * 60 + minutes;
+};
+
+const formatMinutesAsClock = (minutes: number) => {
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return `${`${hours}`.padStart(2, '0')}:${`${mins}`.padStart(2, '0')}`;
+};
+
+const formatClockForLocale = (value: string, locale: string) => {
+  const [hours, minutes] = value.split(':').map(Number);
+  return new Intl.DateTimeFormat(locale, {
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(new Date(2026, 0, 1, hours, minutes, 0, 0));
+};
+
+const ceilMinutesToStep = (minutes: number, step: number) => Math.ceil(minutes / step) * step;
+
+const buildTimeOptions = (startMinutes: number, endMinutes: number) => {
+  const values: string[] = [];
+
+  for (let cursor = startMinutes; cursor <= endMinutes; cursor += CHECK_IN_OPTION_STEP_MINUTES) {
+    values.push(formatMinutesAsClock(cursor));
+  }
+
+  return values;
 };
 
 const startOfMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth(), 1, 12, 0, 0, 0);
@@ -200,14 +245,13 @@ export const RoomDetailPage = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const room = rooms.find((r) => r.id.toString() === id);
-  const today = useMemo(() => new Date().toISOString().split('T')[0], []);
+  const today = useMemo(() => toDateKey(new Date()), []);
   const tomorrow = useMemo(() => {
-    const nextDay = new Date();
-    nextDay.setDate(nextDay.getDate() + 1);
-    return nextDay.toISOString().split('T')[0];
+    return toDateKey(addDays(new Date(), 1));
   }, []);
   const [checkIn, setCheckIn] = useState(today);
   const [checkOut, setCheckOut] = useState(tomorrow);
+  const [checkInTime, setCheckInTime] = useState(room?.standardCheckInTime || '14:00');
   const [guests, setGuests] = useState('1');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [checkInMonth, setCheckInMonth] = useState(() => fromDateKey(today));
@@ -224,14 +268,59 @@ export const RoomDetailPage = () => {
     [bookings, room?.id]
   );
   const canBookRoom = availabilityState !== 'unavailable';
-  const firstBookableDate = room?.nextAvailableDate || today;
-  const isFutureOnlyBooking = Boolean(room?.nextAvailableDate);
+  const firstBookableDate = room?.nextAvailableAt?.split('T')[0] || room?.nextAvailableDate || today;
+  const isFutureOnlyBooking = Boolean(room?.nextAvailableAt || room?.nextAvailableDate);
   const selectedOverlap = useMemo(
     () => roomReservations.find((booking) => booking.checkIn < checkOut && checkIn < booking.checkOut),
     [roomReservations, checkIn, checkOut]
   );
   const canBookSelection = !selectedOverlap;
-  const formatBookingDate = (value: string) => new Intl.DateTimeFormat(i18n.language, { dateStyle: 'medium' }).format(new Date(value));
+  const formatBookingDate = (value: string) =>
+    new Intl.DateTimeFormat(i18n.language, { dateStyle: 'medium' }).format(fromDateKey(value));
+  const formatAvailabilityMoment = (value?: string | null) => {
+    if (!value) {
+      return null;
+    }
+
+    if (value.includes('T')) {
+      return new Intl.DateTimeFormat(i18n.language, {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      }).format(fromDateTimeKey(value));
+    }
+
+    return new Intl.DateTimeFormat(i18n.language, { dateStyle: 'medium' }).format(fromDateKey(value));
+  };
+  const nextAvailableDateKey = room?.nextAvailableAt?.split('T')[0] || room?.nextAvailableDate || null;
+  const nextAvailableMinutes = useMemo(() => {
+    if (!room?.nextAvailableAt) {
+      return null;
+    }
+
+    const nextAvailable = fromDateTimeKey(room.nextAvailableAt);
+    return nextAvailable.getHours() * 60 + nextAvailable.getMinutes();
+  }, [room?.nextAvailableAt]);
+  const checkInTimeOptions = useMemo(() => {
+    const baseStart = parseClockToMinutes(room?.standardCheckInTime) ?? 14 * 60;
+    const baseEnd = parseClockToMinutes(room?.latestCheckInTime) ?? 17 * 60;
+    let minimumAllowed = baseStart;
+
+    if (nextAvailableDateKey && checkIn === nextAvailableDateKey && nextAvailableMinutes !== null) {
+      minimumAllowed = Math.max(minimumAllowed, nextAvailableMinutes);
+    }
+
+    if (checkIn === today) {
+      const now = new Date();
+      const currentMinutes = now.getHours() * 60 + now.getMinutes();
+      minimumAllowed = Math.max(minimumAllowed, ceilMinutesToStep(currentMinutes, CHECK_IN_OPTION_STEP_MINUTES));
+    }
+
+    if (minimumAllowed > baseEnd) {
+      return [];
+    }
+
+    return buildTimeOptions(minimumAllowed, baseEnd);
+  }, [checkIn, nextAvailableDateKey, nextAvailableMinutes, room?.latestCheckInTime, room?.standardCheckInTime, today]);
   const reservedDateKeys = useMemo(() => {
     const keys = new Set<string>();
     roomReservations.forEach((booking) => {
@@ -281,14 +370,38 @@ export const RoomDetailPage = () => {
     if (!room?.nextAvailableDate) return;
 
     const nextAvailable = room.nextAvailableDate;
-    const defaultCheckOut = new Date(nextAvailable);
-    defaultCheckOut.setDate(defaultCheckOut.getDate() + 1);
+    const defaultCheckOut = addDays(fromDateKey(nextAvailable), 1);
+    const defaultCheckOutKey = toDateKey(defaultCheckOut);
 
     setCheckIn(nextAvailable);
-    setCheckOut(defaultCheckOut.toISOString().split('T')[0]);
+    setCheckOut(defaultCheckOutKey);
     setCheckInMonth(fromDateKey(nextAvailable));
-    setCheckOutMonth(fromDateKey(defaultCheckOut.toISOString().split('T')[0]));
+    setCheckOutMonth(fromDateKey(defaultCheckOutKey));
   }, [room?.id, room?.nextAvailableDate]);
+
+  useEffect(() => {
+    if (checkInTimeOptions.length === 0) {
+      return;
+    }
+
+    if (!checkInTimeOptions.includes(checkInTime)) {
+      setCheckInTime(checkInTimeOptions[0]);
+    }
+  }, [checkInTime, checkInTimeOptions]);
+
+  useEffect(() => {
+    if (!room) {
+      return;
+    }
+
+    if (room.nextAvailableAt) {
+      const [, timePart = room.standardCheckInTime || '14:00'] = room.nextAvailableAt.split('T');
+      setCheckInTime(timePart.slice(0, 5));
+      return;
+    }
+
+    setCheckInTime(room.standardCheckInTime || '14:00');
+  }, [room?.id, room?.nextAvailableAt, room?.standardCheckInTime]);
 
   const handleBookNow = async () => {
     if (!room) return;
@@ -304,8 +417,18 @@ export const RoomDetailPage = () => {
       return;
     }
 
+    if (!checkInTime) {
+      toast.error(t('bookingCheckInTimeRequired'));
+      return;
+    }
+
     if (checkOut <= checkIn) {
       toast.error(t('bookingInvalidDates'));
+      return;
+    }
+
+    if (checkInTimeOptions.length === 0) {
+      toast.error(t('bookingNoCheckInSlots'));
       return;
     }
 
@@ -331,6 +454,7 @@ export const RoomDetailPage = () => {
         roomId: Number(room.id),
         checkIn,
         checkOut,
+        checkInTime,
         guests: guestCount,
       });
       navigate('/');
@@ -391,10 +515,42 @@ export const RoomDetailPage = () => {
           <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900">
             <p className="mb-1 text-xs uppercase tracking-wide text-gray-500 dark:text-slate-400">{t('pricePerNight')}</p>
             <p className="text-2xl font-bold text-amber-600 lg:text-3xl">{formatCurrency(room.pricePerNight)}</p>
-            {room.nextAvailableDate && (
+            {(room.nextAvailableAt || room.nextAvailableDate) && (
               <p className="mt-2 text-sm text-amber-700 dark:text-amber-300">
                 {t('availableFromText', {
-                  date: new Intl.DateTimeFormat(i18n.language, { dateStyle: 'medium' }).format(new Date(room.nextAvailableDate)),
+                  date: formatAvailabilityMoment(room.nextAvailableAt || room.nextAvailableDate),
+                })}
+              </p>
+            )}
+            {(room.standardCheckOutTime || room.standardCheckInTime) && (
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                {room.standardCheckOutTime && (
+                  <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-950/70">
+                    <p className="text-[11px] uppercase tracking-[0.12em] text-gray-500 dark:text-slate-400">
+                      {t('standardCheckOutTime')}
+                    </p>
+                    <p className="mt-1 text-sm font-semibold text-gray-800 dark:text-slate-100">
+                      {room.standardCheckOutTime}
+                    </p>
+                  </div>
+                )}
+                {room.standardCheckInTime && (
+                  <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-950/70">
+                    <p className="text-[11px] uppercase tracking-[0.12em] text-gray-500 dark:text-slate-400">
+                      {t('standardCheckInTime')}
+                    </p>
+                    <p className="mt-1 text-sm font-semibold text-gray-800 dark:text-slate-100">
+                      {room.standardCheckInTime}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+            {room.standardCheckOutTime && room.standardCheckInTime && (
+              <p className="mt-3 text-xs text-gray-500 dark:text-slate-400">
+                {t('roomTurnoverNote', {
+                  checkOut: room.standardCheckOutTime,
+                  checkIn: room.standardCheckInTime,
                 })}
               </p>
             )}
@@ -446,6 +602,34 @@ export const RoomDetailPage = () => {
                 highlightedDateKey={nextReservationStart}
               />
             </div>
+            <div className="mt-3">
+              <label className="mb-1 block text-xs text-gray-600 dark:text-slate-300">{t('checkInTimeLabel')}</label>
+              <Select value={checkInTime} onValueChange={setCheckInTime} disabled={checkInTimeOptions.length === 0}>
+                <SelectTrigger>
+                  <SelectValue placeholder={t('checkInTimePlaceholder')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {checkInTimeOptions.map((value) => (
+                    <SelectItem key={value} value={value}>
+                      {formatClockForLocale(value, i18n.language)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {room.standardCheckInTime && room.latestCheckInTime && (
+                <p className="mt-1 text-[11px] text-gray-500 dark:text-slate-400">
+                  {t('checkInTimeWindow', {
+                    start: formatClockForLocale(room.standardCheckInTime, i18n.language),
+                    end: formatClockForLocale(room.latestCheckInTime, i18n.language),
+                  })}
+                </p>
+              )}
+              {checkInTimeOptions.length === 0 && (
+                <p className="mt-1 text-[11px] text-amber-700 dark:text-amber-300">
+                  {t('bookingNoCheckInSlots')}
+                </p>
+              )}
+            </div>
             {roomReservations.length > 0 && (
               <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-950/70">
                 <p className="text-xs font-semibold uppercase tracking-[0.12em] text-gray-500 dark:text-slate-400">
@@ -471,7 +655,7 @@ export const RoomDetailPage = () => {
             {isFutureOnlyBooking && (
               <p className="mt-2 text-xs font-medium text-amber-700 dark:text-amber-300">
                 {t('bookingStartsFromText', {
-                  date: new Intl.DateTimeFormat(i18n.language, { dateStyle: 'medium' }).format(new Date(firstBookableDate)),
+                  date: formatAvailabilityMoment(room?.nextAvailableAt || firstBookableDate),
                 })}
               </p>
             )}

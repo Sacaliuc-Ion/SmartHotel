@@ -12,6 +12,9 @@ public class ReservationService : IReservationService
 {
     private readonly DbSession _db;
     private static readonly string[] StaffRoles = ["Admin", "Reception", "Manager"];
+    private const string CheckInTimeMarkerPrefix = "[checkin-time:";
+    private static readonly TimeSpan DefaultCheckInTime = new(14, 0, 0);
+    private static readonly TimeSpan CheckInSelectionWindow = TimeSpan.FromHours(3);
 
     public ReservationService(DbSession db)
     {
@@ -49,6 +52,7 @@ public class ReservationService : IReservationService
             request.RoomId,
             request.CheckIn,
             request.CheckOut,
+            request.CheckInTime,
             request.Guests,
             ReservationStatus.Confirmed
         );
@@ -65,7 +69,8 @@ public class ReservationService : IReservationService
             TotalPrice = validation.Room.PricePerNight * validation.Nights,
             Status = ReservationStatus.Confirmed,
             PaymentStatus = PaymentStatus.Unpaid,
-            Guests = request.Guests
+            Guests = request.Guests,
+            Notes = MergeReservationNotes(null, validation.CheckInTime, null)
         };
 
         _db.Context.Reservations.Add(reservation);
@@ -104,6 +109,10 @@ public class ReservationService : IReservationService
         if (targetStatus == null)
             return ServiceResult<ReservationDto>.Fail("The selected reservation status is not supported.");
 
+        var targetPaymentStatus = ParsePaymentStatus(request.PaymentStatus, reservation.PaymentStatus);
+        if (targetPaymentStatus == null)
+            return ServiceResult<ReservationDto>.Fail("The selected payment status is not supported.");
+
         if (reservation.Status == ReservationStatus.CheckedIn && targetStatus != ReservationStatus.CheckedIn)
             return ServiceResult<ReservationDto>.Fail("Checked-in reservations must be completed through the dedicated front desk actions.");
 
@@ -114,11 +123,13 @@ public class ReservationService : IReservationService
             request.RoomId,
             request.CheckIn,
             request.CheckOut,
+            request.CheckInTime,
             request.Guests,
             targetStatus.Value,
             reservation.Id,
             reservation.Status,
-            reservation.CheckInDate
+            reservation.CheckInDate,
+            ExtractCheckInTime(reservation.Notes)
         );
 
         if (!validation.Success)
@@ -134,7 +145,8 @@ public class ReservationService : IReservationService
         reservation.CheckOutDate = validation.CheckOutDate;
         reservation.Guests = request.Guests;
         reservation.Status = targetStatus.Value;
-        reservation.Notes = CleanOptional(request.Notes);
+        reservation.PaymentStatus = targetPaymentStatus.Value;
+        reservation.Notes = MergeReservationNotes(request.Notes, validation.CheckInTime, reservation.Notes);
         reservation.TotalPrice = validation.Room.PricePerNight * validation.Nights;
 
         if (roomChanged && originalStatus == ReservationStatus.CheckedIn)
@@ -167,6 +179,33 @@ public class ReservationService : IReservationService
             .FirstAsync(existingReservation => existingReservation.Id == reservationId);
 
         return ServiceResult<ReservationDto>.Ok(MapToDto(updated));
+    }
+
+    public async Task<ServiceResult<ReservationDto>> UpdateReservationPaymentStatusAsync(int reservationId, string paymentStatus, int actorUserId)
+    {
+        var reservation = await _db.Context.Reservations
+            .Include(existingReservation => existingReservation.User)
+            .Include(existingReservation => existingReservation.Room)
+            .Include(existingReservation => existingReservation.Review)
+            .FirstOrDefaultAsync(existingReservation => existingReservation.Id == reservationId);
+
+        if (reservation == null)
+            return ServiceResult<ReservationDto>.Fail("Reservation not found.");
+
+        if (reservation.Status == ReservationStatus.CheckedOut)
+            return ServiceResult<ReservationDto>.Fail("Checked-out reservations can no longer be modified.");
+
+        if (reservation.Status == ReservationStatus.Cancelled)
+            return ServiceResult<ReservationDto>.Fail("Cancelled reservations can no longer be modified.");
+
+        var targetPaymentStatus = ParsePaymentStatus(paymentStatus, reservation.PaymentStatus);
+        if (targetPaymentStatus == null)
+            return ServiceResult<ReservationDto>.Fail("The selected payment status is not supported.");
+
+        reservation.PaymentStatus = targetPaymentStatus.Value;
+        await _db.SaveChangesAsync();
+
+        return ServiceResult<ReservationDto>.Ok(MapToDto(reservation));
     }
 
     public async Task<ServiceResult> CancelReservationAsync(int reservationId, int userId, bool isAdminOrReception)
@@ -254,6 +293,64 @@ public class ReservationService : IReservationService
         });
     }
 
+    public async Task<ServiceResult<GymAccessDto>> GetGymAccessAsync(int? userId)
+    {
+        if (!userId.HasValue)
+        {
+            return ServiceResult<GymAccessDto>.Ok(new GymAccessDto
+            {
+                IsAuthenticated = false,
+                HasAccess = false,
+                HasUpcomingReservation = false
+            });
+        }
+
+        var today = DateOnly.FromDateTime(DateTime.Now);
+        var reservations = await _db.Context.Reservations
+            .Include(r => r.Room)
+            .Where(r =>
+                r.UserId == userId.Value &&
+                r.Status != ReservationStatus.Cancelled &&
+                r.Status != ReservationStatus.CheckedOut &&
+                r.Status != ReservationStatus.NoShow)
+            .OrderBy(r => r.CheckInDate)
+            .ToListAsync();
+
+        var activeReservation = reservations.FirstOrDefault(r =>
+            r.Status == ReservationStatus.CheckedIn &&
+            r.CheckInDate <= today &&
+            today < r.CheckOutDate);
+
+        if (activeReservation != null)
+        {
+            return ServiceResult<GymAccessDto>.Ok(new GymAccessDto
+            {
+                IsAuthenticated = true,
+                HasAccess = true,
+                HasUpcomingReservation = false,
+                ReservationId = activeReservation.Id,
+                RoomNumber = activeReservation.Room.Number,
+                CheckIn = activeReservation.CheckInDate.ToString("yyyy-MM-dd"),
+                CheckOut = activeReservation.CheckOutDate.ToString("yyyy-MM-dd")
+            });
+        }
+
+        var upcomingReservation = reservations.FirstOrDefault(r =>
+            r.Status == ReservationStatus.Confirmed &&
+            r.CheckOutDate > today);
+
+        return ServiceResult<GymAccessDto>.Ok(new GymAccessDto
+        {
+            IsAuthenticated = true,
+            HasAccess = false,
+            HasUpcomingReservation = upcomingReservation != null,
+            ReservationId = upcomingReservation?.Id,
+            RoomNumber = upcomingReservation?.Room.Number,
+            CheckIn = upcomingReservation?.CheckInDate.ToString("yyyy-MM-dd"),
+            CheckOut = upcomingReservation?.CheckOutDate.ToString("yyyy-MM-dd")
+        });
+    }
+
     private static ReservationDto MapToDto(ReservationData r) => new()
     {
         Id = r.Id,
@@ -262,11 +359,12 @@ public class ReservationService : IReservationService
         RoomNumber = r.Room.Number,
         CheckIn = r.CheckInDate.ToString("yyyy-MM-dd"),
         CheckOut = r.CheckOutDate.ToString("yyyy-MM-dd"),
+        CheckInTime = ExtractCheckInTime(r.Notes) ?? "14:00",
         Status = ClientValueFormatter.ToClientValue(r.Status),
         PaymentStatus = ClientValueFormatter.ToClientValue(r.PaymentStatus),
         TotalAmount = r.TotalPrice,
         Guests = r.Guests,
-        Notes = r.Notes,
+        Notes = StripCheckInTimeMarker(r.Notes),
         Review = r.Review == null ? null : MapToReviewDto(r.Review)
     };
 
@@ -282,11 +380,13 @@ public class ReservationService : IReservationService
         int roomId,
         string checkInValue,
         string checkOutValue,
+        string? checkInTimeValue,
         int guests,
         ReservationStatus targetStatus,
         int? reservationIdToIgnore = null,
         ReservationStatus? currentStatus = null,
-        DateOnly? currentCheckInDate = null)
+        DateOnly? currentCheckInDate = null,
+        string? existingCheckInTime = null)
     {
         var room = await _db.Context.Rooms.FirstOrDefaultAsync(existingRoom => existingRoom.Id == roomId);
         if (room == null || !room.IsActive)
@@ -300,9 +400,20 @@ public class ReservationService : IReservationService
         if (!DateOnly.TryParse(checkInValue, out var checkIn) || !DateOnly.TryParse(checkOutValue, out var checkOut))
             return ReservationValidationResult.Fail("Please use the YYYY-MM-DD format for arrival and departure dates.");
 
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var allowedCheckInWindow = await GetCheckInWindowAsync();
+        if (!TryResolveCheckInTime(checkInTimeValue, existingCheckInTime, allowedCheckInWindow, out var selectedCheckInTime))
+            return ReservationValidationResult.Fail($"Check-in time must be between {allowedCheckInWindow.Start:hh\\:mm} and {allowedCheckInWindow.End:hh\\:mm}.");
+
+        var today = DateOnly.FromDateTime(DateTime.Now);
         if (currentStatus != ReservationStatus.CheckedIn && targetStatus != ReservationStatus.NoShow && checkIn < today)
             return ReservationValidationResult.Fail("Reservations can only be created or updated for today or a future arrival date.");
+
+        if (currentStatus != ReservationStatus.CheckedIn && checkIn == today)
+        {
+            var currentLocalTime = DateTime.Now.TimeOfDay;
+            if (selectedCheckInTime <= currentLocalTime)
+                return ReservationValidationResult.Fail("For today's arrival, please choose a check-in time later than the current time.");
+        }
 
         var nights = checkOut.DayNumber - checkIn.DayNumber;
         if (nights <= 0)
@@ -339,7 +450,46 @@ public class ReservationService : IReservationService
                 return ReservationValidationResult.Fail("The selected room already has another active reservation for the chosen period.");
         }
 
-        return ReservationValidationResult.Ok(room, checkIn, checkOut, nights);
+        return ReservationValidationResult.Ok(room, checkIn, checkOut, selectedCheckInTime, nights);
+    }
+
+    private async Task<CheckInWindow> GetCheckInWindowAsync()
+    {
+        var checkInValue = await _db.Context.HotelSettings
+            .Where(setting => setting.Key == "CheckInTime")
+            .Select(setting => setting.Value)
+            .FirstOrDefaultAsync();
+
+        var start = TimeSpan.TryParse(checkInValue, out var parsed) ? parsed : DefaultCheckInTime;
+        return new CheckInWindow
+        {
+            Start = start,
+            End = start.Add(CheckInSelectionWindow),
+        };
+    }
+
+    private static bool TryResolveCheckInTime(string? requestedCheckInTime, string? existingCheckInTime, CheckInWindow checkInWindow, out TimeSpan selectedCheckInTime)
+    {
+        if (TimeSpan.TryParse(requestedCheckInTime, out var parsedRequested))
+        {
+            if (parsedRequested < checkInWindow.Start || parsedRequested > checkInWindow.End)
+            {
+                selectedCheckInTime = default;
+                return false;
+            }
+
+            selectedCheckInTime = parsedRequested;
+            return true;
+        }
+
+        if (TimeSpan.TryParse(existingCheckInTime, out var parsedExisting))
+        {
+            selectedCheckInTime = parsedExisting;
+            return true;
+        }
+
+        selectedCheckInTime = checkInWindow.Start;
+        return true;
     }
 
     private static ReservationStatus? ParseReservationStatus(string? value, ReservationStatus fallback)
@@ -349,6 +499,15 @@ public class ReservationService : IReservationService
 
         var normalized = value.Trim().Replace("-", string.Empty, StringComparison.OrdinalIgnoreCase);
         return Enum.TryParse<ReservationStatus>(normalized, true, out var parsed) ? parsed : null;
+    }
+
+    private static PaymentStatus? ParsePaymentStatus(string? value, PaymentStatus fallback)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return fallback;
+
+        var normalized = value.Trim().Replace("-", string.Empty, StringComparison.OrdinalIgnoreCase);
+        return Enum.TryParse<PaymentStatus>(normalized, true, out var parsed) ? parsed : null;
     }
 
     private async Task AddReservationUpdateNotificationAsync(
@@ -412,6 +571,52 @@ public class ReservationService : IReservationService
         return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     }
 
+    private static string? ExtractCheckInTime(string? notes)
+    {
+        if (string.IsNullOrWhiteSpace(notes))
+            return null;
+
+        var markerStart = notes.IndexOf(CheckInTimeMarkerPrefix, StringComparison.OrdinalIgnoreCase);
+        if (markerStart < 0)
+            return null;
+
+        var valueStart = markerStart + CheckInTimeMarkerPrefix.Length;
+        var markerEnd = notes.IndexOf(']', valueStart);
+        if (markerEnd < 0)
+            return null;
+
+        var rawValue = notes[valueStart..markerEnd].Trim();
+        return TimeSpan.TryParse(rawValue, out var parsed) ? parsed.ToString(@"hh\:mm") : null;
+    }
+
+    private static string? StripCheckInTimeMarker(string? notes)
+    {
+        if (string.IsNullOrWhiteSpace(notes))
+            return null;
+
+        var markerStart = notes.IndexOf(CheckInTimeMarkerPrefix, StringComparison.OrdinalIgnoreCase);
+        if (markerStart < 0)
+            return CleanOptional(notes);
+
+        var markerEnd = notes.IndexOf(']', markerStart);
+        if (markerEnd < 0)
+            return CleanOptional(notes);
+
+        var withoutMarker = string.Concat(notes[..markerStart], notes[(markerEnd + 1)..]).Trim();
+        return CleanOptional(withoutMarker);
+    }
+
+    private static string? MergeReservationNotes(string? visibleNotes, TimeSpan selectedCheckInTime, string? existingNotes)
+    {
+        var sanitizedVisibleNotes = CleanOptional(visibleNotes) ?? StripCheckInTimeMarker(existingNotes);
+        var marker = $"{CheckInTimeMarkerPrefix}{selectedCheckInTime:hh\\:mm}]";
+
+        if (string.IsNullOrWhiteSpace(sanitizedVisibleNotes))
+            return marker;
+
+        return $"{marker} {sanitizedVisibleNotes}";
+    }
+
     private sealed class ReservationValidationResult
     {
         public bool Success { get; private init; }
@@ -419,14 +624,16 @@ public class ReservationService : IReservationService
         public RoomData Room { get; private init; } = null!;
         public DateOnly CheckInDate { get; private init; }
         public DateOnly CheckOutDate { get; private init; }
+        public TimeSpan CheckInTime { get; private init; }
         public int Nights { get; private init; }
 
-        public static ReservationValidationResult Ok(RoomData room, DateOnly checkInDate, DateOnly checkOutDate, int nights) => new()
+        public static ReservationValidationResult Ok(RoomData room, DateOnly checkInDate, DateOnly checkOutDate, TimeSpan checkInTime, int nights) => new()
         {
             Success = true,
             Room = room,
             CheckInDate = checkInDate,
             CheckOutDate = checkOutDate,
+            CheckInTime = checkInTime,
             Nights = nights
         };
 
@@ -436,4 +643,11 @@ public class ReservationService : IReservationService
             Message = message
         };
     }
+
+    private sealed class CheckInWindow
+    {
+        public TimeSpan Start { get; init; }
+        public TimeSpan End { get; init; }
+    }
+
 }
