@@ -39,7 +39,7 @@ public class ReceptionController : ControllerBase
           var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
           var result = await _receptionService.CheckInAsync(reservationId, request, userId);
           if (!result.Success) return BadRequest(new { message = result.Message });
-          return Ok();
+          return Ok(result.Data);
      }
 
      [HttpPost("check-out/{reservationId}")]
@@ -49,6 +49,6 @@ public class ReceptionController : ControllerBase
           var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
           var result = await _receptionService.CheckOutAsync(reservationId, request, userId);
           if (!result.Success) return BadRequest(new { message = result.Message });
-          return Ok();
+          return Ok(result.Data);
      }
 }
